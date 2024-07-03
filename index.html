@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECCION INFORMATICA | Ficha de Solicitud de Servicio </title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script_autocomplete.js"></script>
+
+</head>
+<body>
+    <section class="section-ingreso">
+        <h1>Solicitud de Servicio Técnico</h1>
+        <form action="/servicio-tecnico/solicitar" method="post">
+            <h2>Formulario de Ingreso</h2>
+    
+            <label for="autocomplete-input-tipo-servicio">Solicitud de Servicio</label>
+
+            <input type="text" id="autocomplete-input-tipo-servicio" placeholder="Escribe aquí...">
+            <div class="autocomplete-results-container">
+                <ul class="autocomplete-list"></ul>
+            </div>
+            <select class="autocomplete-select" style="display: none;"></select>
+
+
+            <label for="input-date" class="label-date">Fecha de Emision</label>
+            <input type="date" name="" id="input-date">
+            <fieldset>
+                <legend>DATOS DEL USUARIO</legend>
+                <label for="apellido">Apellido</label>
+                <input type="text" id="input-apellido">
+
+                <label for="autocomplete-input-grado">Grado</label>
+
+                <input type="text" id="autocomplete-input-grado" placeholder="Escribe aquí...">
+                <div class="autocomplete-results-container">
+                    <ul class="autocomplete-list"></ul>
+                </div>
+                <select class="autocomplete-select" style="display: none;"></select>
+
+                <label for="input-credencial" class="label-form">Credencial</label>
+                <input type="number" id="input-credencial">
+            </fieldset>
+            <fieldset>
+                <legend>DATOS DEL AREA/ DEPENDENCIA</legend>
+                <label for="input-division">Division</label>
+                <input type="text" id="input-division" class="input-form">
+                <label for="input-seccion" class="label-form">Seccion</label>
+                <input type="text" id="input-seccion" class="input-form">
+                <label for="input-mail" class="label-form">Correo Electronico</label>
+                <input type="mail" id="input-mail" class="input-form">
+            </fieldset>
+            <fieldset>
+                <legend>OBSERVACIONES</legend>
+                <textarea name="" id=""></textarea>
+            </fieldset>
+            <section class="area_firmas">
+                <label for="">Firma de Usuario - Aclaracion</label>
+                <label for="">Firma de Seccion - Aclaracion</label>
+            </section>
+            <input type="submit" value="Enviar">
+        </form>
+    </section>
+
+
+</body>
+</html>

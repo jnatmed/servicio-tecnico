@@ -1,0 +1,97 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+/* Contenedor principal del formulario */
+.section-ingreso {
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Formulario */
+form {
+    display: grid;
+    gap: 15px;
+}
+
+/* Campos de entrada y selectores */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Para incluir el padding en el ancho total */
+}
+
+/* Botones */
+button {
+    padding: 12px 24px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos para el autocompletado */
+
+.autocomplete-results-container {
+    position: relative;
+}
+
+.autocomplete-results {
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    
+}
+
+.autocomplete-list {
+    position: absolute;
+    top:-13px;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    background-color: gray;
+    width: 75%;
+}
+
+.autocomplete-item {
+    padding: 5px;
+    cursor: pointer;
+}
+
+.autocomplete-item:hover {
+    background-color: #eee;
+}
+
+
+
+input[type="submit"]{
+    height: 3rem;
+    font-size: 1.5rem;
+}

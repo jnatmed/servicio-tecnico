@@ -1,0 +1,5 @@
+vendor/
+logs/
+composer.lock
+.env
+src/App/views/cache

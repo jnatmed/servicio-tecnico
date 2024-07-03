@@ -1,0 +1,65 @@
+h1, h2 {
+    text-align: center;
+    color: #333;
+}
+
+.section-resumen {
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+details {
+    margin-bottom: 10px;
+}
+
+summary {
+    font-weight: bold;
+    cursor: pointer;
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+}
+
+.resumen-datos, .resumen-firmas {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 5px;
+}
+
+.resumen-datos p, .resumen-firmas p {
+    margin: 5px 0;
+}
+
+.resumen-firmas {
+    margin-top: 10px;
+}
+
+
+/* area de firmas */
+
+.area_firmas{
+    display: flex;
+    justify-content: center;
+    padding: 1rem 2rem 1rem 2rem; /*arriba der abajo izq*/
+}
+
+.area_firmas label {
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: flex-end;
+    border: 1px solid black;
+    height: 5rem;
+    padding: 1rem 2rem 1rem 2rem;
+}
+
+.area_firmas label:first-child{
+    margin-right: 1rem;
+}

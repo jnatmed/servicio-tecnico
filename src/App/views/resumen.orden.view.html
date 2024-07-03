@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+<body class="home">
+    {% include 'parts/header.view.html' %}
+
+    <section class="section-resumen">
+        <h2>Resumen del Pedido</h2>
+        <hr>
+        <details open>
+            <summary>Detalles del Servicio</summary>
+            <div class="resumen-datos">
+                <p><strong>Solicitud de Servicio:</strong> {{ tipoServicio }}</p>
+                <p><strong>Fecha de Emisión:</strong> {{ fechaEmision }}</p>                
+            </div>
+        </details>
+        <details open>
+            <summary>Usuario</summary>
+            <p><strong>Apellido:</strong> {{ apellido }}</p>
+            <p><strong>Nombre:</strong> {{ nombre }}</p>
+            <p><strong>Grado:</strong> {{ grado }}</p>
+            <p><strong>Credencial:</strong> {{ credencial }}</p>
+        </details>
+        <details open>
+            <summary>Area Dependencia</summary>
+            <p><strong>División:</strong> {{ division }}</p>
+            <p><strong>Sección:</strong> {{ seccion }}</p>
+            <p><strong>Correo Electrónico:</strong> {{ email }}</p>
+        </details>
+        <details open>
+            <summary>Observaciones</summary>
+            <p><strong>Observaciones:</strong> {{ observaciones }}</p>
+        </details>
+    </section>
+    <section class="area_firmas">
+        <label for="">Firma de Usuario - Aclaracion</label>
+        <label for="">Firma de Sección - Aclaración</label>
+    </section>
+
+</body>
+</html>
