@@ -35,7 +35,7 @@ class Uploader
 
             return [
                 "exito" => true,
-                "pathName" => $randomName // Devuelve el nombre del archivo generado
+                "pathOrden" => $randomName // Devuelve el nombre del archivo generado
             ];
             
         } else {
@@ -47,7 +47,7 @@ class Uploader
         }     
     }
 
-    public function obtenerMinuta($documentPath) {
+    public function obtenerOrden($documentPath) {
         // Construir la ruta completa del archivo PDF
         $fullPath = self::UPLOADDIRECTORY . $documentPath;
 

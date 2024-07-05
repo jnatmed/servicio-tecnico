@@ -53,12 +53,19 @@ class OrdenController extends Controller
                 'observaciones' => $observaciones,
             ];
 
-            $nroOrden = $this->model->guardarOrden($ordenNueva);
+            $resultNuevaInsercion = $this->model->guardarOrden($ordenNueva);
 
-            /**
-             * hago un redirect a la orden de trabajo generada
-             */
-            redirect('orden-de-trabajo/ver?id='. $nroOrden);
+            $this->logger->info("resultNuevaInsercion: ", [$resultNuevaInsercion]);
+
+            if($resultNuevaInsercion['exito'])
+            {
+                /**
+                 * hago un redirect a la orden de trabajo generada
+                 */
+                redirect('orden-de-trabajo/ver?id='. $resultNuevaInsercion['nuevoNroOrden']);
+            }else{
+                view('errors/not-found.view');
+            }
 
         }else{
 
@@ -74,6 +81,8 @@ class OrdenController extends Controller
         $nroOrden = $request->get('id');
 
         $datosOrden = $this->model->getDatosOrden($nroOrden);
+        
+        $this->logger->info("datosOrden: ",[$datosOrden]);
 
         if ($datosOrden['exito']){
             view('resumen.orden.view', $datosOrden);
@@ -98,6 +107,26 @@ class OrdenController extends Controller
 
     public function download()
     {
+        global $request;
+        
+        $nroOrden = $request->get('id');
+
+        $datosOrden = $this->model->getDatosOrden($nroOrden);
+        
+        $this->logger->info("datosOrden: ",[$datosOrden]);
+
+        $pdfContent = $this->uploader->obtenerOrden($datosOrden['pathOrden']);
+
+        if (!$pdfContent) {
+            http_response_code(500);
+            echo 'Error al obtener el PDF';
+            exit;
+        }
+    
+        // Enviar el PDF como respuesta
+        header('Content-Type: application/pdf');
+        echo $pdfContent;
+
 
     }
 
@@ -106,11 +135,8 @@ class OrdenController extends Controller
         try {
             $ordenes = $this->model->listarOrdenes();
 
-            if (!empty($ordenes)) {
-                view('orden.trabajo.list', ['ordenes' => $ordenes]);
-            } else {
-                view('ordenes/vacio.view');
-            }
+            view('orden.trabajo.list', ['ordenes' => $ordenes]);
+
         } catch (Exception $e) {
             view('errors/error.view', ['error' => $e->getMessage()]);
         }
@@ -159,15 +185,19 @@ class OrdenController extends Controller
                 'observaciones' => $observaciones,
             ];
 
-            
-
             if(isset($_FILES["file"]) && $_FILES["file"]['error'] !== 4){
                 $file = $_FILES["file"];
                 $this->uploader->setLogger($this->logger);
-                $result = $this->uploader->guardarOrdenPDF($file);
+                $resultArchivo = $this->uploader->guardarOrdenPDF($file);
             }
-            
-            $nroOrden = $this->model->actualizarOrden($ordenActualizada); // 
+
+            if($resultArchivo['exito'])
+            {
+                $ordenActualizada['pathOrden'] = $resultArchivo['pathOrden'];
+            }
+
+            $resultUpdate = $this->model->actualizarOrden($ordenActualizada); // 
+
             /**
              * hago un redirect a la orden de trabajo generada
              */

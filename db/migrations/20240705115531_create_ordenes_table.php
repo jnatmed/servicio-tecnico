@@ -33,6 +33,7 @@ final class CreateOrdenesTable extends AbstractMigration
               ->addColumn('seccion', 'string', ['limit' => 255])
               ->addColumn('email', 'string', ['limit' => 255])
               ->addColumn('observaciones', 'text', ['null' => true])
+              ->addColumn('pathOrden', 'string', ['limit' => 255, 'null' => true]) 
               ->addTimestamps() 
               ->create();
     }

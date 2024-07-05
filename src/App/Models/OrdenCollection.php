@@ -18,24 +18,35 @@ class OrdenCollection extends Model
             // Inserta la nueva orden usando QueryBuilder
             [$idGenerado, $resultado] = $this->queryBuilder->insert('ordenes', $ordenNueva);
 
-            $this->logger->info("guardarOrden: ", [$resultado]);
+            $this->logger->info("guardarOrden: ", [$idGenerado, $resultado]);
 
             if ($resultado) {
-                $this->nro_orden = $idGenerado;
-                $this->logger->info("Orden insertada con existo - id Generada : " . $this->nro_orden);
-                return true;
+                $this->logger->info("Orden insertada con existo - id Generada : " . $idGenerado);
+                return [
+                    "exito" => true,
+                    "nuevoNroOrden" => $idGenerado
+                ];
             } else {
                 $this->logger->error('Error al insertar la nueva orden en la base de datos.');
-                throw new Exception('Error al insertar la nueva orden en la base de datos.');
+                return [
+                    "exito" => false,
+                    "details" => 'Error al insertar la nueva orden en la base de datos.'
+                ];
             }
         } catch (PDOException $e) {
             // Manejar la excepción de la base de datos
             $this->logger->error('Error al realizar la inserción en la base de datos: ' . $e->getMessage());
-            throw new Exception('Error al realizar la inserción en la base de datos: ' . $e->getMessage());
+            return [
+                "exito" => false,
+                "details" => 'Error al realizar la inserción en la base de datos: ' . $e->getMessage()
+            ];            
         } catch (Exception $e) {
             // Manejar otras excepciones
             $this->logger->error('Ocurrió un error al guardar la orden: ' . $e->getMessage());
-            throw new Exception('Ocurrió un error al guardar la orden: ' . $e->getMessage());
+            return [
+                "exito" => false,
+                "details" => 'Ocurrió un error al guardar la orden: ' . $e->getMessage()
+            ];
         }
     }
 
@@ -67,13 +78,8 @@ class OrdenCollection extends Model
     {
         try {
             // Usar el método select de QueryBuilder para obtener todas las órdenes
-            $ordenes = $this->queryBuilder->select('ordenes');
+            return $this->queryBuilder->select('ordenes');
 
-            if (!empty($ordenes)) {
-                return $ordenes;
-            } else {
-                throw new Exception("No se encontraron órdenes de trabajo.");
-            }
         } catch (Exception $e) {
             throw new Exception("Error al obtener las órdenes de trabajo: " . $e->getMessage());
         }
@@ -93,19 +99,34 @@ class OrdenCollection extends Model
     
             if ($resultado) {
                 $this->logger->info("Orden actualizada exitosamente - ID: " . $idOrden);
-                return $idOrden; // Devuelve el ID de la orden actualizada
+                
+                return [
+                    "exito" => true,
+                    "idOrden" => $idOrden // Devuelve el ID de la orden actualizada
+                ];
+                    
             } else {
                 $this->logger->error('Error al actualizar la orden en la base de datos.');
-                throw new Exception('Error al actualizar la orden en la base de datos.');
+                return [
+                    "exito" => false,
+                    "details" => 'Error al actualizar la orden en la base de datos.'
+                ];
             }
         } catch (PDOException $e) {
             // Manejar la excepción de la base de datos
             $this->logger->error('Error al realizar la actualización en la base de datos: ' . $e->getMessage());
-            throw new Exception('Error al realizar la actualización en la base de datos: ' . $e->getMessage());
+            return [
+                "exito" => false,
+                "details" => 'Error al realizar la actualización en la base de datos: ' . $e->getMessage()
+            ];            
+
         } catch (Exception $e) {
             // Manejar otras excepciones
             $this->logger->error('Ocurrió un error al actualizar la orden: ' . $e->getMessage());
-            throw new Exception('Ocurrió un error al actualizar la orden: ' . $e->getMessage());
+            return [
+                "exito" => false,
+                "details" => 'Ocurrió un error al actualizar la orden: ' . $e->getMessage()
+            ];            
         }
     }
     

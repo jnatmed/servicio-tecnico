@@ -42,7 +42,11 @@
                         <a href="/orden-de-trabajo/eliminar?id={{ orden.id }}">Eliminar</a>
                     </td>
                     <td>
-                        <a href="/orden-de-trabajo/descargar?id={{ orden.id }}">Descargar</a>
+                        {% if orden.pathOrden is empty %}
+                            No hay Archivo
+                        {% else %}
+                            <a href="/orden-de-trabajo/descargar?id={{ orden.id }}">Descargar</a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
