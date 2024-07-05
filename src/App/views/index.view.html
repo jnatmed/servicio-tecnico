@@ -27,7 +27,7 @@
             <select class="autocomplete-select" style="display: none;"></select>
 
             <label for="input-date" class="label-date">Fecha de Emisión</label>
-            <input type="date" id="input-date" name="fecha-emision" {% if fechaEmision is not null %}value="{{ fechaEmision|date('Y-m-d') }}"{% endif %}>
+            <input type="date" id="input-date" name="fecha-emision" {% if fechaEmision is not null %}value="{{ fechaEmision|date('Y-m-d') }}"{% else %}value="{{ 'now'|date('Y-m-d') }}"{% endif %}>
 
             <fieldset>
                 <legend>DATOS DEL USUARIO</legend>
@@ -65,8 +65,11 @@
                 <textarea id="observaciones" name="observaciones">{{ observaciones }}</textarea>
             </fieldset>
 
-            <div class="drop-zone" id="drop-zone">Arrastra y suelta tu archivo aquí o haz click para subir</div>
-            <input type="file" id="file-input" name="file" class="hidden" accept=".pdf,.doc,.docx">
+
+            {% if action == 'editar' %}
+                <div class="drop-zone" id="drop-zone">Arrastra y suelta tu archivo aquí o haz click para subir</div>
+                <input type="file" id="file-input" name="file" class="hidden" accept=".pdf,.doc,.docx">
+            {% endif %}
             
             <input type="submit" value="{{ action == 'editar' ? 'Actualizar Datos' : 'Enviar' }}">
         </form>

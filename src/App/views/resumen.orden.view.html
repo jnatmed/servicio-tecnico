@@ -36,6 +36,14 @@
             <summary>Observaciones</summary>
             <p><strong>Observaciones:</strong> {{ observaciones }}</p>
         </details>
+        <hr>
+        {% if pathOrden is not empty %}
+            <button class="btn-descarga">
+                <a href="/orden-de-trabajo/descargar?id={{ id }}">Descargar</a>
+            </button>
+        {% else %}
+            <td>No hay Archivo para Descargar</td>
+        {% endif %}
     </section>
     <section class="area_firmas">
         <label for="">Firma de Usuario - Aclaracion</label>
