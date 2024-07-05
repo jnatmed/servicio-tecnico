@@ -18,6 +18,8 @@ class OrdenCollection extends Model
             // Inserta la nueva orden usando QueryBuilder
             [$idGenerado, $resultado] = $this->queryBuilder->insert('ordenes', $ordenNueva);
 
+            $this->logger->info("guardarOrden: ", [$resultado]);
+
             if ($resultado) {
                 $this->nro_orden = $idGenerado;
                 $this->logger->info("Orden insertada con existo - id Generada : " . $this->nro_orden);
@@ -87,9 +89,9 @@ class OrdenCollection extends Model
             unset($ordenActualizada['id']);
     
             // Actualizar la orden usando QueryBuilder
-            $idOrden = $this->queryBuilder->update('ordenes', $ordenActualizada, ['id' => $idOrden]);
+            $resultado = $this->queryBuilder->update('ordenes', $ordenActualizada, ['id' => $idOrden]);
     
-            if ($idOrden) {
+            if ($resultado) {
                 $this->logger->info("Orden actualizada exitosamente - ID: " . $idOrden);
                 return $idOrden; // Devuelve el ID de la orden actualizada
             } else {
@@ -106,6 +108,7 @@ class OrdenCollection extends Model
             throw new Exception('Ocurrió un error al actualizar la orden: ' . $e->getMessage());
         }
     }
+    
 
     public function borrarDatosOrden($idOrden)
     {

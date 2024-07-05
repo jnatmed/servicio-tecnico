@@ -5,6 +5,7 @@ namespace Paw\App\Controllers;
 use Paw\Core\Controller;
 use Paw\App\Models\OrdenCollection;
 use Paw\Core\Traits\Loggable;
+use Paw\App\Utils\Uploader;
 
 class OrdenController extends Controller
 {
@@ -14,6 +15,7 @@ class OrdenController extends Controller
     public function __construct()
     {
         parent::__construct();     
+        $this->uploader = new Uploader;
     }
 
     public function new()
@@ -94,6 +96,11 @@ class OrdenController extends Controller
         }
     }
 
+    public function download()
+    {
+
+    }
+
     public function listar()
     {
         try {
@@ -118,6 +125,11 @@ class OrdenController extends Controller
         {
             $this->logger->info("parametros formulario: ", [$_POST]);
             // Capturar y sanitizar los datos del formulario
+
+
+            $this->logger->info("file: ", [$_FILES]);
+
+
 
             $id = htmlspecialchars($request->get('id'), ENT_QUOTES, 'UTF-8');
             $tipoServicio = htmlspecialchars($request->get('tipo-servicio'), ENT_QUOTES, 'UTF-8');
@@ -147,8 +159,15 @@ class OrdenController extends Controller
                 'observaciones' => $observaciones,
             ];
 
-            $nroOrden = $this->model->actualizarOrden($ordenActualizada); // 
+            
 
+            if(isset($_FILES["file"]) && $_FILES["file"]['error'] !== 4){
+                $file = $_FILES["file"];
+                $this->uploader->setLogger($this->logger);
+                $result = $this->uploader->guardarOrdenPDF($file);
+            }
+            
+            $nroOrden = $this->model->actualizarOrden($ordenActualizada); // 
             /**
              * hago un redirect a la orden de trabajo generada
              */

@@ -260,16 +260,24 @@ class QueryBuilder
             }
     
             // Ejecutar la consulta
-            $statement->execute();
+            $executionResult = $statement->execute();
     
-            // Devolver el número de filas afectadas
-            return $statement->rowCount();
+            // Comprobar si la ejecución fue exitosa
+            if ($executionResult) {
+                // Devolver true si la ejecución fue exitosa, independientemente del número de filas afectadas
+                return true;
+            } else {
+                // Si la ejecución falló, lanzar una excepción
+                $this->logger->error('Error en la actualización: la consulta no se ejecutó correctamente.');
+                throw new PDOException('Error en la actualización: la consulta no se ejecutó correctamente.');
+            }
         } catch (PDOException $e) {
             // Manejar la excepción de PDO
             $this->logger->error('Error en la actualización: ' . $e->getMessage());
             throw new PDOException('Error en la actualización: ' . $e->getMessage());
         }
     }
+    
     
 
     public function delete($table, $conditions)

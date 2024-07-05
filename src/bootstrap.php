@@ -100,4 +100,5 @@ $router->get('/orden-de-trabajo/listar', 'OrdenController@listar');
 $router->get('/orden-de-trabajo/editar', 'OrdenController@edit');
 $router->post('/orden-de-trabajo/editar', 'OrdenController@edit');
 $router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete');
+$router->get('/orden-de-trabajo/descargar', 'OrdenController@download');
 

@@ -20,6 +20,7 @@
                     <th>Ver</th>
                     <th>Editar</th>
                     <th>Eliminar</th>
+                    <th>Descargar</th>
                     <!-- Agrega más encabezados según los datos que quieras mostrar -->
                 </tr>
             </thead>
@@ -39,6 +40,9 @@
                     </td>
                     <td>
                         <a href="/orden-de-trabajo/eliminar?id={{ orden.id }}">Eliminar</a>
+                    </td>
+                    <td>
+                        <a href="/orden-de-trabajo/descargar?id={{ orden.id }}">Descargar</a>
                     </td>
                 </tr>
                 {% endfor %}

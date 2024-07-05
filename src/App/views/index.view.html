@@ -8,7 +8,7 @@
 
     <section class="section-ingreso">
         
-        <form action="/orden-de-trabajo/{{ action }}" method="post">
+        <form action="/orden-de-trabajo/{{ action }}" method="post" enctype="multipart/form-data">
             <h2>{{ action == 'editar' ? 'Formulario de Edición' : 'Formulario de Ingreso' }}</h2>
             <hr>
             {% if id is defined %}
@@ -22,6 +22,8 @@
             <div class="autocomplete-results-container">
                 <ul class="autocomplete-list"></ul>
             </div>
+
+            
             <select class="autocomplete-select" style="display: none;"></select>
 
             <label for="input-date" class="label-date">Fecha de Emisión</label>
@@ -63,6 +65,8 @@
                 <textarea id="observaciones" name="observaciones">{{ observaciones }}</textarea>
             </fieldset>
 
+            <div class="drop-zone" id="drop-zone">Arrastra y suelta tu archivo aquí o haz click para subir</div>
+            <input type="file" id="file-input" name="file" class="hidden" accept=".pdf,.doc,.docx">
             
             <input type="submit" value="{{ action == 'editar' ? 'Actualizar Datos' : 'Enviar' }}">
         </form>
