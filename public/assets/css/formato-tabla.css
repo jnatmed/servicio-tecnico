@@ -1,0 +1,33 @@
+/* Estilos para la tabla de órdenes */
+.orden-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.orden-table th, .orden-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.orden-table th {
+    background-color: #f2f2f2;
+}
+
+/* Estilos para el contenedor principal */
+.orden-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Estilos para mensajes o secciones específicas */
+.orden-message {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    border-radius: 4px;
+}

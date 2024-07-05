@@ -94,6 +94,8 @@ $router->setLogger($log);
  * 9) RUTAS
  * Aca van los enrutadores
  */
-$router->get('/', 'OrdenController@new');
+$router->get('/orden-de-trabajo/nuevo', 'OrdenController@new');
 $router->post('/orden-de-trabajo/cargar', 'OrdenController@new');
+$router->get('/orden-de-trabajo/ver', 'OrdenController@show');
+$router->get('/orden-de-trabajo/listar', 'OrdenController@listar');
 

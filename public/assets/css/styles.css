@@ -16,6 +16,8 @@ nav {
     background-color: #f2f2f2;
     padding: 10px 20px;
     margin-bottom: 20px;
+    display: flex;
+    justify-content: center;    
 }
 
 nav ul {
@@ -122,3 +124,5 @@ input[type="submit"]{
     height: 3rem;
     font-size: 1.5rem;
 }
+
+

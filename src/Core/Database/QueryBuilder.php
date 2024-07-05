@@ -19,48 +19,43 @@ class QueryBuilder
         $this->logger = $logger;
     }
 
-    public function select($table, $params = []) {
+    public function select($table, $columns = '*', $params = [])
+    {
         try {
             $whereClauses = [];
             $bindings = [];
-        
+    
             // Construir las cláusulas WHERE y los parámetros de enlace
-            if (isset($params['id'])) {
-                $whereClauses[] = "id = :id";
-                $bindings[':id'] = $params['id'];
+            if (!empty($params)) {
+                foreach ($params as $key => $value) {
+                    $whereClauses[] = "$key = :$key";
+                    $bindings[":$key"] = $value;
+                }
             }
-
-            if (isset($params['email'])) {
-                $whereClauses[] = "email = :email";
-                $bindings[':email'] = $params['email'];
-            }        
-            
-            if (isset($params['id_publicacion'])) {
-                $whereClauses[] = "id_publicacion = :id_publicacion";
-                $bindings[':id_publicacion'] = $params['id_publicacion'];
-            }
-        
-            if (isset($params['id_imagen'])) {
-                $whereClauses[] = "id_imagen = :id_imagen";
-                $bindings[':id_imagen'] = $params['id_imagen'];
-            }
-        
+    
             // Unir las cláusulas WHERE con AND
             $where = implode(' AND ', $whereClauses);
-            $query = "SELECT * FROM {$table} WHERE {$where}";
-        
+            $query = "SELECT $columns FROM $table";
+    
+            if (!empty($whereClauses)) {
+                $query .= " WHERE $where";
+            }
+    
             // Preparar la sentencia
             $sentencia = $this->pdo->prepare($query);
-        
+    
             // Enlazar los valores de los parámetros
             foreach ($bindings as $key => $value) {
                 $sentencia->bindValue($key, $value);
             }
-        
+    
             // Establecer el modo de obtención y ejecutar la consulta
             $sentencia->setFetchMode(PDO::FETCH_ASSOC);
             $sentencia->execute();
+            
+            // Retornar todos los resultados
             return $sentencia->fetchAll();
+            
         } catch (PDOException $e) {
             // Manejar la excepción de la base de datos
             $this->logger->error('Database error: ' . $e->getMessage());
@@ -71,6 +66,7 @@ class QueryBuilder
             throw new Exception('Ocurrió un error inesperado');
         }
     }
+    
     
 
     public function insert($table, $data)

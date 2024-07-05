@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+    <link rel="stylesheet" href="path/to/styles.css"> <!-- Reemplaza con la ruta correcta a tu archivo CSS -->
+</head>
+<body class="home">
+    {% include 'parts/header.view.html' %}
+
+    <div class="orden-container">
+        <h1>Listado de Órdenes de Trabajo</h1>
+        <table class="orden-table">
+            <thead>
+                <tr>
+                    <th>Número de Orden</th>
+                    <th>Tipo de Servicio</th>
+                    <th>Fecha de Emisión</th>
+                    <th>Apellido</th>
+                    <th>Nombre</th>
+                    <th>Ver</th>
+                    <!-- Agrega más encabezados según los datos que quieras mostrar -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes %}
+                <tr>
+                    <td>{{ orden.id }}</td>
+                    <td>{{ orden.tipoServicio }}</td>
+                    <td>{{ orden.fechaEmision }}</td>
+                    <td>{{ orden.apellido }}</td>
+                    <td>{{ orden.nombre }}</td>
+                    <td>
+                        <a href="/orden-de-trabajo/ver?id={{ orden.id }}" target="_blank">Ver</a>
+                    </td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if ordenes is empty %}
+            <p class="orden-message">No hay órdenes de trabajo para mostrar.</p>
+        {% endif %}
+    </div>
+
+    {% include 'parts/footer.view.html' %}
+
+</body>
+</html>

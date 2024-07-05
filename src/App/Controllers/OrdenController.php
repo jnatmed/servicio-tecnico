@@ -3,39 +3,42 @@
 namespace Paw\App\Controllers;
 
 use Paw\Core\Controller;
-// use Paw\App\Models\OrdenCollection;
+use Paw\App\Models\OrdenCollection;
+use Paw\Core\Traits\Loggable;
 
 class OrdenController extends Controller
 {
-    // public ?string $modelName = OrdenCollection::class;    
+    public ?string $modelName = OrdenCollection::class;    
+    use Loggable;
 
     public function __construct()
     {
-        parent::__construct();
+        parent::__construct();     
     }
 
     public function new()
     {
         global $request;
-        global $log;
 
         if($request->method() == 'POST')
         {
-            $log->info("parametros formulario: ", [$_POST]);
-            // Capturar los datos del formulario
-            $tipoServicio = $request->get('tipo-servicio');
-            $fechaEmision = $request->get('fecha-emision');
-            $apellido = $request->get('apellido');
-            $nombre = $request->get('nombre');
-            $grado = $request->get('grado');
-            $credencial = $request->get('credencial');
-            $division = $request->get('division');
-            $seccion = $request->get('seccion');
-            $email = $request->get('correo-electronico');
-            $observaciones = $request->get('observaciones');
+            $this->logger->info("parametros formulario: ", [$_POST]);
+            // Capturar y sanitizar los datos del formulario
+
+            $tipoServicio = htmlspecialchars($request->get('tipo-servicio'), ENT_QUOTES, 'UTF-8');
+            $fechaEmision = htmlspecialchars($request->get('fecha-emision'), ENT_QUOTES, 'UTF-8');
+            $apellido = htmlspecialchars($request->get('apellido'), ENT_QUOTES, 'UTF-8');
+            $nombre = htmlspecialchars($request->get('nombre'), ENT_QUOTES, 'UTF-8');
+            $grado = htmlspecialchars($request->get('grado'), ENT_QUOTES, 'UTF-8');
+            $credencial = htmlspecialchars($request->get('credencial'), ENT_QUOTES, 'UTF-8');
+            $division = htmlspecialchars($request->get('division'), ENT_QUOTES, 'UTF-8');
+            $seccion = htmlspecialchars($request->get('seccion'), ENT_QUOTES, 'UTF-8');
+            $email = htmlspecialchars($request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
+            $observaciones = htmlspecialchars($request->get('observaciones'), ENT_QUOTES, 'UTF-8');
+
 
             // Preparar los datos para pasar a la vista
-            $datos = [
+            $ordenNueva = [
                 'tipoServicio' => $tipoServicio,
                 'fechaEmision' => $fechaEmision,
                 'apellido' => $apellido,
@@ -48,12 +51,47 @@ class OrdenController extends Controller
                 'observaciones' => $observaciones,
             ];
 
-            // Mostrar la vista de resumen con los datos
-            view('resumen.orden.view', $datos);            
+            $nroOrden = $this->model->guardarOrden($ordenNueva);
+
+            /**
+             * hago un redirect a la orden de trabajo generada
+             */
+            redirect('orden-de-trabajo/ver?id='. $nroOrden);
+
         }else{
             view('index.view');
         }
 
+    }
+
+    public function show()
+    {
+        global $request;
+        
+        $nroOrden = $request->get('id');
+
+        $datosOrden = $this->model->getDatosOrden($nroOrden);
+
+        if ($datosOrden['exito']){
+            view('resumen.orden.view', $datosOrden);
+        }else{
+            view('errors/not-found.view');
+        }
+    }
+
+    public function listar()
+    {
+        try {
+            $ordenes = $this->model->listarOrdenes();
+
+            if (!empty($ordenes)) {
+                view('orden.trabajo.list', ['ordenes' => $ordenes]);
+            } else {
+                view('ordenes/vacio.view');
+            }
+        } catch (Exception $e) {
+            view('errors/error.view', ['error' => $e->getMessage()]);
+        }
     }
 
 

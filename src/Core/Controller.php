@@ -8,12 +8,14 @@ use Paw\Core\Traits\Loggable;
 
 class Controller 
 {
-    use Loggable;
-    
     public string $viewsDir;
 
     public array $menu;
 
+    public ?string $modelName = null;   
+    protected $model;
+    use Loggable;
+    public $qb;
     public $request;
 
     public function __construct(){
@@ -29,14 +31,15 @@ class Controller
             ]
         ];
 
-        // $this->qb = new QueryBuilder($connection, $log);
-        // $this->request = new Request();
+        $this->qb = new QueryBuilder($connection, $log);
+        $this->request = new Request();
 
-        // if(!is_null($this->modelName)){
-        //     $model = new $this->modelName;
-        //     $model->setQueryBuilder($this->qb);
-        //     $this->setModel($model);
-        // }
+        if(!is_null($this->modelName)){
+            $model = new $this->modelName;
+            $model->setQueryBuilder($this->qb);
+            $model->setLogger($log); // todos los modelos tienen q ser logeables
+            $this->setModel($model);
+        }
         
     }
 
