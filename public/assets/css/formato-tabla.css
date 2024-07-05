@@ -1,14 +1,17 @@
 /* Estilos para la tabla de órdenes */
 .orden-table {
     width: 100%;
+    border: 1px solid #ddd; /* Borde general para la tabla */
     border-collapse: collapse;
     margin-bottom: 20px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); /* Sombra alrededor de la tabla */
 }
 
 .orden-table th, .orden-table td {
     padding: 8px;
     text-align: left;
     border-bottom: 1px solid #ddd;
+    text-align: center;
 }
 
 .orden-table th {
@@ -30,4 +33,10 @@
     border: 1px solid #f5c6cb;
     color: #721c24;
     border-radius: 4px;
+}
+
+/* Efecto hover para las celdas td */
+.orden-table tr:hover {
+    background-color: #b3a2a2; /* Color de fondo al hacer hover */
+    cursor: pointer; /* Cambio de cursor al pasar sobre las celdas */
 }

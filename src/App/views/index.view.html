@@ -8,56 +8,63 @@
 
     <section class="section-ingreso">
         
-        <form action="/orden-de-trabajo/cargar" method="post">
-            <h2>Formulario de Ingreso</h2>
+        <form action="/orden-de-trabajo/{{ action }}" method="post">
+            <h2>{{ action == 'editar' ? 'Formulario de Edición' : 'Formulario de Ingreso' }}</h2>
             <hr>
+            {% if id is defined %}
+                <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ id }} </h3>
+            {% endif %}
+
+            <input type="number" value="{{ id }}" name="id" hidden>
+
             <label for="autocomplete-input-tipo-servicio">Solicitud de Servicio</label>
-            <input type="text" id="autocomplete-input-tipo-servicio" name="tipo-servicio" placeholder="Escribe aquí...">
+            <input type="text" id="autocomplete-input-tipo-servicio" name="tipo-servicio" placeholder="Escribe aquí..." value="{{ tipoServicio }}">
             <div class="autocomplete-results-container">
                 <ul class="autocomplete-list"></ul>
             </div>
             <select class="autocomplete-select" style="display: none;"></select>
 
             <label for="input-date" class="label-date">Fecha de Emisión</label>
-            <input type="date" id="input-date" name="fecha-emision">
+            <input type="date" id="input-date" name="fecha-emision" {% if fechaEmision is not null %}value="{{ fechaEmision|date('Y-m-d') }}"{% endif %}>
 
             <fieldset>
                 <legend>DATOS DEL USUARIO</legend>
                 <label for="input-apellido">Apellido</label>
-                <input type="text" id="input-apellido" name="apellido">
+                <input type="text" id="input-apellido" name="apellido" value="{{ apellido }}">
 
                 <label for="input-nombre">Nombre</label>
-                <input type="text" id="input-nombre" name="nombre">
+                <input type="text" id="input-nombre" name="nombre" value="{{ nombre }}">
 
                 <label for="autocomplete-input-grado">Grado</label>
-                <input type="text" id="autocomplete-input-grado" name="grado" placeholder="Escribe aquí...">
+                <input type="text" id="autocomplete-input-grado" name="grado" placeholder="Escribe aquí..." value="{{ grado }}">
                 <div class="autocomplete-results-container">
                     <ul class="autocomplete-list"></ul>
                 </div>
                 <select class="autocomplete-select" style="display: none;"></select>
 
                 <label for="input-credencial" class="label-form">Credencial</label>
-                <input type="number" id="input-credencial" name="credencial">
+                <input type="number" id="input-credencial" name="credencial" value="{{ credencial }}">
             </fieldset>
 
             <fieldset>
                 <legend>DATOS DEL AREA/ DEPENDENCIA</legend>
                 <label for="input-division">División</label>
-                <input type="text" id="input-division" name="division" class="input-form">
+                <input type="text" id="input-division" name="division" class="input-form" value="{{ division }}">
 
                 <label for="input-seccion" class="label-form">Sección</label>
-                <input type="text" id="input-seccion" name="seccion" class="input-form">
+                <input type="text" id="input-seccion" name="seccion" class="input-form" value="{{ seccion }}">
 
                 <label for="input-mail" class="label-form">Correo Electrónico</label>
-                <input type="email" id="input-mail" name="correo-electronico" class="input-form">
+                <input type="email" id="input-mail" name="correo-electronico" class="input-form" value="{{ email }}">
             </fieldset>
 
             <fieldset>
                 <legend>OBSERVACIONES</legend>
-                <textarea id="observaciones" name="observaciones"></textarea>
+                <textarea id="observaciones" name="observaciones">{{ observaciones }}</textarea>
             </fieldset>
 
-            <input type="submit" value="Enviar">
+            
+            <input type="submit" value="{{ action == 'editar' ? 'Actualizar Datos' : 'Enviar' }}">
         </form>
     </section>
 

@@ -89,13 +89,15 @@ $twig->addExtension(new DebugExtension());
 $router = new Router;
 $router->setLogger($log);
 
-
 /**
  * 9) RUTAS
  * Aca van los enrutadores
  */
 $router->get('/orden-de-trabajo/nuevo', 'OrdenController@new');
-$router->post('/orden-de-trabajo/cargar', 'OrdenController@new');
+$router->post('/orden-de-trabajo/nuevo', 'OrdenController@new');
 $router->get('/orden-de-trabajo/ver', 'OrdenController@show');
 $router->get('/orden-de-trabajo/listar', 'OrdenController@listar');
+$router->get('/orden-de-trabajo/editar', 'OrdenController@edit');
+$router->post('/orden-de-trabajo/editar', 'OrdenController@edit');
+$router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete');
 

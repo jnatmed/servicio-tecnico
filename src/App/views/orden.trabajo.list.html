@@ -8,7 +8,7 @@
     {% include 'parts/header.view.html' %}
 
     <div class="orden-container">
-        <h1>Listado de Órdenes de Trabajo</h1>
+        <h1>Órdenes de Trabajo</h1>
         <table class="orden-table">
             <thead>
                 <tr>
@@ -18,21 +18,28 @@
                     <th>Apellido</th>
                     <th>Nombre</th>
                     <th>Ver</th>
+                    <th>Editar</th>
+                    <th>Eliminar</th>
                     <!-- Agrega más encabezados según los datos que quieras mostrar -->
                 </tr>
             </thead>
             <tbody>
                 {% for orden in ordenes %}
                 <tr>
-                    <td>{{ orden.id }}</td>
+                    <td class="tipo-nro-lista">{{ orden.id }}</td>
                     <td>{{ orden.tipoServicio }}</td>
                     <td>{{ orden.fechaEmision }}</td>
-                    <td>{{ orden.apellido }}</td>
-                    <td>{{ orden.nombre }}</td>
+                    <td>{{ orden.apellido | capitalize }}</td>
+                    <td>{{ orden.nombre | capitalize }}</td>
                     <td>
                         <a href="/orden-de-trabajo/ver?id={{ orden.id }}" target="_blank">Ver</a>
                     </td>
-
+                    <td>
+                        <a href="/orden-de-trabajo/editar?id={{ orden.id }}" target="_blank">Editar</a>
+                    </td>
+                    <td>
+                        <a href="/orden-de-trabajo/eliminar?id={{ orden.id }}">Eliminar</a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

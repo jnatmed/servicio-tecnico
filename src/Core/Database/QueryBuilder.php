@@ -226,13 +226,91 @@ class QueryBuilder
     }
 
 
-    public function update()
+    public function update($table, $data, $conditions = [])
     {
-
+        try {
+            // Construir la cadena SET para los datos a actualizar
+            $setValues = [];
+            foreach ($data as $key => $value) {
+                $setValues[] = "$key = :$key";
+            }
+            $setString = implode(', ', $setValues);
+    
+            // Construir la cadena WHERE para las condiciones
+            $whereClauses = [];
+            $bindings = [];
+            foreach ($conditions as $key => $value) {
+                $whereClauses[] = "$key = :where_$key";
+                $bindings[":where_$key"] = $value;
+            }
+            $whereString = implode(' AND ', $whereClauses);
+    
+            // Construir y ejecutar la consulta SQL
+            $query = "UPDATE $table SET $setString WHERE $whereString";
+            $statement = $this->pdo->prepare($query);
+    
+            // Vincular los valores de los datos a actualizar
+            foreach ($data as $key => $value) {
+                $statement->bindValue(":$key", $value);
+            }
+    
+            // Vincular los valores de las condiciones WHERE
+            foreach ($bindings as $key => $value) {
+                $statement->bindValue($key, $value);
+            }
+    
+            // Ejecutar la consulta
+            $statement->execute();
+    
+            // Devolver el número de filas afectadas
+            return $statement->rowCount();
+        } catch (PDOException $e) {
+            // Manejar la excepción de PDO
+            $this->logger->error('Error en la actualización: ' . $e->getMessage());
+            throw new PDOException('Error en la actualización: ' . $e->getMessage());
+        }
     }
+    
 
-    public function delete()
+    public function delete($table, $conditions)
     {
-
+        try {
+            // Construir la cláusula WHERE y los parámetros de enlace
+            $whereClauses = [];
+            $bindings = [];
+    
+            foreach ($conditions as $key => $value) {
+                $whereClauses[] = "$key = :$key";
+                $bindings[":$key"] = $value;
+            }
+    
+            $where = implode(' AND ', $whereClauses);
+    
+            // Construir la consulta DELETE
+            $query = "DELETE FROM $table WHERE $where";
+    
+            // Preparar la sentencia
+            $sentencia = $this->pdo->prepare($query);
+    
+            // Enlazar los valores de los parámetros
+            foreach ($bindings as $key => $value) {
+                $sentencia->bindValue($key, $value);
+            }
+    
+            // Ejecutar la consulta
+            $sentencia->execute();
+    
+            // Devolver el número de filas afectadas
+            return $sentencia->rowCount();
+        } catch (PDOException $e) {
+            // Manejar la excepción de la base de datos
+            $this->logger->error('Error al ejecutar consulta DELETE: ' . $e->getMessage());
+            throw new Exception('Error al ejecutar consulta DELETE: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Manejar otras excepciones
+            $this->logger->error('Ocurrió un error al ejecutar consulta DELETE: ' . $e->getMessage());
+            throw new Exception('Ocurrió un error al ejecutar consulta DELETE: ' . $e->getMessage());
+        }
     }
+    
 }

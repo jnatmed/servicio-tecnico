@@ -8,6 +8,9 @@
 
     <section class="section-resumen">
         <h2>Resumen del Pedido</h2>
+        {% if id is defined %}
+            <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ id }} </h3>
+        {% endif %}        
         <hr>
         <details open>
             <summary>Detalles del Servicio</summary>

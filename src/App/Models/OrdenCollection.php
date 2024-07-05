@@ -77,5 +77,62 @@ class OrdenCollection extends Model
         }
     }
     
+    public function actualizarOrden($ordenActualizada)
+    {
+        try {
+            // Extraer el ID de la orden a actualizar
+            $idOrden = $ordenActualizada['id'];
+    
+            // Eliminar el ID del array para evitar su actualización
+            unset($ordenActualizada['id']);
+    
+            // Actualizar la orden usando QueryBuilder
+            $idOrden = $this->queryBuilder->update('ordenes', $ordenActualizada, ['id' => $idOrden]);
+    
+            if ($idOrden) {
+                $this->logger->info("Orden actualizada exitosamente - ID: " . $idOrden);
+                return $idOrden; // Devuelve el ID de la orden actualizada
+            } else {
+                $this->logger->error('Error al actualizar la orden en la base de datos.');
+                throw new Exception('Error al actualizar la orden en la base de datos.');
+            }
+        } catch (PDOException $e) {
+            // Manejar la excepción de la base de datos
+            $this->logger->error('Error al realizar la actualización en la base de datos: ' . $e->getMessage());
+            throw new Exception('Error al realizar la actualización en la base de datos: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Manejar otras excepciones
+            $this->logger->error('Ocurrió un error al actualizar la orden: ' . $e->getMessage());
+            throw new Exception('Ocurrió un error al actualizar la orden: ' . $e->getMessage());
+        }
+    }
+
+    public function borrarDatosOrden($idOrden)
+    {
+        try {
+            // Eliminar la orden usando QueryBuilder
+            $resultado = $this->queryBuilder->delete('ordenes', ['id' => $idOrden]);
+    
+            if ($resultado) {
+                $this->logger->info("Orden eliminada exitosamente - ID: " . $idOrden);
+                return ['exito' => true];
+            } else {
+                $this->logger->error('Error al eliminar la orden de trabajo en la base de datos.');
+                return ['exito' => false];
+                throw new Exception('Error al eliminar la orden de trabajo en la base de datos.');
+            }
+        } catch (PDOException $e) {
+            // Manejar la excepción de la base de datos
+            $this->logger->error('Error al realizar la eliminación en la base de datos: ' . $e->getMessage());
+            return ['exito' => false];
+            throw new Exception('Error al realizar la eliminación en la base de datos: ' . $e->getMessage());
+        } catch (Exception $e) {
+            // Manejar otras excepciones
+            $this->logger->error('Ocurrió un error al eliminar la orden de trabajo: ' . $e->getMessage());
+            return ['exito' => false];
+            throw new Exception('Ocurrió un error al eliminar la orden de trabajo: ' . $e->getMessage());
+        }
+    }
+        
 
 }
