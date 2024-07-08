@@ -24,10 +24,25 @@ class Controller
 
         $this->viewsDir = __DIR__ . '/../App/views/';
 
+
         $this->menu = [
-            [
-                'href' => '/',
-                'name' => 'CARGAR NUEVA ORDEN DE TRABAJO'
+            'menu' => [
+                [
+                    'href' => '/orden-de-trabajo/nuevo',
+                    'name' => 'CARGAR NUEVA ORDEN DE TRABAJO'
+                ],
+                [
+                    'href' => '/orden-de-trabajo/listar',
+                    'name' => 'VER ORDENES DE TRABAJO'
+                ],
+                [
+                    'href' => '/user/login',
+                    'name' => 'LOGIN'
+                ],
+                [
+                    'href' => '/user/register',
+                    'name' => 'REGISTRO'
+                ]
             ]
         ];
 

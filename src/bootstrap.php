@@ -97,8 +97,20 @@ $router->get('/orden-de-trabajo/nuevo', 'OrdenController@new');
 $router->post('/orden-de-trabajo/nuevo', 'OrdenController@new');
 $router->get('/orden-de-trabajo/ver', 'OrdenController@show');
 $router->get('/orden-de-trabajo/listar', 'OrdenController@listar');
+$router->get('/', 'OrdenController@listar');
 $router->get('/orden-de-trabajo/editar', 'OrdenController@edit');
 $router->post('/orden-de-trabajo/editar', 'OrdenController@edit');
 $router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete');
 $router->get('/orden-de-trabajo/descargar', 'OrdenController@download');
+
+/**
+ * 9.1) Logeo de usuario
+ */
+$router->get('/user/login', 'UserController@login');
+$router->post('/user/login', 'UserController@login');
+$router->get('/user/logout', 'UserController@logout');
+$router->get('/user/register', 'UserController@register');
+$router->post('/user/register', 'UserController@register');
+
+
 

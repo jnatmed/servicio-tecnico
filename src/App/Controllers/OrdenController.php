@@ -64,12 +64,14 @@ class OrdenController extends Controller
                  */
                 redirect('orden-de-trabajo/ver?id='. $resultNuevaInsercion['nuevoNroOrden']);
             }else{
-                view('errors/not-found.view');
+                view('errors/not-found.view', $this->menu);
             }
 
         }else{
-
-            view('index.view', [ "action" => "nuevo"]);
+            view('index.view', [
+                    "datos" => ["action" => "nuevo"], 
+                    ...$this->menu
+        ]);
         }
 
     }
@@ -81,13 +83,17 @@ class OrdenController extends Controller
         $nroOrden = $request->get('id');
 
         $datosOrden = $this->model->getDatosOrden($nroOrden);
-        
+   
+
         $this->logger->info("datosOrden: ",[$datosOrden]);
 
         if ($datosOrden['exito']){
-            view('resumen.orden.view', $datosOrden);
+            view('resumen.orden.view', [
+                "datos" => $datosOrden, 
+                ...$this->menu]
+        );
         }else{
-            view('errors/not-found.view');
+            view('errors/not-found.view', $this->menu);
         }
     }
 
@@ -101,7 +107,7 @@ class OrdenController extends Controller
         if ($datosOrden['exito']){
             redirect('orden-de-trabajo/listar');
         }else{
-            view('errors/not-found.view');
+            view('errors/not-found.view', $this->menu);
         }
     }
 
@@ -135,10 +141,17 @@ class OrdenController extends Controller
         try {
             $ordenes = $this->model->listarOrdenes();
 
-            view('orden.trabajo.list', ['ordenes' => $ordenes]);
+            view('orden.trabajo.list', [
+                'ordenes' => $ordenes,    
+                ...$this->menu]
+        );
 
         } catch (Exception $e) {
-            view('errors/error.view', ['error' => $e->getMessage()]);
+            view('errors/error.view', [[
+                'error' => $e->getMessage()
+                ],
+                ...$this->menu
+            ]);
         }
     }
 
@@ -211,9 +224,13 @@ class OrdenController extends Controller
             $datosOrden['action'] = "editar";
 
             if ($datosOrden['exito']){
-                view('index.view', $datosOrden);
+                view('index.view', [
+                        "datos" => $datosOrden,
+                        ...$this->menu
+                        ]
+            );
             }else{
-                view('errors/not-found.view');
+                view('errors/not-found.view', $this->menu);
             }        
         }
 

@@ -1,0 +1,55 @@
+/* Estilos para el contenedor principal */
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    margin: 20px auto; /* Centrar el contenedor */
+}
+
+/* Estilos para los formularios */
+.form {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Estilos para etiquetas */
+.form label {
+    margin-bottom: 5px;
+}
+
+/* Estilos para campos de entrada */
+.form input[type="text"],
+.form input[type="password"],
+.form input[type="email"],
+.form button {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* Estilos para botones de inicio de sesión */
+.btn-login {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-login:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos para botones de registro */
+.btn-register {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-register:hover {
+    background-color: #218838;
+}

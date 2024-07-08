@@ -1,7 +1,9 @@
 
 <nav>
     <ul>
-        <li><a href="/orden-de-trabajo/nuevo">NUEVA ORDEN DE TRABAJO</a></li>
-        <li><a href="/orden-de-trabajo/listar">VER ORDENES DE TRABAJO</a></li>
+        {% for item in menu %}
+            <li><a href="{{ item.href }}">{{ item.name }}</a></li>
+        {% endfor %}
+
     </ul>
 </nav>

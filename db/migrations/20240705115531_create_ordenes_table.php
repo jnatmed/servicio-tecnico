@@ -36,5 +36,16 @@ final class CreateOrdenesTable extends AbstractMigration
               ->addColumn('pathOrden', 'string', ['limit' => 255, 'null' => true]) 
               ->addTimestamps() 
               ->create();
+              
+        // Crear la tabla 'usuarios'
+        $table = $this->table('usuarios');
+        
+        // Definir las columnas de la tabla
+        $table->addColumn('usuario', 'string', ['limit' => 50])
+              ->addColumn('contrasenia', 'string', ['limit' => 255])
+              ->addColumn('tipo_usuario', 'enum', ['values' => ['tecnico', 'administrativo']])
+              ->addColumn('email', 'string', ['limit' => 100])
+              ->addTimestamps()  // Añade las columnas created_at y updated_at
+              ->create();           
     }
 }

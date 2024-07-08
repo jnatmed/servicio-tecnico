@@ -8,38 +8,38 @@
 
     <section class="section-resumen">
         <h2>Resumen del Pedido</h2>
-        {% if id is defined %}
-            <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ id }} </h3>
+        {% if datos.id is defined %}
+            <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ datos.id }} </h3>
         {% endif %}        
         <hr>
         <details open>
             <summary>Detalles del Servicio</summary>
             <div class="resumen-datos">
-                <p><strong>Solicitud de Servicio:</strong> {{ tipoServicio }}</p>
-                <p><strong>Fecha de Emisión:</strong> {{ fechaEmision }}</p>                
+                <p><strong>Solicitud de Servicio:</strong> {{ datos.tipoServicio }}</p>
+                <p><strong>Fecha de Emisión:</strong> {{ datos.fechaEmision }}</p>                
             </div>
         </details>
         <details open>
             <summary>Usuario</summary>
-            <p><strong>Apellido:</strong> {{ apellido }}</p>
-            <p><strong>Nombre:</strong> {{ nombre }}</p>
-            <p><strong>Grado:</strong> {{ grado }}</p>
-            <p><strong>Credencial:</strong> {{ credencial }}</p>
+            <p><strong>Apellido:</strong> {{ datos.apellido }}</p>
+            <p><strong>Nombre:</strong> {{ datos.nombre }}</p>
+            <p><strong>Grado:</strong> {{ datos.grado }}</p>
+            <p><strong>Credencial:</strong> {{ datos.credencial }}</p>
         </details>
         <details open>
             <summary>Area Dependencia</summary>
-            <p><strong>División:</strong> {{ division }}</p>
-            <p><strong>Sección:</strong> {{ seccion }}</p>
-            <p><strong>Correo Electrónico:</strong> {{ email }}</p>
+            <p><strong>División:</strong> {{ datos.division }}</p>
+            <p><strong>Sección:</strong> {{ datos.seccion }}</p>
+            <p><strong>Correo Electrónico:</strong> {{ datos.email }}</p>
         </details>
         <details open>
             <summary>Observaciones</summary>
-            <p><strong>Observaciones:</strong> {{ observaciones }}</p>
+            <p><strong>Observaciones:</strong> {{ datos.observaciones }}</p>
         </details>
         <hr>
-        {% if pathOrden is not empty %}
+        {% if datos.pathOrden is not empty %}
             <button class="btn-descarga">
-                <a href="/orden-de-trabajo/descargar?id={{ id }}">Descargar</a>
+                <a href="/orden-de-trabajo/descargar?id={{ datos.id }}">Descargar</a>
             </button>
         {% else %}
             <td>No hay Archivo para Descargar</td>

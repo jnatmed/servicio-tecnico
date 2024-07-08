@@ -7,18 +7,17 @@
     {% include 'parts/header.view.html' %}
 
     <section class="section-ingreso">
-        
-        <form action="/orden-de-trabajo/{{ action }}" method="post" enctype="multipart/form-data">
+        <form action="/orden-de-trabajo/{{ datos.action }}" method="post" enctype="multipart/form-data">
             <h2>{{ action == 'editar' ? 'Formulario de Edición' : 'Formulario de Ingreso' }}</h2>
             <hr>
-            {% if id is defined %}
-                <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ id }} </h3>
+            {% if datos.id is defined %}
+                <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ datos.id }} </h3>
             {% endif %}
 
-            <input type="number" value="{{ id }}" name="id" hidden>
+            <input type="number" value="{{ datos.id }}" name="id" hidden>
 
             <label for="autocomplete-input-tipo-servicio">Solicitud de Servicio</label>
-            <input type="text" id="autocomplete-input-tipo-servicio" name="tipo-servicio" placeholder="Escribe aquí..." value="{{ tipoServicio }}">
+            <input type="text" id="autocomplete-input-tipo-servicio" name="tipo-servicio" placeholder="Escribe aquí..." value="{{ datos.tipoServicio }}">
             <div class="autocomplete-results-container">
                 <ul class="autocomplete-list"></ul>
             </div>
@@ -27,51 +26,51 @@
             <select class="autocomplete-select" style="display: none;"></select>
 
             <label for="input-date" class="label-date">Fecha de Emisión</label>
-            <input type="date" id="input-date" name="fecha-emision" {% if fechaEmision is not null %}value="{{ fechaEmision|date('Y-m-d') }}"{% else %}value="{{ 'now'|date('Y-m-d') }}"{% endif %}>
+            <input type="date" id="input-date" name="fecha-emision" {% if datos.fechaEmision is not null %}value="{{ datos.fechaEmision|date('Y-m-d') }}"{% else %}value="{{ 'now'|date('Y-m-d') }}"{% endif %}>
 
             <fieldset>
                 <legend>DATOS DEL USUARIO</legend>
                 <label for="input-apellido">Apellido</label>
-                <input type="text" id="input-apellido" name="apellido" value="{{ apellido }}">
+                <input type="text" id="input-apellido" name="apellido" value="{{ datos.apellido }}">
 
                 <label for="input-nombre">Nombre</label>
-                <input type="text" id="input-nombre" name="nombre" value="{{ nombre }}">
+                <input type="text" id="input-nombre" name="nombre" value="{{ datos.nombre }}">
 
                 <label for="autocomplete-input-grado">Grado</label>
-                <input type="text" id="autocomplete-input-grado" name="grado" placeholder="Escribe aquí..." value="{{ grado }}">
+                <input type="text" id="autocomplete-input-grado" name="grado" placeholder="Escribe aquí..." value="{{ datos.grado }}">
                 <div class="autocomplete-results-container">
                     <ul class="autocomplete-list"></ul>
                 </div>
                 <select class="autocomplete-select" style="display: none;"></select>
 
                 <label for="input-credencial" class="label-form">Credencial</label>
-                <input type="number" id="input-credencial" name="credencial" value="{{ credencial }}">
+                <input type="number" id="input-credencial" name="credencial" value="{{ datos.credencial }}">
             </fieldset>
 
             <fieldset>
                 <legend>DATOS DEL AREA/ DEPENDENCIA</legend>
                 <label for="input-division">División</label>
-                <input type="text" id="input-division" name="division" class="input-form" value="{{ division }}">
+                <input type="text" id="input-division" name="division" class="input-form" value="{{ datos.division }}">
 
                 <label for="input-seccion" class="label-form">Sección</label>
-                <input type="text" id="input-seccion" name="seccion" class="input-form" value="{{ seccion }}">
+                <input type="text" id="input-seccion" name="seccion" class="input-form" value="{{ datos.seccion }}">
 
                 <label for="input-mail" class="label-form">Correo Electrónico</label>
-                <input type="email" id="input-mail" name="correo-electronico" class="input-form" value="{{ email }}">
+                <input type="email" id="input-mail" name="correo-electronico" class="input-form" value="{{ datos.email }}">
             </fieldset>
 
             <fieldset>
                 <legend>OBSERVACIONES</legend>
-                <textarea id="observaciones" name="observaciones">{{ observaciones }}</textarea>
+                <textarea id="observaciones" name="observaciones">{{ datos.observaciones }}</textarea>
             </fieldset>
 
 
-            {% if action == 'editar' %}
+            {% if datos.action == 'editar' %}
                 <div class="drop-zone" id="drop-zone">Arrastra y suelta tu archivo aquí o haz click para subir</div>
                 <input type="file" id="file-input" name="file" class="hidden" accept=".pdf,.doc,.docx">
             {% endif %}
             
-            <input type="submit" value="{{ action == 'editar' ? 'Actualizar Datos' : 'Enviar' }}">
+            <input type="submit" value="{{ datos.action == 'editar' ? 'Actualizar Datos' : 'Enviar' }}">
         </form>
     </section>
 
