@@ -10,9 +10,52 @@ use Paw\Core\Traits\Loggable;
 class UserController extends Controller
 {
     use Loggable;
+    public ?string $modelName = UserCollection::class;    
+
+    public function __construct()
+    {
+        global $log; 
+
+        parent::__construct();     
+
+        $this->setLogger($log);
+
+        $this->menu = $this->adjustMenuForSession($this->menu);  
+    }
+
+    public function adjustMenuForSession($menu) {
+
+        
+        $this->logger->info("dentro de adjustMenuForSession: ", [$menu]);
+
+        // Iniciar la sesión si no está ya iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Verificar si hay una sesión activa
+        if (isset($_SESSION['nombre_usuario'])) {
+            // Filtrar los elementos del menú
+            $menu['menu'] = array_filter($menu['menu'], function ($item) {
+                return !in_array($item['href'], ['/user/login', '/user/register']);
+            });
+        } else {
+            // Filtrar los elementos del menú para eliminar 'LOGOUT'
+            $menu['menu'] = array_filter($menu['menu'], function ($item) {
+                return $item['href'] !== '/user/logout';
+            });
+        }
+
+        return $menu;
+    }    
 
     public function login()
     {
+        // Iniciar la sesión si no está ya iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }     
+
         if($this->request->method() == 'POST')
         {
             /**
@@ -20,8 +63,10 @@ class UserController extends Controller
              * si existe el usuario
              * entonces guardo en $_session: nombre_usuario y tipo_usuario
              */
+            $username = htmlspecialchars($this->request->get('username'));
+            $password = htmlspecialchars($this->request->get('password'));
             // Verificar credenciales
-            $user = $this->userCollection->getUserByUsernameAndPassword($username, $password);
+            $user = $this->model->getUserByUsernameAndPassword($username, $password);
 
             if ($user) {
                 // Usuario autenticado correctamente
@@ -30,7 +75,7 @@ class UserController extends Controller
 
                 // Redirigir a una página de inicio o a donde necesites
                 // Ejemplo: redirigir al dashboard
-                redirect('Location: /');
+                redirect('');
             } else {
                 // Usuario o contraseña incorrectos
                 // Puedes manejar el error de autenticación aquí
@@ -41,18 +86,29 @@ class UserController extends Controller
                     ...$this->menu
             ]);
             }
-             
         }else{                                 
             view('login.view', $this->menu);
         }
     }
+
     public function logout()
     {
-        /**
-         * si hay sesion iniciada
-         * la cierro
-         */
+        // Iniciar la sesión si no está ya iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Verificar si hay una sesión activa
+        if (isset($_SESSION['nombre_usuario'])) {
+            // Cerrar la sesión
+            session_unset(); // Eliminar todas las variables de sesión
+            session_destroy(); // Destruir la sesión
+        }
+
+        // Redirigir a la página de inicio o a la página de login
+        redirect('');
     }
+
     public function register()
     {
         if($this->request->method() == 'POST')

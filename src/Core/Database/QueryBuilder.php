@@ -22,6 +22,8 @@ class QueryBuilder
     public function select($table, $columns = '*', $params = [])
     {
         try {
+            $this->logger->info("params : ", [$params]);
+
             $whereClauses = [];
             $bindings = [];
     
@@ -37,6 +39,8 @@ class QueryBuilder
             $where = implode(' AND ', $whereClauses);
             $query = "SELECT $columns FROM $table";
     
+            $this->logger->info("query: $query");
+
             if (!empty($whereClauses)) {
                 $query .= " WHERE $where";
             }
@@ -53,8 +57,11 @@ class QueryBuilder
             $sentencia->setFetchMode(PDO::FETCH_ASSOC);
             $sentencia->execute();
             
+            $result = $sentencia->fetchAll();
+
+            $this->logger->info("result: ", [$result]);
             // Retornar todos los resultados
-            return $sentencia->fetchAll();
+            return $result;
             
         } catch (PDOException $e) {
             // Manejar la excepción de la base de datos

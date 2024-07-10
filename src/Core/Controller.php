@@ -40,6 +40,10 @@ class Controller
                     'name' => 'LOGIN'
                 ],
                 [
+                    'href' => '/user/logout',
+                    'name' => 'SALIR'
+                ],                
+                [
                     'href' => '/user/register',
                     'name' => 'REGISTRO'
                 ]
