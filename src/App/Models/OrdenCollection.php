@@ -77,14 +77,74 @@ class OrdenCollection extends Model
     public function listarOrdenes()
     {
         try {
-            // Usar el método select de QueryBuilder para obtener todas las órdenes
-            return $this->queryBuilder->select('ordenes');
-
+            // Obtener todas las órdenes
+            $ordenes = $this->queryBuilder->select('ordenes');
+    
+            // Para cada orden, obtener la descripción del estado
+            foreach ($ordenes as &$orden) {
+                // Obtener el estado de la orden
+                $estadoOrden = $this->queryBuilder->select('estado_ordenes', 'descripcion_estado', [
+                    'id' => $orden['estado_orden_id']
+                ]);
+    
+                // Si se encuentra el estado, añadirlo a la orden
+                if (!empty($estadoOrden)) {
+                    $orden['descripcion_estado'] = $estadoOrden[0]['descripcion_estado'];
+                } else {
+                    $orden['descripcion_estado'] = 'Estado desconocido';
+                }
+            }
+    
+            return $ordenes;
         } catch (Exception $e) {
             throw new Exception("Error al obtener las órdenes de trabajo: " . $e->getMessage());
         }
     }
-    
+
+    public function actualizarEstadoOrden($idOrden, $nuevoEstado)
+    {
+        try {
+            // Preparar los datos de la actualización
+            $datosActualizar = [
+                'estado_orden_id' => $nuevoEstado
+            ];
+
+            // Preparar las condiciones para la actualización
+            $condiciones = [
+                'id' => $idOrden
+            ];
+
+            // Llamar al método update del QueryBuilder
+            $resultado = $this->queryBuilder->update('ordenes', $datosActualizar, $condiciones);
+
+            if ($resultado) {
+                $this->logger->info("Estado de la orden actualizado exitosamente - ID: " . $idOrden);
+                return [
+                    "exito" => true,
+                    "idOrden" => $idOrden
+                ];
+            } else {
+                $this->logger->error("Error al actualizar el estado de la orden - ID: " . $idOrden);
+                return [
+                    "exito" => false,
+                    "details" => "Error al actualizar el estado de la orden en la base de datos."
+                ];
+            }
+        } catch (PDOException $e) {
+            $this->logger->error('Error al realizar la actualización en la base de datos: ' . $e->getMessage());
+            return [
+                "exito" => false,
+                "details" => 'Error al realizar la actualización en la base de datos: ' . $e->getMessage()
+            ];
+        } catch (Exception $e) {
+            $this->logger->error('Ocurrió un error al actualizar el estado de la orden: ' . $e->getMessage());
+            return [
+                "exito" => false,
+                "details" => 'Ocurrió un error al actualizar el estado de la orden: ' . $e->getMessage()
+            ];
+        }
+    }    
+
     public function actualizarOrden($ordenActualizada)
     {
         try {

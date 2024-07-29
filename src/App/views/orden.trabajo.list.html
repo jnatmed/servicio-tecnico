@@ -15,12 +15,14 @@
                     <th>Número de Orden</th>
                     <th>Tipo de Servicio</th>
                     <th>Fecha de Emisión</th>
-                    <th>Apellido</th>
-                    <th>Nombre</th>
+                    <th>Division</th>
+                    <th>Seccion</th>
+                    <th>Estado</th>
                     <th>Ver</th>
                     <th>Editar</th>
                     <th>Eliminar</th>
                     <th>Descargar</th>
+                    <th>Accion</th>
                     <!-- Agrega más encabezados según los datos que quieras mostrar -->
                 </tr>
             </thead>
@@ -30,8 +32,9 @@
                     <td class="tipo-nro-lista">{{ orden.id }}</td>
                     <td>{{ orden.tipoServicio }}</td>
                     <td>{{ orden.fechaEmision }}</td>
-                    <td>{{ orden.apellido | capitalize }}</td>
-                    <td>{{ orden.nombre | capitalize }}</td>
+                    <td>{{ orden.division | capitalize }}</td>
+                    <td>{{ orden.seccion | capitalize }}</td>
+                    <td>{{ orden.descripcion_estado | format_estado }}</td>
                     <td>
                         <a href="/orden-de-trabajo/ver?id={{ orden.id }}" >Ver</a>
                     </td>
@@ -46,6 +49,20 @@
                             No hay Archivo
                         {% else %}
                             <a href="/orden-de-trabajo/descargar?id={{ orden.id }}">Descargar</a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set estado = orden.estado_orden_id %}
+
+                        {% if estado == 1 %}
+                            <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=2">Aceptar</a>
+                            <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=3">Rechazar</a>
+                        
+                        {% elseif estado == 2 %}
+                            <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=4">Finalizar</a>
+                        
+                        {% elseif estado == 3 or estado == 4 %}
+                            ----
                         {% endif %}
                     </td>
                 </tr>

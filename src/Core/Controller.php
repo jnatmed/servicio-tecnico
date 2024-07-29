@@ -46,6 +46,10 @@ class Controller
                 [
                     'href' => '/user/register',
                     'name' => 'REGISTRO'
+                ],
+                [
+                    'href' => '/user/ver-perfil',
+                    'name' => 'PERFIL'
                 ]
             ]
         ];

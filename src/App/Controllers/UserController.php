@@ -37,12 +37,13 @@ class UserController extends Controller
         if (isset($_SESSION['nombre_usuario'])) {
             // Filtrar los elementos del menú
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return !in_array($item['href'], ['/user/login', '/user/register']);
+                return !in_array($item['href'], ['/user/login', '/user/register' ]);
             });
         } else {
             // Filtrar los elementos del menú para eliminar 'LOGOUT'
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return $item['href'] !== '/user/logout';
+                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil' ]);
+                // return $item['href'] !== '/user/logout';
             });
         }
 
@@ -72,7 +73,7 @@ class UserController extends Controller
                 // Usuario autenticado correctamente
                 $_SESSION['nombre_usuario'] = $user['usuario'];
                 $_SESSION['tipo_usuario'] = $user['tipo_usuario'];
-
+                $_SESSION['id_user'] = $user['id'];
                 // Redirigir a una página de inicio o a donde necesites
                 // Ejemplo: redirigir al dashboard
                 redirect('');
@@ -89,6 +90,16 @@ class UserController extends Controller
         }else{                                 
             view('login.view', $this->menu);
         }
+    }
+
+    public function getUserType()
+    {
+        return $_SESSION['tipo_usuario'];
+    }
+
+    public function getIdUser()
+    {
+        return $_SESSION['id_user'];
     }
 
     public function logout()
@@ -118,4 +129,23 @@ class UserController extends Controller
             view('register.view', $this->menu);
         }
     }
+
+    public function verPerfil()
+    {
+        // Iniciar la sesión si no está ya iniciada
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Suponiendo que `getIdUser` es un método que devuelve el ID del usuario actual
+        $userId = $this->getIdUser();  
+        $datos = $this->model->getUserById($userId);
+        
+        $this->logger->info("datos: ",[$datos]);
+
+        view('perfil.view', array_merge([
+            'usuario' => $datos
+        ], $this->menu));
+    }
+
 }

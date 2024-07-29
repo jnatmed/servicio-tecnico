@@ -1,0 +1,47 @@
+/* perfil.css */
+
+/* Contenedor principal del perfil */
+.user-profile-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Título del perfil */
+.user-profile-title {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Contenedor de detalles del usuario */
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Estilo de los labels */
+.user-details label {
+    font-weight: bold;
+    color: #555;
+}
+
+/* Estilo de la información del usuario */
+.user-details .user-info {
+    font-size: 1em;
+    color: #777;
+}
+
+/* Otros estilos adicionales */
+.user-details p {
+    margin: 0;
+}
+
+.user-details p:not(:last-child) {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}

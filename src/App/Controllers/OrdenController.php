@@ -2,6 +2,7 @@
 
 namespace Paw\App\Controllers;
 
+use Exception;
 use Paw\Core\Controller;
 use Paw\App\Controllers\UserController;
 use Paw\App\Models\OrdenCollection;
@@ -62,6 +63,7 @@ class OrdenController extends Controller
                 'seccion' => $seccion,
                 'email' => $email,
                 'observaciones' => $observaciones,
+                'estado_orden_id' => 1,
             ];
 
             $resultNuevaInsercion = $this->model->guardarOrden($ordenNueva);
@@ -85,6 +87,28 @@ class OrdenController extends Controller
         ]);
         }
 
+    }
+
+    public function actualizarEstado()
+    {
+        $id = htmlspecialchars($this->request->get('id'));
+        $estadoId = htmlspecialchars($this->request->get('estado'));
+
+        if($id && $estadoId)
+        {
+            $resultado = $this->model->actualizarEstadoOrden($id, $estadoId);
+
+            if ($resultado['exito'])
+            {
+                redirect('orden-de-trabajo/listar');    
+            }else{
+                $this->logger->error("No se pudo actualizar la orden Id o estadoId [$id, $estadoId]");    
+                redirect('orden-de-trabajo/listar');
+            }
+        }else{
+            $this->logger->error("ERROR Id o estadoId [$id, $estadoId] no son correctos o no estan seteados");
+            redirect('orden-de-trabajo/listar');
+        }
     }
 
     public function show()

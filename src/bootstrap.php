@@ -81,6 +81,28 @@ $twig = new Environment($loader, [
 
 $twig->addExtension(new DebugExtension());
 
+$twig->addFilter(new \Twig\TwigFilter('format_estado', function ($estado) {
+    // Reemplaza guiones bajos por espacios
+    $estado = str_replace('_', ' ', $estado);
+
+    // Lista de palabras que no se deben capitalizar
+    $no_capitalize_words = ['de', 'ante', 'con', 'por', 'en', 'a', 'el', 'la', 'los', 'las', 'desde', 'hasta', 'para', 'entre', 'sobre'];
+
+    // Capitaliza cada palabra importante
+    $words = explode(' ', $estado);
+    $formatted_words = [];
+
+    foreach ($words as $index => $word) {
+        $lowercase_word = strtolower($word);
+        if ($index == 0 || $index == count($words) - 1 || !in_array($lowercase_word, $no_capitalize_words)) {
+            $formatted_words[] = ucfirst($lowercase_word);
+        } else {
+            $formatted_words[] = $lowercase_word;
+        }
+    }
+
+    return implode(' ', $formatted_words);
+}));
 
 /**
  * 8) ROUTER
@@ -102,6 +124,7 @@ $router->get('/orden-de-trabajo/editar', 'OrdenController@edit');
 $router->post('/orden-de-trabajo/editar', 'OrdenController@edit');
 $router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete');
 $router->get('/orden-de-trabajo/descargar', 'OrdenController@download');
+$router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarEstado');
 
 /**
  * 9.1) Logeo de usuario
@@ -111,6 +134,7 @@ $router->post('/user/login', 'UserController@login');
 $router->get('/user/logout', 'UserController@logout');
 $router->get('/user/register', 'UserController@register');
 $router->post('/user/register', 'UserController@register');
+$router->get('/user/ver-perfil', 'UserController@verPerfil');
 
 
 

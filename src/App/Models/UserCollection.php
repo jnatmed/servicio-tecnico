@@ -52,4 +52,25 @@ class UserCollection extends Model
             return null;
         }
     }
+
+    public function getUserById($id)
+    {
+        try {
+            // Ejecutar la consulta usando el ID del usuario
+            $result = $this->queryBuilder->select($this->table, '*', ['id' => $id]);
+
+            if ($result) {
+                // Registrar el resultado para depuración
+                $this->logger->info("Usuario encontrado: ", [$result]);
+                return $result[0]; // Asumimos que el ID es único y devuelve un solo resultado
+            } else {
+                $this->logger->info("No se encontró un usuario con el ID proporcionado.");
+                return null;
+            }
+        } catch (\Exception $e) {
+            $this->logger->error("Error en getUserById: ", [$e->getMessage()]);
+            return null;
+        }
+    }
+       
 }
