@@ -64,6 +64,7 @@ class OrdenController extends Controller
                 'email' => $email,
                 'observaciones' => $observaciones,
                 'estado_orden_id' => 1,
+                'usuario_id' => $this->usuario->getIdUser()
             ];
 
             $resultNuevaInsercion = $this->model->guardarOrden($ordenNueva);
@@ -175,19 +176,18 @@ class OrdenController extends Controller
     {
         $this->logger->info("metodo listar(): ", [$this->menu]);
         try {
-            $ordenes = $this->model->listarOrdenes();
+            $ordenes = $this->model->listarOrdenes($this->usuario->getIdUser());
 
-            view('orden.trabajo.list', [
-                'ordenes' => $ordenes,    
-                ...$this->menu]
+            view('orden.trabajo.list', array_merge(
+                ['ordenes' => $ordenes],   
+                $this->menu)
         );
 
         } catch (Exception $e) {
-            view('errors/error.view', [[
-                'error' => $e->getMessage()
-                ],
-                ...$this->menu
-            ]);
+            view('errors/not-found.view', array_merge(
+                ['error' => $e->getMessage()],
+                $this->menu)
+            );
         }
     }
 

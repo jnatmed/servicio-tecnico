@@ -74,11 +74,11 @@ class OrdenCollection extends Model
         }
     }
 
-    public function listarOrdenes()
+    public function listarOrdenes($userId)
     {
         try {
             // Obtener todas las órdenes
-            $ordenes = $this->queryBuilder->select('ordenes');
+            $ordenes = $this->queryBuilder->select('ordenes', '*', ['usuario_id' => $userId]);
     
             // Para cada orden, obtener la descripción del estado
             foreach ($ordenes as &$orden) {
