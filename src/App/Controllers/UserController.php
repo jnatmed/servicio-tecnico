@@ -4,8 +4,10 @@ namespace Paw\App\Controllers;
 
 use Paw\Core\Controller;
 use Paw\App\Models\UserCollection;
+use Paw\App\Models\MailjetMailer;
 use Paw\Core\Traits\Loggable;
 
+use Exception;
 
 class UserController extends Controller
 {
@@ -42,13 +44,19 @@ class UserController extends Controller
         } else {
             // Filtrar los elementos del menú para eliminar 'LOGOUT'
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil' ]);
+                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo' ]);
                 // return $item['href'] !== '/user/logout';
             });
         }
 
+        $this->logger->debug("menu: ", [$menu]);
         return $menu;
     }    
+
+    public function haySession()
+    {
+        return (session_status() == PHP_SESSION_ACTIVE) && isset($_SESSION['id_user']); 
+    }
 
     public function login()
     {
@@ -147,5 +155,24 @@ class UserController extends Controller
             'usuario' => $datos
         ], $this->menu));
     }
+
+    public function enviarMail()
+    {
+        try {
+            $mailer = new MailjetMailer();
+            $result = $mailer->send(
+                'juanm.soft@ejemplo.com',
+                'Juan',
+                'Prueba de Correo',
+                'Contenido del correo en texto plano.',
+                '<h3>Contenido del correo en HTML</h3>'
+            );
+        
+            echo "Correo enviado exitosamente.";
+        } catch (Exception $e) {
+            echo 'Error: ' . $e->getMessage();
+        }        
+    }
+
 
 }

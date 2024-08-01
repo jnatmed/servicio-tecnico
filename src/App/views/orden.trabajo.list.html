@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-    <link rel="stylesheet" href="path/to/styles.css"> <!-- Reemplaza con la ruta correcta a tu archivo CSS -->
+    <link rel="stylesheet" href="/assets/css/tooltips.css">
 </head>
 <body class="home">
     {% include 'parts/header.view.html' %}
@@ -57,10 +57,10 @@
 
                                 {% if estado == 1 %}
                                     <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=2">Aceptar</a>
-                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=3">Rechazar</a>
+                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=3" class="tooltip">Rechazar<span class="tooltiptext">Tenga en cuenta que: Para rechazar una orden, debera antes, describir el motivo del rechazo</span></a>
                                 
                                 {% elseif estado == 2 %}
-                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=4">Finalizar</a>
+                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=4" class="tooltip"> Finalizar<span class="tooltiptext">Tenga en cuenta que: Para finalizar una orden, debera antes, describir los trabajos realizados</span></a>
                                 
                                 {% elseif estado == 3 or estado == 4 %}
                                     ----

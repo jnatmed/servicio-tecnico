@@ -23,6 +23,10 @@ class Config
 
         $this->configs['TEMPLATE_DIR'] =  getenv('TEMPLATE_DIR') ?? '';
         $this->configs['TEMPLATE_CACHE_DIR'] =  getenv('TEMPLATE_CACHE_DIR') ?? '';
+        $this->configs['API_KEY_MAIL'] =  getenv('API_KEY_MAIL') ?? '';
+        $this->configs['SECRET_KEY_MAIL'] =  getenv('SECRET_KEY_MAIL') ?? '';
+        $this->configs['FROM_MAIL'] =  getenv('FROM_MAIL') ?? '';
+        $this->configs['FROM_NAME'] =  getenv('FROM_NAME') ?? '';
     }
 
     public function joinPaths()

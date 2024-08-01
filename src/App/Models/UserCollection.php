@@ -4,6 +4,7 @@ namespace Paw\App\Models;
 
 use Paw\Core\Model;
 
+
 use Exception;
 use PDOException;
 use Paw\Core\Traits\Loggable;
@@ -72,5 +73,4 @@ class UserCollection extends Model
             return null;
         }
     }
-       
 }

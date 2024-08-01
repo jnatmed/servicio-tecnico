@@ -80,7 +80,7 @@ Class Router
             } catch (RouteNotFoundException $e) {
                 list($controller, $method) = $this->getController($this->notFound, "GET");
                 $this->logger
-                    ->debug(
+                    ->error(
                         "Status Code: 404 - Route Not Found",
                         [
                             "ERROR" => [$path, $http_method]

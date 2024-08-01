@@ -175,20 +175,31 @@ class OrdenController extends Controller
     public function listar()
     {
         $this->logger->info("metodo listar(): ", [$this->menu]);
-        try {
-            $ordenes = $this->model->listarOrdenes($this->usuario->getIdUser());
+        $this->logger->debug("SESSION: ", [$_SESSION]);
 
-            view('orden.trabajo.list', array_merge(
-                ['ordenes' => $ordenes],   
-                $this->menu)
-        );
-
-        } catch (Exception $e) {
-            view('errors/not-found.view', array_merge(
-                ['error' => $e->getMessage()],
-                $this->menu)
+        if(!$this->usuario->haySession()){
+            $this->logger->info("!this->usuario->haySession(): ", [!$this->usuario->haySession()]);
+            redirect('user/login');
+        }else{
+            $this->logger->debug("HAY SESSION: ", [$this->usuario->haySession()]);
+            try {
+                $ordenes = $this->model->listarOrdenes($this->usuario->getIdUser());
+    
+                view('orden.trabajo.list', array_merge(
+                    ['ordenes' => $ordenes],   
+                    $this->menu)
             );
+    
+            } catch (Exception $e) {
+    
+                $this->logger->error("Error en LISTAR: ", [$e->getMessage()]);
+                view('errors/not-found.view', array_merge(
+                    ['error' => $e->getMessage()],
+                    $this->menu)
+                );
+            }
         }
+
     }
 
 
