@@ -57,7 +57,7 @@
 
                                 {% if estado == 1 %}
                                     <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=2">Aceptar</a>
-                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=3" class="tooltip">Rechazar<span class="tooltiptext">Tenga en cuenta que: Para rechazar una orden, debera antes, describir el motivo del rechazo</span></a>
+                                    <a href="/orden-de-trabajo/editar?id={{ orden.id }}&estado=3" class="tooltip">Rechazar<span class="tooltiptext">Tenga en cuenta que: Para rechazar una orden, debera antes, describir el motivo del rechazo</span></a>
                                 
                                 {% elseif estado == 2 %}
                                     <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=4" class="tooltip"> Finalizar<span class="tooltiptext">Tenga en cuenta que: Para finalizar una orden, debera antes, describir los trabajos realizados</span></a>

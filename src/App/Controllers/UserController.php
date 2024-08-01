@@ -27,7 +27,6 @@ class UserController extends Controller
 
     public function adjustMenuForSession($menu) {
 
-        
         $this->logger->info("dentro de adjustMenuForSession: ", [$menu]);
 
         // Iniciar la sesión si no está ya iniciada

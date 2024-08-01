@@ -14,6 +14,7 @@ class OrdenController extends Controller
     public ?string $modelName = OrdenCollection::class;    
     use Loggable;
     public $usuario;
+    public $uploader;
 
     public function __construct()
     {
@@ -32,23 +33,22 @@ class OrdenController extends Controller
 
     public function new()
     {
-        global $request;
 
-        if($request->method() == 'POST')
+        if($this->request->method() == 'POST')
         {
             $this->logger->info("parametros formulario: ", [$_POST]);
             // Capturar y sanitizar los datos del formulario
 
-            $tipoServicio = htmlspecialchars($request->get('tipo-servicio'), ENT_QUOTES, 'UTF-8');
-            $fechaEmision = htmlspecialchars($request->get('fecha-emision'), ENT_QUOTES, 'UTF-8');
-            $apellido = htmlspecialchars($request->get('apellido'), ENT_QUOTES, 'UTF-8');
-            $nombre = htmlspecialchars($request->get('nombre'), ENT_QUOTES, 'UTF-8');
-            $grado = htmlspecialchars($request->get('grado'), ENT_QUOTES, 'UTF-8');
-            $credencial = htmlspecialchars($request->get('credencial'), ENT_QUOTES, 'UTF-8');
-            $division = htmlspecialchars($request->get('division'), ENT_QUOTES, 'UTF-8');
-            $seccion = htmlspecialchars($request->get('seccion'), ENT_QUOTES, 'UTF-8');
-            $email = htmlspecialchars($request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
-            $observaciones = htmlspecialchars($request->get('observaciones'), ENT_QUOTES, 'UTF-8');
+            $tipoServicio = htmlspecialchars($this->request->get('tipo-servicio'), ENT_QUOTES, 'UTF-8');
+            $fechaEmision = htmlspecialchars($this->request->get('fecha-emision'), ENT_QUOTES, 'UTF-8');
+            $apellido = htmlspecialchars($this->request->get('apellido'), ENT_QUOTES, 'UTF-8');
+            $nombre = htmlspecialchars($this->request->get('nombre'), ENT_QUOTES, 'UTF-8');
+            $grado = htmlspecialchars($this->request->get('grado'), ENT_QUOTES, 'UTF-8');
+            $credencial = htmlspecialchars($this->request->get('credencial'), ENT_QUOTES, 'UTF-8');
+            $division = htmlspecialchars($this->request->get('division'), ENT_QUOTES, 'UTF-8');
+            $seccion = htmlspecialchars($this->request->get('seccion'), ENT_QUOTES, 'UTF-8');
+            $email = htmlspecialchars($this->request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
+            $observaciones = htmlspecialchars($this->request->get('observaciones'), ENT_QUOTES, 'UTF-8');
 
 
             // Preparar los datos para pasar a la vista
@@ -116,7 +116,7 @@ class OrdenController extends Controller
     {
         global $request;
         
-        $nroOrden = $request->get('id');
+        $nroOrden = $this->request->get('id');
 
         $datosOrden = $this->model->getDatosOrden($nroOrden);
    
@@ -137,7 +137,7 @@ class OrdenController extends Controller
     {
         global $request;
 
-        $nroOrden = $request->get('id');
+        $nroOrden = $this->request->get('id');
         $datosOrden = $this->model->borrarDatosOrden($nroOrden);
 
         if ($datosOrden['exito']){
@@ -151,7 +151,7 @@ class OrdenController extends Controller
     {
         global $request;
         
-        $nroOrden = $request->get('id');
+        $nroOrden = $this->request->get('id');
 
         $datosOrden = $this->model->getDatosOrden($nroOrden);
         
@@ -205,9 +205,8 @@ class OrdenController extends Controller
 
     public function edit()
     {
-        global $request;
         
-        if($request->method() == 'POST')
+        if($this->request->method() == 'POST')
         {
             $this->logger->info("parametros formulario: ", [$_POST]);
             // Capturar y sanitizar los datos del formulario
@@ -215,19 +214,17 @@ class OrdenController extends Controller
 
             $this->logger->info("file: ", [$_FILES]);
 
-
-
-            $id = htmlspecialchars($request->get('id'), ENT_QUOTES, 'UTF-8');
-            $tipoServicio = htmlspecialchars($request->get('tipo-servicio'), ENT_QUOTES, 'UTF-8');
-            $fechaEmision = htmlspecialchars($request->get('fecha-emision'), ENT_QUOTES, 'UTF-8');
-            $apellido = htmlspecialchars($request->get('apellido'), ENT_QUOTES, 'UTF-8');
-            $nombre = htmlspecialchars($request->get('nombre'), ENT_QUOTES, 'UTF-8');
-            $grado = htmlspecialchars($request->get('grado'), ENT_QUOTES, 'UTF-8');
-            $credencial = htmlspecialchars($request->get('credencial'), ENT_QUOTES, 'UTF-8');
-            $division = htmlspecialchars($request->get('division'), ENT_QUOTES, 'UTF-8');
-            $seccion = htmlspecialchars($request->get('seccion'), ENT_QUOTES, 'UTF-8');
-            $email = htmlspecialchars($request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
-            $observaciones = htmlspecialchars($request->get('observaciones'), ENT_QUOTES, 'UTF-8');
+            $id = htmlspecialchars($this->request->get('id'), ENT_QUOTES, 'UTF-8');
+            $tipoServicio = htmlspecialchars($this->request->get('tipo-servicio'), ENT_QUOTES, 'UTF-8');
+            $fechaEmision = htmlspecialchars($this->request->get('fecha-emision'), ENT_QUOTES, 'UTF-8');
+            $apellido = htmlspecialchars($this->request->get('apellido'), ENT_QUOTES, 'UTF-8');
+            $nombre = htmlspecialchars($this->request->get('nombre'), ENT_QUOTES, 'UTF-8');
+            $grado = htmlspecialchars($this->request->get('grado'), ENT_QUOTES, 'UTF-8');
+            $credencial = htmlspecialchars($this->request->get('credencial'), ENT_QUOTES, 'UTF-8');
+            $division = htmlspecialchars($this->request->get('division'), ENT_QUOTES, 'UTF-8');
+            $seccion = htmlspecialchars($this->request->get('seccion'), ENT_QUOTES, 'UTF-8');
+            $email = htmlspecialchars($this->request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
+            $observaciones = htmlspecialchars($this->request->get('observaciones'), ENT_QUOTES, 'UTF-8');
 
 
             // Preparar los datos para pasar a la vista
@@ -264,18 +261,20 @@ class OrdenController extends Controller
             redirect('orden-de-trabajo/ver?id='. $id);
         }else{
 
-            $nroOrden = $request->get('id');
+            $nroOrden = $this->request->get('id');
+            $estado = $this->request->get('estado');
     
             $datosOrden = $this->model->getDatosOrden($nroOrden);
             
             $datosOrden['action'] = "editar";
+            
 
             if ($datosOrden['exito']){
-                view('index.view', [
-                        "datos" => $datosOrden,
-                        ...$this->menu
-                        ]
-            );
+                view('index.view', array_merge(
+                        ["datos" => $datosOrden],
+                        ["estado" => $estado],
+                        $this->menu
+                ));
             }else{
                 view('errors/not-found.view', $this->menu);
             }        
