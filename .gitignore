@@ -4,3 +4,5 @@ composer.lock
 .env
 src/App/views/cache
 ordenes/
+.env copy
+.env cloud
