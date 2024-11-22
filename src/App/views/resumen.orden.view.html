@@ -36,6 +36,12 @@
             <summary>Observaciones</summary>
             <p><strong>Observaciones:</strong> {{ datos.observaciones }}</p>
         </details>
+
+        <details open>
+            <summary>Trabajos Realizados</summary>
+            <p><strong>Descripcion:</strong> {{ datos.trabajos_realizados }}</p>
+        </details>
+
         <hr>
         {% if datos.pathOrden is not empty %}
             <button class="btn-descarga">

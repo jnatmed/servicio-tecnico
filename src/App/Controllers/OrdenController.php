@@ -49,6 +49,7 @@ class OrdenController extends Controller
             $seccion = htmlspecialchars($this->request->get('seccion'), ENT_QUOTES, 'UTF-8');
             $email = htmlspecialchars($this->request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
             $observaciones = htmlspecialchars($this->request->get('observaciones'), ENT_QUOTES, 'UTF-8');
+            $trabajos_realizados = htmlspecialchars($this->request->get('trabajos_realizados'), ENT_QUOTES, 'UTF-8');
 
 
             // Preparar los datos para pasar a la vista
@@ -63,6 +64,7 @@ class OrdenController extends Controller
                 'seccion' => $seccion,
                 'email' => $email,
                 'observaciones' => $observaciones,
+                'trabajos_realizados' => $trabajos_realizados,
                 'estado_orden_id' => 1,
                 'usuario_id' => $this->usuario->getIdUser()
             ];
@@ -225,6 +227,7 @@ class OrdenController extends Controller
             $seccion = htmlspecialchars($this->request->get('seccion'), ENT_QUOTES, 'UTF-8');
             $email = htmlspecialchars($this->request->get('correo-electronico'), ENT_QUOTES, 'UTF-8');
             $observaciones = htmlspecialchars($this->request->get('observaciones'), ENT_QUOTES, 'UTF-8');
+            $trabajos_realizados = htmlspecialchars($this->request->get('trabajos_realizados'), ENT_QUOTES, 'UTF-8');
 
 
             // Preparar los datos para pasar a la vista
@@ -240,6 +243,7 @@ class OrdenController extends Controller
                 'seccion' => $seccion,
                 'email' => $email,
                 'observaciones' => $observaciones,
+                'trabajos_realizados' => $trabajos_realizados,
             ];
 
             if(isset($_FILES["file"]) && $_FILES["file"]['error'] !== 4){
@@ -248,11 +252,11 @@ class OrdenController extends Controller
                 $resultArchivo = $this->uploader->guardarOrdenPDF($file);
             }
 
-            if($resultArchivo['exito'])
+            if(isset($resultArchivo) && isset($resultArchivo['exito']) && $resultArchivo['exito'])
             {
                 $ordenActualizada['pathOrden'] = $resultArchivo['pathOrden'];
             }
-
+            
             $resultUpdate = $this->model->actualizarOrden($ordenActualizada); // 
 
             /**

@@ -16,6 +16,10 @@ class Request
         return $_SERVER['REQUEST_METHOD'];
     }
 
+    public function getKeySession($key){
+        return $_SESSION[$key] ?? null;
+    }
+
     public function get($key)
     {
         return $_POST[$key] ?? $_GET[$key] ?? null;

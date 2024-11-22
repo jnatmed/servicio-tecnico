@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class V20241108182443 extends AbstractMigration
+final class AddTrabajosRealizadosToOrdenes extends AbstractMigration
 {
     /**
      * Change Method.
@@ -19,6 +19,8 @@ final class V20241108182443 extends AbstractMigration
      */
     public function change(): void
     {
-
+        $table = $this->table('ordenes');
+        $table->addColumn('trabajos_realizados', 'text', ['null' => true])
+              ->update();
     }
 }

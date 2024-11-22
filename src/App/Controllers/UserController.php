@@ -81,9 +81,21 @@ class UserController extends Controller
                 $_SESSION['nombre_usuario'] = $user['usuario'];
                 $_SESSION['tipo_usuario'] = $user['tipo_usuario'];
                 $_SESSION['id_user'] = $user['id'];
+
+                $this->logger->debug("User: ",[$user]);
+
                 // Redirigir a una página de inicio o a donde necesites
                 // Ejemplo: redirigir al dashboard
-                redirect('');
+                if(isset($_SESSION['redirect_url'])){
+                    $this->logger->debug("Hay redirect_url");
+                    $redirectUrl = $_SESSION['redirect_url'];
+                    unset($_SESSION['redirect_url']);
+                    redirect($redirectUrl);
+                }else{
+                    $this->logger->debug("No Hay redirect_url");
+                    // Redirigir a la pagina de inicio (o a donde se necesite)
+                    redirect('');
+                }
             } else {
                 // Usuario o contraseña incorrectos
                 // Puedes manejar el error de autenticación aquí
@@ -94,7 +106,18 @@ class UserController extends Controller
                     ...$this->menu
             ]);
             }
-        }else{                                 
+        }else{                       
+            
+            // Si el metodo no es POST, puede ser un acceso inicial a la pagina de login
+            // Verificar si hay una URL de redireccion pendiente
+            $this->logger->debug("Entrando al Login..");
+
+            if (!is_null($this->request->getKeySession('redirect_to'))){
+                $_SESSION['redirect_url'] = $this->request->getKeySession('redirect_to');
+
+                $this->logger->debug("Hay Redirect_url: ",[$_SESSION['redirect_url']]);
+            }
+
             view('login.view', $this->menu);
         }
     }
