@@ -27,6 +27,14 @@ class Config
         $this->configs['SECRET_KEY_MAIL'] =  getenv('SECRET_KEY_MAIL') ?? '';
         $this->configs['FROM_MAIL'] =  getenv('FROM_MAIL') ?? '';
         $this->configs['FROM_NAME'] =  getenv('FROM_NAME') ?? '';
+
+        $this->configs['CLIENT_ID'] =  getenv('CLIENT_ID') ?? '';
+        $this->configs['CLIENT_SECRET'] =  getenv('CLIENT_SECRET') ?? '';
+        $this->configs['REDIRECT_URI'] =  getenv('REDIRECT_URI') ?? '';
+        $this->configs['AUTH_URL'] =  getenv('AUTH_URL') ?? '';
+
+        $this->configs['JWT_SECRET'] =  getenv('JWT_SECRET') ?? '';
+
     }
 
     public function joinPaths()

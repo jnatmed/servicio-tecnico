@@ -5,6 +5,7 @@ namespace Paw\App\Controllers;
 use Paw\Core\Controller;
 use Paw\App\Models\UserCollection;
 use Paw\App\Models\MailjetMailer;
+use Paw\App\Models\GoogleClient;
 use Paw\Core\Traits\Loggable;
 
 use Exception;
@@ -59,33 +60,23 @@ class UserController extends Controller
 
     public function login()
     {
-        // Iniciar la sesión si no está ya iniciada
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }     
 
         if($this->request->method() == 'POST')
         {
-            /**
-             * recibo user y login y consulto a userCollection 
-             * si existe el usuario
-             * entonces guardo en $_session: nombre_usuario y tipo_usuario
-             */
             $username = htmlspecialchars($this->request->get('username'));
             $password = htmlspecialchars($this->request->get('password'));
-            // Verificar credenciales
             $user = $this->model->getUserByUsernameAndPassword($username, $password);
 
             if ($user) {
-                // Usuario autenticado correctamente
                 $_SESSION['nombre_usuario'] = $user['usuario'];
                 $_SESSION['tipo_usuario'] = $user['tipo_usuario'];
                 $_SESSION['id_user'] = $user['id'];
 
                 $this->logger->debug("User: ",[$user]);
 
-                // Redirigir a una página de inicio o a donde necesites
-                // Ejemplo: redirigir al dashboard
                 if(isset($_SESSION['redirect_url'])){
                     $this->logger->debug("Hay redirect_url");
                     $redirectUrl = $_SESSION['redirect_url'];
@@ -93,23 +84,16 @@ class UserController extends Controller
                     redirect($redirectUrl);
                 }else{
                     $this->logger->debug("No Hay redirect_url");
-                    // Redirigir a la pagina de inicio (o a donde se necesite)
                     redirect('');
                 }
             } else {
-                // Usuario o contraseña incorrectos
-                // Puedes manejar el error de autenticación aquí
-                // Por ejemplo, mostrar un mensaje de error en la vista de login
                 $error = 'Usuario o contraseña incorrectos';
                 view('login.view', [
                     ['error' => $error],
                     ...$this->menu
-            ]);
+                ]);
             }
         }else{                       
-            
-            // Si el metodo no es POST, puede ser un acceso inicial a la pagina de login
-            // Verificar si hay una URL de redireccion pendiente
             $this->logger->debug("Entrando al Login..");
 
             if (!is_null($this->request->getKeySession('redirect_to'))){
@@ -118,9 +102,52 @@ class UserController extends Controller
                 $this->logger->debug("Hay Redirect_url: ",[$_SESSION['redirect_url']]);
             }
 
-            view('login.view', $this->menu);
+            $client = new GoogleClient();
+            $authUrl = $client->createAuthUrl();
+
+            $this->logger->debug("authUrl: ",[$authUrl]);
+
+            view('login.view', [
+                'authUrl' => $authUrl,
+                ...$this->menu]);
         }
     }
+
+    public function callback()
+    {
+        global $log;
+    
+        if (!is_null($this->request->get('code'))) {
+            $log->debug("Authorization code recibido: ", [$this->request->get('code')]);
+    
+            try {
+                $googleClient = new GoogleClient();
+                $userInfo = $googleClient->receptionCallbacks($this->request->get('code'), $googleClient);
+    
+                $log->debug("userInfo: ", [$userInfo]);
+    
+                // Asegúrate de estructurar los datos para la vista
+                $data = [
+                    'usuario' => [
+                        'usuario' => $userInfo->name ?? 'No definido',
+                        'email' => $userInfo->email ?? 'No definido',
+                        'tipo_usuario' => 'Google User', // Personaliza según sea necesario
+                        'imagen' => $userInfo->picture ?? null // Si deseas mostrar la imagen de perfil
+                    ]
+                ];
+    
+                view('perfil.view', $data);
+    
+            } catch (Exception $e) {
+                $log->error("Error al recuperar el token de Google: ", [$e->getMessage()]);
+                redirect('user/login');
+            }
+        } else {
+            $log->debug("No hay código de autorización");
+            redirect('user/login');
+        }
+    }
+    
 
     public function getUserType()
     {

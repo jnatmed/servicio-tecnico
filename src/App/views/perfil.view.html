@@ -10,11 +10,18 @@
     <main>
         <div class="user-profile-container">
             <h1 class="user-profile-title">Perfil de Usuario</h1>
+
             <div class="user-details">
                 <p><label>Nombre de Usuario:</label> <span class="user-info">{{ usuario.usuario }}</span></p>
                 <p><label>Email:</label> <span class="user-info">{{ usuario.email }}</span></p>
                 <p><label>Tipo de Usuario:</label> <span class="user-info">{{ usuario.tipo_usuario }}</span></p>
             </div>
+
+            {% if usuario.imagen %}
+            <div class="user-profile-picture">
+                <img src="{{ usuario.imagen }}" alt="Foto de perfil">
+            </div>
+            {% endif %}
         </div>
     </main>
 

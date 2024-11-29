@@ -136,9 +136,13 @@ $router->get('/user/logout', 'UserController@logout');
 $router->get('/user/register', 'UserController@register');
 $router->post('/user/register', 'UserController@register');
 $router->get('/user/ver-perfil', 'UserController@verPerfil');
+$router->get('/auth/google/callback', 'UserController@callback');
 
 $router->get('/enviar-mail', 'UserController@enviarMail');
 
 
-
-
+/**
+ * 10) Datos de los internos trabajadores
+ */
+ $router->get('/interno', 'InternoController@datosInternos');
+ // /interno?id=1
