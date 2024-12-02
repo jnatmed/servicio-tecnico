@@ -42,12 +42,12 @@
                 <a href="/orden-de-trabajo/descargar?id={{ datos.id }}">Descargar</a>
             </button>
         {% else %}
-            <td>No hay Archivo para Descargar</td>
+            <p class="no-archivo-mensaje">No hay Archivo para Descargar</p>
         {% endif %}
     </section>
     <section class="area_firmas">
-        <label for="">Firma de Usuario - Aclaracion</label>
-        <label for="">Firma de Sección - Aclaración</label>
+        <label for="">Recibe Conforme - (Aclaracion)</label>
+        <label for="">Firma de Tecnico - (Aclaración)</label>
     </section>
 
     {% include 'parts/footer.view.html' %}

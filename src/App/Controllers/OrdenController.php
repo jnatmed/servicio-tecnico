@@ -242,13 +242,14 @@ class OrdenController extends Controller
                 'observaciones' => $observaciones,
             ];
 
+            $resultArchivo = null;
             if(isset($_FILES["file"]) && $_FILES["file"]['error'] !== 4){
                 $file = $_FILES["file"];
                 $this->uploader->setLogger($this->logger);
                 $resultArchivo = $this->uploader->guardarOrdenPDF($file);
             }
 
-            if($resultArchivo['exito'])
+            if($resultArchivo !== null && $resultArchivo['exito'])
             {
                 $ordenActualizada['pathOrden'] = $resultArchivo['pathOrden'];
             }

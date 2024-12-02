@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Uso de la clase Autocomplete
   
   const grados = [
-    "Alcaide", "Subalcaide", "Adjutor Principal", "Adjutor", "Subadjutor",
+    "Alcaide Mayor", "Alcaide", "Subalcaide", "Adjutor Principal", "Adjutor", "Subadjutor",
     "Ayudante Mayor", "Ayudante Principal", "Ayudante de Segunda", 
     "Ayudante de Tercera", "Ayudante de Cuarta", "Ayudante de Quinta", 
     "Subayudante"
