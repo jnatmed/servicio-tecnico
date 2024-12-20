@@ -102,13 +102,14 @@ class UserController extends Controller
                 $this->logger->debug("Hay Redirect_url: ",[$_SESSION['redirect_url']]);
             }
 
-            $client = new GoogleClient();
-            $authUrl = $client->createAuthUrl();
+            // $client = new GoogleClient();
+            // $authUrl = $client->createAuthUrl();
 
-            $this->logger->debug("authUrl: ",[$authUrl]);
+            // $this->logger->debug("authUrl: ",[$authUrl]);
 
             view('login.view', [
-                'authUrl' => $authUrl,
+                // 'authUrl' => $authUrl,
+                'authUrl' => "",
                 ...$this->menu]);
         }
     }

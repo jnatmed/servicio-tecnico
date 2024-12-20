@@ -13,7 +13,7 @@ class QueryBuilder
     public Logger $logger;
     private $lastQuery;
 
-    public function __construct(PDO $pdo, Logger $logger = null)
+    public function __construct(PDO $pdo, ?Logger $logger = null)
     {   
         $this->pdo = $pdo;
         $this->logger = $logger;

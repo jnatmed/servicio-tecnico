@@ -8,7 +8,7 @@
 
     <section class="section-ingreso">
         <form action="/orden-de-trabajo/{{ datos.action }}" method="post" enctype="multipart/form-data">
-            <h2>{{ action == 'editar' ? 'Formulario de Edición' : 'Formulario de Ingreso' }}</h2>
+            <h2>{{ action == 'editar' ? 'Formulario de Edición' : 'Formulario de Ingreso (Orden de Trabajo)' }}</h2>
             <hr>
             {% if datos.id is defined %}
                 <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ datos.id }} </h3>

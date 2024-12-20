@@ -29,7 +29,11 @@ class Controller
             'menu' => [
                 [
                     'href' => '/orden-de-trabajo/nuevo',
-                    'name' => 'CARGAR NUEVA ORDEN DE TRABAJO'
+                    'name' => 'NUEVA ORDEN DE TRABAJO'
+                ],
+                [
+                    'href' => '/minuta/new',
+                    'name' => 'NUEVA MINUTA'
                 ],
                 [
                     'href' => '/orden-de-trabajo/listar',
