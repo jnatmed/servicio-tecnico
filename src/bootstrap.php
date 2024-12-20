@@ -130,6 +130,8 @@ $router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarE
 
 $router->get('/minuta/new', 'MinutaController@new');
 
+$router->get('/','PageController@home');
+
 /**
  * 9.1) Logeo de usuario
  */

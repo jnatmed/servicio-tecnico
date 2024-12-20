@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Ordenes de Trabajo y Minutas</title>
+    <link rel="stylesheet" href="styles.css">
+    {% include 'parts/head.view.html' %}
+</head>
+<body class="home">
+    {% include 'parts/header.view.html' %}
+
+    <section class="home-page__section">
+        <article class="home-page__card">
+            <h2 class="home-page__card-title">Órdenes de Trabajo</h2>
+            <p class="home-page__card-description">Accede a todas las órdenes de trabajo generadas.</p>
+            <a href="/ordenes-de-trabajo/listar" class="home-page__button">Ver Órdenes</a>
+        </article>
+
+        <article class="home-page__card">
+            <h2 class="home-page__card-title">Minutas</h2>
+            <p class="home-page__card-description">Consulta las minutas de reuniones anteriores.</p>
+            <a href="minutas.html" class="home-page__button">Ver Minutas</a>
+        </article>
+    </section>
+
+    {% include 'parts/footer.view.html' %}
+</body>
+</html>
