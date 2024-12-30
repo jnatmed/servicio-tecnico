@@ -65,7 +65,7 @@ class InternoController extends Controller
     }
 
     public function verInternosAsignados() {
-        $idTaller = $this->request->get('idTaller');
+        $idTaller = $this->request->get('id_taller');
         // Obtener los datos del modelo
         $datosAsignaciones = $this->model->obtenerInternosAsignados($idTaller);
 

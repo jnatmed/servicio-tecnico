@@ -353,8 +353,11 @@ class QueryBuilder
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
             
+            $result = $stmt->fetchAll(PDO::FETCH_OBJ); 
             // Retornar los resultados como objetos
-            return $stmt->fetchAll(PDO::FETCH_OBJ); 
+
+            $this->logger->debug("resultado asignaciones",[$params, $result]);
+            return $result;
         } catch (Exception $e) {
             // Manejo de errores
             throw new Exception("Error al ejecutar la consulta: " . $e->getMessage());
