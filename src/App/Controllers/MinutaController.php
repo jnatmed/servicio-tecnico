@@ -5,13 +5,13 @@ namespace Paw\App\Controllers;
 use Exception;
 use Paw\Core\Controller;
 use Paw\App\Controllers\UserController;
-use Paw\App\Models\OrdenCollection;
+use Paw\App\Models\Minutas;
 use Paw\Core\Traits\Loggable;
 use Paw\App\Utils\Uploader;
 
 class MinutaController extends Controller
 {
-    public ?string $modelName = OrdenCollection::class;    
+    public ?string $modelName = Minutas::class;    
     use Loggable;
     public $usuario;
     public $uploader;
@@ -30,6 +30,24 @@ class MinutaController extends Controller
 
         $log->info("this->menu: ", [$this->menu]);
     }
+
+    public function listar(){
+
+        $this->usuario->verificarSesion();
+
+        $minutas = $this->model->listarMinutas();
+
+        view('minutas.listado', array_merge(
+            ['minutas' => $minutas],
+            $this->menu
+        ));
+
+    }
+
+    public function ver(){
+        $this->usuario->verificarSesion();
+    }
+
 
     public function new()
     {

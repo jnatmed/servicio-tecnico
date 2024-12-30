@@ -129,6 +129,7 @@ $router->get('/orden-de-trabajo/descargar', 'OrdenController@download');
 $router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarEstado');
 
 $router->get('/minuta/new', 'MinutaController@new');
+$router->get('/minutas/listar', 'MinutaController@listar');
 
 $router->get('/','PageController@home');
 

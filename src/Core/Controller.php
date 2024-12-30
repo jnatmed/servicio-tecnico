@@ -36,6 +36,10 @@ class Controller
                     'name' => 'NUEVA MINUTA'
                 ],
                 [
+                    'href' => '/minutas/listar',
+                    'name' => 'VER MINUTAS'
+                ],
+                [
                     'href' => '/orden-de-trabajo/listar',
                     'name' => 'VER ORDENES DE TRABAJO'
                 ],

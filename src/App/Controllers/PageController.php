@@ -33,6 +33,8 @@ class PageController extends Controller
 
     public function home()
     {
+        $this->usuario->verificarSesion();
+        
         view('home.view', [
             "datos" => ["action" => "nuevo"], 
             ...$this->menu

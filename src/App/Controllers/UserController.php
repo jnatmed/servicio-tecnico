@@ -44,7 +44,7 @@ class UserController extends Controller
         } else {
             // Filtrar los elementos del menú para eliminar 'LOGOUT'
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo' ]);
+                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo', '/minuta/new','/user/login', '/user/register', '/minutas/listar' ]);
                 // return $item['href'] !== '/user/logout';
             });
         }
@@ -52,6 +52,12 @@ class UserController extends Controller
         $this->logger->debug("menu: ", [$menu]);
         return $menu;
     }    
+
+    public function verificarSesion() {
+        if (!$this->haySession()) {
+            redirect('user/login');
+        }
+    }
 
     public function haySession()
     {

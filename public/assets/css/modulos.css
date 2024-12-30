@@ -12,6 +12,15 @@ header {
     position: relative;
 }
 
+.header {
+    position: relative;
+    height: 30vh; /* 30% del viewport height */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
 .header-container {
     display: flex;
     justify-content: space-between;
