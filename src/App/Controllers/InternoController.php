@@ -4,11 +4,32 @@ namespace Paw\App\Controllers;
 
 use Paw\Core\Controller;
 use Paw\Core\Traits\Loggable;
+use Paw\App\Models\Interno;
 use Exception;
 
 class InternoController extends Controller
 {
+    public ?string $modelName = Interno::class;    
+
     use Loggable;
+    public $usuario;
+
+
+    public function __construct()
+    {
+        global $log;
+         
+        parent::__construct();     
+
+        $this->usuario = new UserController();
+        $this->usuario->setLogger($log);
+
+        $log->info("info __construct: this->menu",  [$this->menu]);
+        $this->menu = $this->usuario->adjustMenuForSession($this->menu);        
+
+        $log->info("this->menu: ", [$this->menu]);
+    }
+
 
     public function datosInternos()
     {
@@ -38,6 +59,23 @@ class InternoController extends Controller
                 'error' => 'Ocurrió un error al procesar la solicitud.',
                 'mensaje' => $e->getMessage()
             ]);
+        }
+
+
+    }
+
+    public function verInternosAsignados() {
+        $idTaller = $this->request->get('idTaller');
+        // Obtener los datos del modelo
+        $datosAsignaciones = $this->model->obtenerInternosAsignados($idTaller);
+
+        // Comprobar si se encontraron datos
+        if ($datosAsignaciones) {
+            // Pasar los datos a la vista
+            return view('asignaciones', ['asignaciones' => $datosAsignaciones]);
+        } else {
+            // Si no se encuentran datos, manejar el error o mostrar un mensaje
+            return view('asignaciones', ['mensaje' => 'No hay internos asignados a este taller.']);
         }
     }
     

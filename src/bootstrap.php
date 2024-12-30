@@ -151,4 +151,5 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
  * 10) Datos de los internos trabajadores
  */
  $router->get('/interno', 'InternoController@datosInternos');
+ $router->get('/talleres/ver_asignaciones', 'InternoController@verInternosAsignados');
  // /interno?id=1

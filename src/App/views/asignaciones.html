@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+    <link rel="stylesheet" href="/assets/css/tooltips.css">
+    <link rel="stylesheet" href="/assets/css/estilos.css"> <!-- Incluye el archivo CSS con los estilos para la tabla -->
+</head>
+<body class="home">
+    {% include 'parts/header.view.html' %}
+
+    <div class="asignaciones-container">
+        <h1>Asignaciones de Talleres</h1>
+        
+        {% if asignaciones is empty %}
+            <p class="asignaciones-message">No hay internos asignados a este taller.</p>
+        {% else %}
+            <table class="asignaciones-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Taller</th>
+                        <th>Cupo</th>
+                        <th>Nombre Interno</th>
+                        <th>Apellido Interno</th>
+                        <th>Fecha de Asignación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for asignacion in asignaciones %}
+                        <tr>
+                            <td>{{ asignacion.nombre_taller }}</td>
+                            <td>{{ asignacion.cupo_taller }}</td>
+                            <td>{{ asignacion.nombre_interno }}</td>
+                            <td>{{ asignacion.apellido_interno }}</td>
+                            <td>{{ asignacion.fecha_asignacion_taller | date("d/m/Y") }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+
+    {% include 'parts/footer.view.html' %}
+</body>
+</html>

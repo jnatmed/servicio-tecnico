@@ -327,5 +327,37 @@ class QueryBuilder
             throw new Exception('Ocurrió un error al ejecutar consulta DELETE: ' . $e->getMessage());
         }
     }
+ 
     
+    public function obtenerInternosAsignados($params) {
+        try {
+            // La consulta SQL ahora está directamente en el método
+            $sql = "
+                SELECT 
+                    t.nombre AS nombre_taller, 
+                    t.cupo AS cupo_taller, 
+                    i.nombre AS nombre_interno, 
+                    i.apellido AS apellido_interno, 
+                    a.fecha_asignacion
+                FROM 
+                    talleres t
+                INNER JOIN 
+                    asignaciones a ON t.id = a.taller_id
+                INNER JOIN 
+                    internos i ON a.interno_id = i.id
+                WHERE 
+                    t.id = :id_taller
+            ";            
+    
+            // Preparar la consulta y ejecutar con los parámetros
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+            
+            // Retornar los resultados como objetos
+            return $stmt->fetchAll(PDO::FETCH_OBJ); 
+        } catch (Exception $e) {
+            // Manejo de errores
+            throw new Exception("Error al ejecutar la consulta: " . $e->getMessage());
+        }
+    }
 }

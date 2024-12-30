@@ -1,0 +1,25 @@
+.asignaciones-container {
+    margin: 20px;
+}
+
+.asignaciones-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.asignaciones-table th,
+.asignaciones-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.asignaciones-table th {
+    background-color: #f4f4f4;
+}
+
+.asignaciones-message {
+    color: #ff0000;
+    font-size: 1.2em;
+}
