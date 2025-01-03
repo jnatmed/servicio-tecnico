@@ -135,3 +135,87 @@ input[type="submit"]{
 .btn-descarga:hover{
     background-color: #7e998b;
 }
+
+/* Contenedor principal */
+.main-container {
+    display: flex;
+    min-height: calc(100vh - 100px); /* Ajusta según el tamaño del header y footer */
+}
+
+/* Barra de navegación */
+.side-nav {
+    width: 250px;
+    background-color: #f4f4f4;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    border-right: 2px solid #ddd;
+    font-family: 'Arial', sans-serif; /* Fuente moderna */
+}
+
+.side-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.side-nav ul li {
+    margin-bottom: 20px; /* Espaciado entre opciones */
+}
+
+.side-nav ul li a {
+    text-decoration: none;
+    color: #444; /* Color de texto más suave */
+    font-weight: bold;
+    font-size: 16px; /* Tamaño de texto mayor */
+    display: flex;
+    align-items: center; /* Alinea íconos con texto */
+    gap: 10px; /* Espacio entre ícono y texto */
+    padding: 10px 15px;
+    border-radius: 8px; /* Bordes redondeados */
+    transition: all 0.3s ease; /* Animación */
+}
+
+.side-nav ul li a:hover {
+    background-color: #007BFF; /* Color de fondo al pasar el mouse */
+    color: white; /* Texto blanco en hover */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra atractiva */
+    transform: scale(1.05); /* Crece ligeramente al pasar el mouse */
+}
+
+/* Íconos personalizados con Font Awesome */
+.side-nav ul li a::before {
+    content: ""; /* Espacio reservado para íconos */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 18px;
+    margin-right: 10px; /* Espaciado entre ícono y texto */
+    color: #007BFF; /* Color inicial del ícono */
+    transition: color 0.3s ease, transform 0.3s ease;
+}
+
+.side-nav ul li a:hover::before {
+    color: white; /* Ícono blanco en hover */
+}
+
+/* Íconos específicos por opción */
+.side-nav ul li:nth-child(1) a::before { content: "\f15b"; } /* Archivo */
+.side-nav ul li:nth-child(2) a::before { content: "\f044"; } /* Edición */
+.side-nav ul li:nth-child(3) a::before { content: "\f06e"; } /* Lista */
+.side-nav ul li:nth-child(4) a::before { content: "\f15c"; } /* Documento */
+.side-nav ul li:nth-child(5) a::before { content: "\f2f5"; } /* Usuario */
+.side-nav ul li:nth-child(6) a::before { content: "\f007"; } /* Perfil */
+
+/* Contenido dinámico */
+.dynamic-content {
+    flex: 1; /* Ocupa el resto del espacio */
+    padding: 20px;
+    background-color: #fff;
+    overflow-y: auto;
+    background-image: url('/assets/imgs/fondo-dat.png'); /* Ruta de la imagen de fondo */ 
+    background-size: cover; /* Ajusta la imagen al tamaño del contenedor */
+    background-position: center; /* Centra la imagen */
+    background-repeat: no-repeat; /* Evita que se repita */
+    z-index: -1; /* Envía el fondo detrás del contenido */
+}

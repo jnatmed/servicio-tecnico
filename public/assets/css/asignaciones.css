@@ -23,3 +23,7 @@
     color: #ff0000;
     font-size: 1.2em;
 }
+.asignaciones-table tr:hover {
+    background-color: #f0f0f0; /* Color de fondo al hacer hover */
+    cursor: pointer; /* Cambio de cursor al pasar sobre las filas */
+}
