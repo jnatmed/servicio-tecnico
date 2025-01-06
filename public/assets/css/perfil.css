@@ -2,46 +2,90 @@
 
 /* Contenedor principal del perfil */
 .user-profile-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 30px;
+    background: linear-gradient(135deg, #ffffff, #f4f6f9);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e4e8;
 }
 
 /* Título del perfil */
 .user-profile-title {
-    font-size: 2em;
-    margin-bottom: 20px;
-    color: #333;
+    font-size: 2.2em;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
 }
 
 /* Contenedor de detalles del usuario */
 .user-details {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
+    padding: 20px 0;
 }
 
 /* Estilo de los labels */
 .user-details label {
+    font-size: 1.1em;
     font-weight: bold;
-    color: #555;
+    color: #34495e;
+    display: inline-block;
+    margin-bottom: 5px;
 }
 
 /* Estilo de la información del usuario */
 .user-details .user-info {
     font-size: 1em;
-    color: #777;
+    font-weight: 500;
+    color: #6c7a89;
+    background-color: #f7f9fb;
+    padding: 10px 15px;
+    border-radius: 8px;
+    border: 1px solid #dcdfe4;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-/* Otros estilos adicionales */
-.user-details p {
-    margin: 0;
-}
-
+/* Línea divisoria entre campos */
 .user-details p:not(:last-child) {
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eaeef2;
+}
+
+/* Imagen de perfil */
+.user-profile-picture {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.user-profile-picture img {
+    max-width: 150px;
+    border-radius: 50%;
+    border: 3px solid #eaeef2;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .user-profile-container {
+        padding: 20px;
+    }
+
+    .user-profile-title {
+        font-size: 1.8em;
+    }
+
+    .user-details label,
+    .user-details .user-info {
+        font-size: 0.95em;
+    }
+
+    .user-profile-picture img {
+        max-width: 120px;
+    }
 }

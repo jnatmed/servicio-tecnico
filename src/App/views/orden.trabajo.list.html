@@ -2,79 +2,98 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-    <link rel="stylesheet" href="/assets/css/tooltips.css">
 </head>
 <body class="home">
-    {% include 'parts/header.view.html' %}
+    {# {% include 'parts/header.view.html' %} #}
 
-    <div class="orden-container">
-        <h1>Órdenes de Trabajo</h1>
-        <table class="orden-table">
-            <thead>
-                <tr>
-                    <th>Número de Orden</th>
-                    <th>Tipo de Servicio</th>
-                    <th>Fecha de Emisión</th>
-                    <th>Division</th>
-                    <th>Seccion</th>
-                    <th>Estado</th>
-                    <th>Ver</th>
-                    <th>Editar</th>
-                    <th>Eliminar</th>
-                    <th>Descargar</th>
-                    <th>Accion</th>
-                    <!-- Agrega más encabezados según los datos que quieras mostrar -->
-                </tr>
-            </thead>
-            <tbody>
-                {% for orden in ordenes %}
+    <section class="main-container">
 
-                    <tr>
-                            <td class="tipo-nro-lista">{{ orden.id }}</td>
-                            <td>{{ orden.tipoServicio }}</td>
-                            <td>{{ orden.fechaEmision }}</td>
-                            <td>{{ orden.division | capitalize }}</td>
-                            <td>{{ orden.seccion | capitalize }}</td>
-                            <td>{{ orden.descripcion_estado | format_estado }}</td>
-                            <td>
-                                <a href="/orden-de-trabajo/ver?id={{ orden.id }}" >Ver</a>
-                            </td>
-                            <td>
-                                <a href="/orden-de-trabajo/editar?id={{ orden.id }}" >Editar</a>
-                            </td>
-                            <td>
-                                <a href="/orden-de-trabajo/eliminar?id={{ orden.id }}">Eliminar</a>
-                            </td>
-                            <td>
-                                {% if orden.pathOrden is empty %}
-                                    No hay Archivo
-                                {% else %}
-                                    <a href="/orden-de-trabajo/descargar?id={{ orden.id }}">Descargar</a>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% set estado = orden.estado_orden_id %}
-
-                                {% if estado == 1 %}
-                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=2">Aceptar</a>
-                                    <a href="/orden-de-trabajo/editar?id={{ orden.id }}&estado=3" class="tooltip">Rechazar<span class="tooltiptext">Tenga en cuenta que: Para rechazar una orden, debera antes, describir el motivo del rechazo</span></a>
-                                
-                                {% elseif estado == 2 %}
-                                    <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=4" class="tooltip"> Finalizar<span class="tooltiptext">Tenga en cuenta que: Para finalizar una orden, debera antes, describir los trabajos realizados</span></a>
-                                
-                                {% elseif estado == 3 or estado == 4 %}
-                                    ----
-                                {% endif %}
-                            </td>
-                        </tr>
+        <nav class="side-nav">
+            <a href="/"><article class="header_icon"></article></a>
+            <ul>
+                {% for item in menu %}
+                    <li>
+                        <a href="{{ item.href }}">{{ item.name }}</a>
+                    </li>
                 {% endfor %}
-            </tbody>
-        </table>
         
-        {% if ordenes is empty %}
-            <p class="orden-message">No hay órdenes de trabajo para mostrar.</p>
-        {% endif %}
-    </div>
+            </ul>
+        </nav>
+
+        <section class="dynamic-content">
+
+        <div class="orden-container">
+            <h1>Órdenes de Trabajo</h1>
+            <table class="orden-table">
+                <thead>
+                    <tr>
+                        <th>Número de Orden</th>
+                        <th>Tipo de Servicio</th>
+                        <th>Fecha de Emisión</th>
+                        <th>Division</th>
+                        <th>Seccion</th>
+                        <th>Estado</th>
+                        <th>Ver</th>
+                        <th>Editar</th>
+                        <th>Eliminar</th>
+                        <th>Descargar</th>
+                        <th>Accion</th>
+                        <!-- Agrega más encabezados según los datos que quieras mostrar -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orden in ordenes %}
+
+                        <tr>
+                                <td class="tipo-nro-lista">{{ orden.id }}</td>
+                                <td>{{ orden.tipoServicio }}</td>
+                                <td>{{ orden.fechaEmision }}</td>
+                                <td>{{ orden.division | capitalize }}</td>
+                                <td>{{ orden.seccion | capitalize }}</td>
+                                <td>{{ orden.descripcion_estado | format_estado }}</td>
+                                <td>
+                                    <a href="/orden-de-trabajo/ver?id={{ orden.id }}" >Ver</a>
+                                </td>
+                                <td>
+                                    <a href="/orden-de-trabajo/editar?id={{ orden.id }}" >Editar</a>
+                                </td>
+                                <td>
+                                    <a href="/orden-de-trabajo/eliminar?id={{ orden.id }}">Eliminar</a>
+                                </td>
+                                <td>
+                                    {% if orden.pathOrden is empty %}
+                                        No hay Archivo
+                                    {% else %}
+                                        <a href="/orden-de-trabajo/descargar?id={{ orden.id }}">Descargar</a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set estado = orden.estado_orden_id %}
+
+                                    {% if estado == 1 %}
+                                        <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=2">Aceptar</a>
+                                        <a href="/orden-de-trabajo/editar?id={{ orden.id }}&estado=3" class="tooltip">Rechazar<span class="tooltiptext">Tenga en cuenta que: Para rechazar una orden, debera antes, describir el motivo del rechazo</span></a>
+                                    
+                                    {% elseif estado == 2 %}
+                                        <a href="/orden-de-trabajo/actualizar_estado?id={{ orden.id }}&estado=4" class="tooltip"> Finalizar<span class="tooltiptext">Tenga en cuenta que: Para finalizar una orden, debera antes, describir los trabajos realizados</span></a>
+                                    
+                                    {% elseif estado == 3 or estado == 4 %}
+                                        ----
+                                    {% endif %}
+                                </td>
+                            </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            {% if ordenes is empty %}
+                <p class="orden-message">No hay órdenes de trabajo para mostrar.</p>
+            {% endif %}
+        </div>
+
+        </section>
+
+    </section>
 
     {% include 'parts/footer.view.html' %}
 

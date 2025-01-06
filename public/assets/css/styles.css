@@ -4,6 +4,7 @@ body {
     background-color: #f0f0f0;
     margin: 0;
     padding: 0;
+    height: 100vh;
 }
 
 h1, h2 {
@@ -139,7 +140,7 @@ input[type="submit"]{
 /* Contenedor principal */
 .main-container {
     display: flex;
-    min-height: calc(100vh - 100px); /* Ajusta según el tamaño del header y footer */
+    height: inherit;
 }
 
 /* Barra de navegación */
@@ -204,8 +205,9 @@ input[type="submit"]{
 .side-nav ul li:nth-child(2) a::before { content: "\f044"; } /* Edición */
 .side-nav ul li:nth-child(3) a::before { content: "\f06e"; } /* Lista */
 .side-nav ul li:nth-child(4) a::before { content: "\f15c"; } /* Documento */
-.side-nav ul li:nth-child(5) a::before { content: "\f2f5"; } /* Usuario */
-.side-nav ul li:nth-child(6) a::before { content: "\f007"; } /* Perfil */
+.side-nav ul li:nth-child(5) a::before { content: "\f0cb"; } /* Lista de Internos */
+.side-nav ul li:nth-child(6) a::before { content: "\f2f5"; } /* Salir */
+.side-nav ul li:nth-child(7) a::before { content: "\f007"; } /* Perfil */
 
 /* Contenido dinámico */
 .dynamic-content {
@@ -217,5 +219,5 @@ input[type="submit"]{
     background-size: cover; /* Ajusta la imagen al tamaño del contenedor */
     background-position: center; /* Centra la imagen */
     background-repeat: no-repeat; /* Evita que se repita */
-    z-index: -1; /* Envía el fondo detrás del contenido */
+    /* z-index: -1; Envía el fondo detrás del contenido */
 }

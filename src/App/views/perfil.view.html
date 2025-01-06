@@ -2,29 +2,48 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-    <link rel="stylesheet" href="/assets/css/perfil.css">
 </head>
 <body class="home">
-    {% include 'parts/header.view.html' %}
+    {# {% include 'parts/header.view.html' %} #}
 
-    <main>
-        <div class="user-profile-container">
-            <h1 class="user-profile-title">Perfil de Usuario</h1>
+    <section class="main-container">
 
-            <div class="user-details">
-                <p><label>Nombre de Usuario:</label> <span class="user-info">{{ usuario.usuario }}</span></p>
-                <p><label>Email:</label> <span class="user-info">{{ usuario.email }}</span></p>
-                <p><label>Tipo de Usuario:</label> <span class="user-info">{{ usuario.tipo_usuario }}</span></p>
-            </div>
+        <nav class="side-nav">
+            <a href="/"><article class="header_icon"></article></a>
+            <ul>
+                {% for item in menu %}
+                    <li>
+                        <a href="{{ item.href }}">{{ item.name }}</a>
+                    </li>
+                {% endfor %}
+        
+            </ul>
+        </nav>
 
-            {% if usuario.imagen %}
-            <div class="user-profile-picture">
-                <img src="{{ usuario.imagen }}" alt="Foto de perfil">
-            </div>
-            {% endif %}
-        </div>
-    </main>
+        <section class="dynamic-content">
 
+            <section class="user-profile-container">
+                <h1 class="user-profile-title">Perfil de Usuario</h1>
+
+                <div class="user-details">
+                    <p><label>Nombre de Usuario:</label> <span class="user-info">{{ usuario.usuario }}</span></p>
+                    <p><label>Email:</label> <span class="user-info">{{ usuario.email }}</span></p>
+                    <p><label>Tipo de Usuario:</label> <span class="user-info">{{ usuario.tipo_usuario }}</span></p>
+                </div>
+
+                {% if usuario.imagen %}
+                <div class="user-profile-picture">
+                    <img src="{{ usuario.imagen }}" alt="Foto de perfil">
+                </div>
+                {% endif %}
+            </section>
+
+
+
+        </section>
+
+    </section>
+    
     {% include 'parts/footer.view.html' %}
 </body>
 </html>

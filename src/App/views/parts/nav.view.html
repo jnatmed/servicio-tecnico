@@ -1,9 +1,10 @@
 
-<nav>
-    <ul>
-        {% for item in menu %}
-            <li><a href="{{ item.href }}">{{ item.name }}</a></li>
-        {% endfor %}
-
-    </ul>
-</nav>
+{% if menu|length > 0 %}
+    <nav>
+        <ul>
+            {% for item in menu %}
+                <li><a href="{{ item.href }}">{{ item.name }}</a></li>
+            {% endfor %}
+        </ul>
+    </nav>
+{% endif %}

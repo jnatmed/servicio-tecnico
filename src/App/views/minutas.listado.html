@@ -2,68 +2,86 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-    <link rel="stylesheet" href="/assets/css/tooltips.css">
-    <link rel="stylesheet" href="/assets/css/estilos.css"> <!-- Incluye el archivo CSS con los estilos para la tabla -->
 </head>
 <body class="home">
-    {% include 'parts/header.view.html' %}
+    {# {% include 'parts/header.view.html' %} #}
 
-    <div class="minutas-container">
-        <h1>Minutas de Reuniones</h1>
-        <table class="minutas-table">
-            <thead>
-                <tr>
-                    <th>Número</th>
-                    <th>Organización</th>
-                    <th>Título</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Lugar</th>
-                    <th>Facilitador</th>
-                    <th>Secretario</th>
-                    <th>Ver</th>
-                    <th>Editar</th>
-                    <th>Eliminar</th>
-                    <th>Descargar</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for minuta in minutas %}
-                    <tr>
-                        <td>{{ minuta.id }}</td>
-                        <td>{{ minuta.orgName }}</td>
-                        <td>{{ minuta.meetingTitle }}</td>
-                        <td>{{ minuta.meetingDate | date("d/m/Y") }}</td>
-                        <td>{{ minuta.meetingTime }}</td>
-                        <td>{{ minuta.meetingPlace }}</td>
-                        <td>{{ minuta.facilitator }}</td>
-                        <td>{{ minuta.secretary }}</td>
-                        <td>
-                            <a href="/minuta/ver?id={{ minuta.id }}">Ver</a>
-                        </td>
-                        <td>
-                            <a href="/minuta/editar?id={{ minuta.id }}">Editar</a>
-                        </td>
-                        <td>
-                            <a href="/minuta/eliminar?id={{ minuta.id }}">Eliminar</a>
-                        </td>
-                        <td class="{% if minuta.documentPath is empty %} no-archivo {% endif %}">
-                            {% if minuta.documentPath is empty %}
-                                No hay Archivo
-                            {% else %}
-                                <a href="/minuta/descargar?id={{ minuta.id }}">Descargar</a>
-                            {% endif %}
-                        </td>
-                    </tr>
+    <section class="main-container">
+
+        <nav class="side-nav">
+            <a href="/"><article class="header_icon"></article></a>
+            <ul>
+                {% for item in menu %}
+                    <li>
+                        <a href="{{ item.href }}">{{ item.name }}</a>
+                    </li>
                 {% endfor %}
-            </tbody>
-        </table>
+        
+            </ul>
+        </nav>
 
-        {% if minutas is empty %}
-            <p class="minutas-message">No hay minutas para mostrar.</p>
-        {% endif %}
-    </div>
+        <section class="dynamic-content">
 
-    {% include 'parts/footer.view.html' %}
+            <div class="minutas-container">
+                <h1>Minutas de Reuniones</h1>
+                <table class="minutas-table">
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Organización</th>
+                            <th>Título</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Lugar</th>
+                            <th>Facilitador</th>
+                            <th>Secretario</th>
+                            <th>Ver</th>
+                            <th>Editar</th>
+                            <th>Eliminar</th>
+                            <th>Descargar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for minuta in minutas %}
+                            <tr>
+                                <td>{{ minuta.id }}</td>
+                                <td>{{ minuta.orgName }}</td>
+                                <td>{{ minuta.meetingTitle }}</td>
+                                <td>{{ minuta.meetingDate | date("d/m/Y") }}</td>
+                                <td>{{ minuta.meetingTime }}</td>
+                                <td>{{ minuta.meetingPlace }}</td>
+                                <td>{{ minuta.facilitator }}</td>
+                                <td>{{ minuta.secretary }}</td>
+                                <td>
+                                    <a href="/minuta/ver?id={{ minuta.id }}">Ver</a>
+                                </td>
+                                <td>
+                                    <a href="/minuta/editar?id={{ minuta.id }}">Editar</a>
+                                </td>
+                                <td>
+                                    <a href="/minuta/eliminar?id={{ minuta.id }}">Eliminar</a>
+                                </td>
+                                <td class="{% if minuta.documentPath is empty %} no-archivo {% endif %}">
+                                    {% if minuta.documentPath is empty %}
+                                        No hay Archivo
+                                    {% else %}
+                                        <a href="/minuta/descargar?id={{ minuta.id }}">Descargar</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if minutas is empty %}
+                    <p class="minutas-message">No hay minutas para mostrar.</p>
+                {% endif %}
+            </div>
+
+        </section>
+
+    </section>
+
+       {% include 'parts/footer.view.html' %}
 </body>
 </html>

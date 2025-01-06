@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+<body class="home">
+
+    <section class="main-container">
+
+        <nav class="side-nav">
+            <a href="/" class="header_icon"><article>DAT</article></a>
+            <button class="menu-toggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul>
+                {% for item in menu %}
+                    <li>
+                        <a href="{{ item.href }}">{{ item.name }}</a>
+                    </li>
+                {% endfor %}
+        
+            </ul>
+        </nav>
+
+    <section class="dynamic-content">  

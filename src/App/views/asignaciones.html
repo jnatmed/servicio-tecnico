@@ -1,12 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    {% include 'parts/head.view.html' %}
-    <link rel="stylesheet" href="/assets/css/tooltips.css">
-    <link rel="stylesheet" href="/assets/css/estilos.css"> <!-- Incluye el archivo CSS con los estilos para la tabla -->
-</head>
-<body class="home">
-    {% include 'parts/header.view.html' %}
+
+{% include "parts/modulos.view.html" %}
 
     <div class="asignaciones-container">
         <h1>Asignaciones de Talleres</h1>
@@ -38,6 +31,8 @@
             </table>
         {% endif %}
     </div>
+
+    {% include "parts/cierre-modulos.view.html" %}
 
     {% include 'parts/footer.view.html' %}
 </body>

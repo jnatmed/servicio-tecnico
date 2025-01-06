@@ -4,57 +4,79 @@
     {% include 'parts/head.view.html' %}
 </head>
 <body class="home">
-    {% include 'parts/header.view.html' %}
+    {# {% include 'parts/header.view.html' %} #}
 
-    <section class="section-resumen">
-        <h2>Resumen del Pedido</h2>
-        {% if datos.id is defined %}
-            <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ datos.id }} </h3>
-        {% endif %}        
-        <hr>
-        <details open>
-            <summary>Detalles del Servicio</summary>
-            <div class="resumen-datos">
-                <p><strong>Solicitud de Servicio:</strong> {{ datos.tipoServicio }}</p>
-                <p><strong>Fecha de Emisión:</strong> {{ datos.fechaEmision }}</p>                
-            </div>
-        </details>
-        <details open>
-            <summary>Usuario</summary>
-            <p><strong>Apellido:</strong> {{ datos.apellido }}</p>
-            <p><strong>Nombre:</strong> {{ datos.nombre }}</p>
-            <p><strong>Grado:</strong> {{ datos.grado }}</p>
-            <p><strong>Credencial:</strong> {{ datos.credencial }}</p>
-        </details>
-        <details open>
-            <summary>Area Dependencia</summary>
-            <p><strong>División:</strong> {{ datos.division }}</p>
-            <p><strong>Sección:</strong> {{ datos.seccion }}</p>
-            <p><strong>Correo Electrónico:</strong> {{ datos.email }}</p>
-        </details>
-        <details open>
-            <summary>Observaciones</summary>
-            <p><strong>Observaciones:</strong> {{ datos.observaciones }}</p>
-        </details>
+    <section class="main-container">
 
-        <details open>
-            <summary>Trabajos Realizados</summary>
-            <p><strong>Descripcion:</strong> {{ datos.trabajos_realizados }}</p>
-        </details>
+        <nav class="side-nav">
+            <a href="/"><article class="header_icon"></article></a>
+            <ul>
+                {% for item in menu %}
+                    <li>
+                        <a href="{{ item.href }}">{{ item.name }}</a>
+                    </li>
+                {% endfor %}
+        
+            </ul>
+        </nav>
 
-        <hr>
-        {% if datos.pathOrden is not empty %}
-            <button class="btn-descarga">
-                <a href="/orden-de-trabajo/descargar?id={{ datos.id }}">Descargar</a>
-            </button>
-        {% else %}
-            <td>No hay Archivo para Descargar</td>
-        {% endif %}
+        <section class="dynamic-content">
+
+            <section class="section-resumen">
+                <h2>Resumen del Pedido</h2>
+                {% if datos.id is defined %}
+                    <h3 class="tipo-nro" >Orden de Trabajo Nro # {{ datos.id }} </h3>
+                {% endif %}        
+                <hr>
+                <details open>
+                    <summary>Detalles del Servicio</summary>
+                    <div class="resumen-datos">
+                        <p><strong>Solicitud de Servicio:</strong> {{ datos.tipoServicio }}</p>
+                        <p><strong>Fecha de Emisión:</strong> {{ datos.fechaEmision }}</p>                
+                    </div>
+                </details>
+                <details open>
+                    <summary>Usuario</summary>
+                    <p><strong>Apellido:</strong> {{ datos.apellido }}</p>
+                    <p><strong>Nombre:</strong> {{ datos.nombre }}</p>
+                    <p><strong>Grado:</strong> {{ datos.grado }}</p>
+                    <p><strong>Credencial:</strong> {{ datos.credencial }}</p>
+                </details>
+                <details open>
+                    <summary>Area Dependencia</summary>
+                    <p><strong>División:</strong> {{ datos.division }}</p>
+                    <p><strong>Sección:</strong> {{ datos.seccion }}</p>
+                    <p><strong>Correo Electrónico:</strong> {{ datos.email }}</p>
+                </details>
+                <details open>
+                    <summary>Observaciones</summary>
+                    <p><strong>Observaciones:</strong> {{ datos.observaciones }}</p>
+                </details>
+
+                <details open>
+                    <summary>Trabajos Realizados</summary>
+                    <p><strong>Descripcion:</strong> {{ datos.trabajos_realizados }}</p>
+                </details>
+
+                <hr>
+                {% if datos.pathOrden is not empty %}
+                    <button class="btn-descarga">
+                        <a href="/orden-de-trabajo/descargar?id={{ datos.id }}">Descargar</a>
+                    </button>
+                {% else %}
+                    <td>No hay Archivo para Descargar</td>
+                {% endif %}
+            </section>
+            <section class="area_firmas">
+                <label for="">Firma de Usuario - Aclaracion</label>
+                <label for="">Firma de Sección - Aclaración</label>
+            </section>
+
+
+        </section>
+
     </section>
-    <section class="area_firmas">
-        <label for="">Firma de Usuario - Aclaracion</label>
-        <label for="">Firma de Sección - Aclaración</label>
-    </section>
+                
 
     {% include 'parts/footer.view.html' %}
 

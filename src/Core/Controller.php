@@ -44,6 +44,10 @@ class Controller
                     'name' => 'VER ORDENES DE TRABAJO'
                 ],
                 [
+                    'href' => '/talleres/ver_talleres',
+                    'name' => 'INTERNOS TRABAJADORES'
+                ],
+                [
                     'href' => '/user/login',
                     'name' => 'LOGIN'
                 ],
