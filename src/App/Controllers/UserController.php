@@ -35,16 +35,19 @@ class UserController extends Controller
             session_start();
         }
 
-        // Verificar si hay una sesión activa
+        // Si hay sesion actva elimino path de login y register
         if (isset($_SESSION['nombre_usuario'])) {
             // Filtrar los elementos del menú
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
                 return !in_array($item['href'], ['/user/login', '/user/register' ]);
             });
         } else {
-            // Filtrar los elementos del menú para eliminar 'LOGOUT'
+            // Si no hay sesion entonces saco del menu las opciones para usuarios logueados
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo', '/minuta/new','/user/login', '/user/register', '/minutas/listar' ]);
+                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', 
+                                                '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo', 
+                                                '/minuta/new','/user/login', '/user/register', 
+                                                '/minutas/listar', '/talleres/ver_talleres' ]);
                 // return $item['href'] !== '/user/logout';
             });
         }
