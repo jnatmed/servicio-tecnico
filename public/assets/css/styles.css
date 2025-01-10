@@ -141,7 +141,8 @@ input[type="submit"]{
 .main-container {
     display: flex;
     height: inherit;
-}
+    
+}   
 
 /* Barra de navegación */
 .side-nav {
@@ -163,8 +164,10 @@ input[type="submit"]{
 
 .side-nav ul li {
     margin-bottom: 20px; /* Espaciado entre opciones */
+    position: relative; /* Para manejar el posicionamiento de las sublistas */
 }
 
+/* Estilos generales para los enlaces */
 .side-nav ul li a {
     text-decoration: none;
     color: #444; /* Color de texto más suave */
@@ -178,6 +181,7 @@ input[type="submit"]{
     transition: all 0.3s ease; /* Animación */
 }
 
+/* Efecto hover para los enlaces */
 .side-nav ul li a:hover {
     background-color: #007BFF; /* Color de fondo al pasar el mouse */
     color: white; /* Texto blanco en hover */
@@ -205,19 +209,62 @@ input[type="submit"]{
 .side-nav ul li:nth-child(2) a::before { content: "\f044"; } /* Edición */
 .side-nav ul li:nth-child(3) a::before { content: "\f06e"; } /* Lista */
 .side-nav ul li:nth-child(4) a::before { content: "\f15c"; } /* Documento */
-.side-nav ul li:nth-child(5) a::before { content: "\f0cb"; } /* Lista de Internos */
-.side-nav ul li:nth-child(6) a::before { content: "\f2f5"; } /* Salir */
-.side-nav ul li:nth-child(7) a::before { content: "\f007"; } /* Perfil */
+.side-nav ul li:nth-child(5) a::before { content: "\f0ad"; } /* Lista de Talleres */
+.side-nav ul li:nth-child(6) a::before { content: "\f0c0"; } /* Lista de Internos */
+.side-nav ul li:nth-child(7) a::before { content: "\f2f5"; } /* Salir */
+.side-nav ul li:nth-child(8) a::before { content: "\f007"; } /* Perfil */
+
+/* Sublistas */
+.side-nav ul li ul.sub-menu {
+    list-style: none; /* Elimina los puntos de lista */
+    padding-left: 20px; /* Indentación de la sublista */
+    display: none; /* Oculta la sublista inicialmente */
+    margin: 0; /* Elimina márgenes */
+}
+
+/* Muestra la sublista cuando el li principal es hovered */
+.side-nav ul li:hover > ul.sub-menu {
+    display: block; /* Muestra la sublista cuando el elemento se pasa por encima */
+}
+
+/* Estilo para los enlaces en las sublistas */
+.side-nav ul li ul.sub-menu li a {
+    font-size: 14px; /* Reducir el tamaño de texto */
+    padding: 8px 15px; /* Ajustar el espaciado */
+    color: #444; /* Color de texto por defecto */
+}
+
+/* Efecto hover para las sublistas */
+.side-nav ul li ul.sub-menu li a:hover {
+    background-color: #007BFF; /* Color de fondo de sublista */
+    color: white; /* Texto blanco en hover */
+}
+
+/* Para los íconos en las sublistas */
+.side-nav ul li ul.sub-menu li a::before {
+    content: ""; /* Espacio reservado para íconos */
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    font-size: 16px; /* Ajustar el tamaño del ícono */
+    margin-right: 10px;
+    color: #007BFF;
+}
+
+/* Color del ícono de las sublistas en hover */
+.side-nav ul li ul.sub-menu li a:hover::before {
+    color: white;
+}
+
 
 /* Contenido dinámico */
 .dynamic-content {
     flex: 1; /* Ocupa el resto del espacio */
     padding: 20px;
-    background-color: #fff;
+
     overflow-y: auto;
     background-image: url('/assets/imgs/fondo-dat.png'); /* Ruta de la imagen de fondo */ 
     background-size: cover; /* Ajusta la imagen al tamaño del contenedor */
     background-position: center; /* Centra la imagen */
     background-repeat: no-repeat; /* Evita que se repita */
-    /* z-index: -1; Envía el fondo detrás del contenido */
+    
 }

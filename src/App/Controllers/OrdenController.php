@@ -126,7 +126,7 @@ class OrdenController extends Controller
         $this->logger->info("datosOrden: ",[$datosOrden]);
 
         if ($datosOrden['exito']){
-            view('resumen.orden.view', [
+            view('ordenes-de-trabajo/resumen.orden.view', [
                 "datos" => $datosOrden, 
                 ...$this->menu]
         );
@@ -187,7 +187,7 @@ class OrdenController extends Controller
             try {
                 $ordenes = $this->model->listarOrdenes($this->usuario->getIdUser());
     
-                view('orden.trabajo.list', array_merge(
+                view('ordenes-de-trabajo/orden.trabajo.list', array_merge(
                     ['ordenes' => $ordenes],   
                     $this->menu)
             );

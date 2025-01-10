@@ -37,7 +37,7 @@ class MinutaController extends Controller
 
         $minutas = $this->model->listarMinutas();
 
-        view('minutas.listado', array_merge(
+        view('minutas/minutas.listado', array_merge(
             ['minutas' => $minutas],
             $this->menu
         ));
@@ -51,7 +51,7 @@ class MinutaController extends Controller
 
     public function new()
     {
-        view('minuta.new', [
+        view('minutas/minuta.new', [
             "datos" => ["action" => "nuevo"], 
             ...$this->menu
         ]);        

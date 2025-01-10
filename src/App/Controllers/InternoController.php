@@ -64,6 +64,11 @@ class InternoController extends Controller
 
     }
 
+    public function verInternosTrabajadores()
+    {
+        
+    }
+
     public function verInternosAsignados() {
         $idTaller = $this->request->get('id_taller');
         // Obtener los datos del modelo
@@ -72,7 +77,9 @@ class InternoController extends Controller
         // Comprobar si se encontraron datos
         if ($datosAsignaciones) {
             // Pasar los datos a la vista
-            return view('asignaciones', ['asignaciones' => $datosAsignaciones]);
+            return view('asignaciones', array_merge([
+                'asignaciones' => $datosAsignaciones],
+                $this->menu));
         } else {
             // Si no se encuentran datos, manejar el error o mostrar un mensaje
             return view('asignaciones', ['mensaje' => 'No hay internos asignados a este taller.']);

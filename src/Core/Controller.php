@@ -28,24 +28,43 @@ class Controller
         $this->menu = [
             'menu' => [
                 [
-                    'href' => '/orden-de-trabajo/nuevo',
-                    'name' => 'NUEVA ORDEN DE TRABAJO'
-                ],
-                [
-                    'href' => '/minuta/new',
-                    'name' => 'NUEVA MINUTA'
+                    'href' => '/orden-de-trabajo/listar',
+                    'name' => 'ORDENES DE TRABAJO',                    
+                    'submenu' => [
+                        [
+                            'href' => '/orden-de-trabajo/nuevo',
+                            'name' => 'NUEVA ORDEN DE TRABAJO'
+                        ],
+                        [
+                            'href' => '/orden-de-trabajo/listado_pcs',
+                            'name' => 'LISTADO PCS'
+                        ],
+                    ]
                 ],
                 [
                     'href' => '/minutas/listar',
-                    'name' => 'VER MINUTAS'
-                ],
-                [
-                    'href' => '/orden-de-trabajo/listar',
-                    'name' => 'VER ORDENES DE TRABAJO'
+                    'name' => 'MINUTAS',
+                    'submenu' => [
+                        [
+                            'href' => '/minuta/new',
+                            'name' => 'NUEVA MINUTA',
+                        ],
+                        [
+                            'href' => '/minutas/listar',
+                            'name' => 'VER MINUTAS'
+                        ],
+                    ]                    
                 ],
                 [
                     'href' => '/talleres/ver_talleres',
-                    'name' => 'INTERNOS TRABAJADORES'
+                    'name' => 'TALLERES',
+                    'submenu' => [
+                        [
+                            'href' => '/internos/ver_internos',
+                            'name' => 'LISTADO INTERNOS'
+                        ]
+                    ]
+                    
                 ],
                 [
                     'href' => '/user/login',
@@ -54,7 +73,7 @@ class Controller
                 [
                     'href' => '/user/logout',
                     'name' => 'SALIR'
-                ],                
+                ],
                 [
                     'href' => '/user/register',
                     'name' => 'REGISTRO'
@@ -65,6 +84,7 @@ class Controller
                 ]
             ]
         ];
+    
 
         $this->qb = new QueryBuilder($connection, $log);
         $this->request = new Request();

@@ -1,30 +1,27 @@
 {% include 'parts/modulos.view.html' %}
 
+    <section class="home-page__section">
+        <article class="home-page__card">
+            <h2 class="home-page__card-title media_size">Órdenes de Trabajo</h2>
+            <p class="home-page__card-description">Accede a todas las órdenes de trabajo generadas.</p>
+            <a href="/orden-de-trabajo/listar" class="home-page__button">Ver Órdenes</a>
+        </article>
 
+        <article class="home-page__card">
+            <h2 class="home-page__card-title">Minutas</h2>
+            <p class="home-page__card-description">Consulta las minutas de reuniones anteriores.</p>
+            <a href="/minutas/listar" class="home-page__button">Ver Minutas</a>
+        </article>
 
-        <section class="home-page__section">
-            <article class="home-page__card">
-                <h2 class="home-page__card-title media_size">Órdenes de Trabajo</h2>
-                <p class="home-page__card-description">Accede a todas las órdenes de trabajo generadas.</p>
-                <a href="/orden-de-trabajo/listar" class="home-page__button">Ver Órdenes</a>
-            </article>
+        <article class="home-page__card">
+            <h2 class="home-page__card-title">Internos Trabajadores</h2>
+            <p class="home-page__card-description">Establezca la Prioridad de Cupo Talleres a Internos.</p>
+            <a href="/talleres/ver_talleres" class="home-page__button">Ver Ranking</a>
+        </article>
+    </section>
 
-            <article class="home-page__card">
-                <h2 class="home-page__card-title">Minutas</h2>
-                <p class="home-page__card-description">Consulta las minutas de reuniones anteriores.</p>
-                <a href="/minutas/listar" class="home-page__button">Ver Minutas</a>
-            </article>
+{% include "parts/cierre-modulos.view.html" %}
 
-            <article class="home-page__card">
-                <h2 class="home-page__card-title">Internos Trabajadores</h2>
-                <p class="home-page__card-description">Establezca la Prioridad de Cupo Talleres a Internos.</p>
-                <a href="/talleres/ver_talleres" class="home-page__button">Ver Ranking</a>
-            </article>
-        </section>
-
-
-    {% include "parts/cierre-modulos.view.html" %}
-
-    {% include 'parts/footer.view.html' %}
+{% include 'parts/footer.view.html' %}
 </body>
 </html>

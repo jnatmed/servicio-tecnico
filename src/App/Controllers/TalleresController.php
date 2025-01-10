@@ -37,7 +37,7 @@ class TalleresController extends Controller
 
         $talleres = $this->model->listarTalleres();
 
-        view('talleres.listado', array_merge(
+        view('talleres/talleres.listado', array_merge(
             ['talleres' => $talleres],
             $this->menu
         ));        

@@ -1,26 +1,5 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    {% include 'parts/head.view.html' %}
-</head>
-<body class="home">
-    {# {% include 'parts/header.view.html' %} #}
+{% include "parts/modulos.view.html" %}
 
-    <section class="main-container">
-
-        <nav class="side-nav">
-            <a href="/"><article class="header_icon"></article></a>
-            <ul>
-                {% for item in menu %}
-                    <li>
-                        <a href="{{ item.href }}">{{ item.name }}</a>
-                    </li>
-                {% endfor %}
-        
-            </ul>
-        </nav>
-
-        <section class="dynamic-content">
 
         <div class="orden-container">
             <h1>Órdenes de Trabajo</h1>
@@ -95,7 +74,9 @@
 
     </section>
 
-    {% include 'parts/footer.view.html' %}
+    {% include "parts/cierre-modulos.view.html" %}
 
+    {% include 'parts/footer.view.html' %}
 </body>
 </html>
+    

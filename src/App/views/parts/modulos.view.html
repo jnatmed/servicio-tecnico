@@ -6,17 +6,25 @@
 <body class="home">
 
     <section class="main-container">
-
+        
+        {% if menu|length > 0 %}
         <nav class="side-nav">
             <a href="/"><article class="header_icon"></article></a>
             <ul>
                 {% for item in menu %}
                     <li>
                         <a href="{{ item.href }}">{{ item.name }}</a>
+                        {% if item.submenu %}
+                            <ul class="sub-menu">
+                                {% for subitem in item.submenu %}
+                                    <li><a href="{{ subitem.href }}">{{ subitem.name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
                     </li>
                 {% endfor %}
-        
             </ul>
         </nav>
-
+    {% endif %}
+    
     <section class="dynamic-content">  
