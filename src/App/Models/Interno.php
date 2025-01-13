@@ -18,4 +18,15 @@ class Interno extends Model
             throw new Exception("Error al obtener los internos asignados: " . $e->getMessage());
         }
     }
+
+    public function getListadoInternos(){
+        try {
+            // Llamamos al método del QueryBuilder
+            return $this->queryBuilder->select('internos');
+            
+        } catch (Exception $e) {
+            // Manejar cualquier excepción lanzada por el QueryBuilder
+            throw new Exception("Error al obtener el listado de internos: ". $e->getMessage());
+        }
+    }
 }

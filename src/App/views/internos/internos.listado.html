@@ -1,0 +1,44 @@
+    {% include "parts/modulos.view.html" %}
+
+        <div class="internos-container">
+            <h1>Listado de Internos Trabajadores</h1>
+            <table class="internos-table">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Conducta</th>
+                        <th>Peligrosidad</th>
+                        <th>Habilidades</th>
+                        <th>Fecha de Ingreso</th>
+                        <th>Fecha de Egreso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for interno in internos %}
+                        <tr>
+                            <td>{{ interno.id }}</td>
+                            <td>{{ interno.nombre }}</td>
+                            <td>{{ interno.apellido }}</td>
+                            <td>{{ interno.conducta }}</td>
+                            <td>{{ interno.peligrosidad }}</td>
+                            <td>{{ interno.habilidades }}</td>
+                            <td>{{ interno.fecha_ingreso }}</td>
+                            <td>{{ interno.fecha_egreso }}</td>
+
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if internos is empty %}
+                <p class="internos-message">No hay talleres para mostrar.</p>
+            {% endif %}
+        </div>
+    
+    {% include "parts/cierre-modulos.view.html" %}
+
+    {% include 'parts/footer.view.html' %}
+</body>
+</html>

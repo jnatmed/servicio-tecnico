@@ -1,0 +1,74 @@
+/* Estilos para la tabla de internos */
+.internos-table {
+    width: 100%;
+    border: 1px solid #ddd; /* Borde general para la tabla */
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1); /* Sombra alrededor de la tabla */
+}
+
+.internos-table th, .internos-table td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.internos-table th {
+    background-color: #f2f2f2;
+}
+
+/* Estilos para el contenedor principal de internos */
+.internos-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Estilos para mensajes o secciones específicas de internos */
+.internos-message {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    border-radius: 4px;
+}
+
+/* Efecto hover para las celdas td */
+.internos-table tr:hover {
+    background-color: #f0f0f0; /* Color de fondo al hacer hover */
+    cursor: pointer; /* Cambio de cursor al pasar sobre las celdas */
+}
+
+/* Estilos para los enlaces en la tabla */
+.internos-table a {
+    text-decoration: none;
+    color: #007bff; /* Color del enlace */
+    font-weight: bold;
+}
+
+.internos-table a:hover {
+    text-decoration: underline; /* Subrayado al pasar el mouse sobre el enlace */
+}
+
+/* Estilos para los botones de acción (Ver, Editar, Eliminar, Descargar) */
+.internos-table td a {
+    padding: 6px 12px;
+    margin: 0 4px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    text-align: center;
+    display: inline-block;
+}
+
+.internos-table td a:hover {
+    background-color: #0056b3;
+}
+
+/* Estilos específicos para la celda "No hay Archivo" */
+.internos-table td.no-archivo {
+    color: #6c757d;
+    font-style: italic;
+}

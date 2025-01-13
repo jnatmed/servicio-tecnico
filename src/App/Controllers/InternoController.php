@@ -66,7 +66,17 @@ class InternoController extends Controller
 
     public function verInternosTrabajadores()
     {
-        
+        $listadoInternos = $this->model->getListadoInternos();
+
+        if ($listadoInternos) {
+            // Pasar los datos a la vista
+            return view('internos/internos.listado', array_merge([
+                'internos' => $listadoInternos],
+                $this->menu));
+        }else {
+            // Si no se encuentran datos, manejar el error o mostrar un mensaje
+            return view('internos/internos.listado', ['mensaje' => 'No hay internos registrados.']);
+        }
     }
 
     public function verInternosAsignados() {
