@@ -16,6 +16,7 @@ use Paw\Core\Router;
 use Paw\Core\Config;
 use Paw\Core\Request;
 use Paw\Core\Database\ConnectionBuilder;
+use Paw\Core\Configs\WhoopsConfig;
 
 /**
  * 1) DOTENV
@@ -53,10 +54,12 @@ $connection = $connectionBuilder->make($config);
  * 5) WHOOPS 
  * configuro el whoops para los errores del servidor
  */
-$whoops = new \Whoops\Run;
-$whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler);
-$whoops->register();
-
+$whoopsConfig = new WhoopsConfig();
+$whoopsConfig->configure([
+    'DB_PASSWORD', 
+    'DB_USERNAME', 
+    'DB_HOSTNAME',
+]);
 
 /**
  * 6) REQUEST

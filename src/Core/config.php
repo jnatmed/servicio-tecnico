@@ -40,6 +40,8 @@ class Config
         $this->configs['LDAP_ADMIN_USER'] = getenv('LDAP_ADMIN_USER') ?? '';
         $this->configs['LDAP_ADMIN_PASSWORD'] = getenv('LDAP_ADMIN_PASSWORD') ?? '';
         $this->configs['LDAP_BASE_DN'] = getenv('LDAP_BASE_DN') ?? '';
+        
+        $this->configs['APP_ENV'] = getenv('APP_ENV') ?? '';
 
     }
 

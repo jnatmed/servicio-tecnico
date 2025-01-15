@@ -1,0 +1,59 @@
+quiero crear las siguientes tablas 
+- entidad: agente, atributos {
+    credencial, 
+    nombre, 
+    apellido, 
+    cuil (clave unica), 
+    dependencia (fk_tabla_dependencia), 
+    estado_agente['activo','retirado'], 
+- entidad: dependencia, atributos {
+   nombre_dependencia
+}
+- entidad: producto, atributos {
+   nro_proyecto_productivo (clave unica),
+   fecha_creacion,
+   descripcion_proyecto,
+   estado ['iniciado','para_la_venta'],
+   tipo ['producto','servicio'],
+   stock_inicial,
+   unidad_que_fabrica (fk_tabla_dependencia)
+}
+- entidad: precio, atributos {
+   precio,
+   pv_autorizacion_consejo (clave unica),
+   fecha_precio	
+   id_producto (fk_tabla_producto)
+}
+- entidad: factura, atributos {
+   nro_factura (clave unica),
+   fecha_factura,
+   unidad_que_factura (fk_tabla_dependencia),
+   total_facturado,
+   condicion_venta ['contado','cta_cte','codigo_608','codigo_689'],
+   condicion_impositiva ['consumidor_final','exento','no_responsable','responsable_monotributo','responsable_inscripto'],
+   id_agente (fk_tabla_agente)
+}
+- entidad: factura_producto, atributo {
+   id_factura (fk_tabla_factura),
+   id_producto (fk_tabla_producto)
+   cantidad_facturada
+}
+
+- entidad: movimiento_inventario, atributos {
+  id_factura (fk_tabla_factura),
+  id_producto (fk_tabla_producto),
+  fecha_movimiento,
+  tipo_movimiento ['in', 'out']
+  cantidad
+  (id_factura, id_producto, fecha_movimiento forman una clave compuesta) 
+}
+- entidad: cuota, atributos {
+   nro_factura (fk_tabla_factura),
+   nro_cuota,
+   estado ['pagada','pendiente'],
+   fecha_vencimiento
+   (nro_factura y nro_cuota forman una clave compuesta)	
+}
+
+las foreign_key son unsigned 
+
