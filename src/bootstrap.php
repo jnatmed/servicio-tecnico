@@ -158,3 +158,11 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
  $router->get('/taller/ver_asignaciones', 'InternoController@verInternosAsignados');
  $router->get('/talleres/ver_talleres', 'TalleresController@verTalleres');
  // /interno?id=1
+
+ /**
+  * 11) Facturacion
+  */
+  $router->get('/facturacion/new', 'FacturacionController@nuevaFactura');
+  $router->get('/facturacion/api_get_agentes', 'FacturacionController@getAgentes');
+  $router->get('/facturacion/api_get_productos', 'FacturacionController@getProductos');
+  $router->get('/facturacion/api_get_precio_producto', 'FacturacionController@getPreciosProductos');

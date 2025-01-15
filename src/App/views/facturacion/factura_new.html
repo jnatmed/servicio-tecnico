@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Factura</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        .modal-dialog-centered {
+            max-width: 800px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Formulario Factura</h1>
+    <form id="facturaForm" method="POST" action="procesar_factura.php" class="needs-validation" novalidate>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="nro_de_factura" class="form-label">Número de Factura:</label>
+                <input type="text" class="form-control" id="nro_de_factura" name="nro_de_factura" readonly value="{{ nro_factura }}">
+            </div>
+            <div class="col-md-6">
+                <label for="fecha_factura" class="form-label">Fecha de Factura:</label>
+                <label class="form-control-plaintext" id="fecha_factura">{{ fecha_factura }}</label>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="dependencia" class="form-label">Dependencia:</label>
+            <select id="dependencia" name="dependencia" class="form-select">
+                <?php
+                // Llenar opciones desde la base de datos
+                foreach ($dependencias as $dependencia) {
+                    echo "<option value='{$dependencia['id']}'>{$dependencia['nombre']}</option>";
+                }
+                ?>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="total_facturado" class="form-label">Total Facturado:</label>
+            <div class="form-control" id="total_facturado">0.00</div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="condicion_venta" class="form-label">Condición de Venta:</label>
+                <select id="condicion_venta" name="condicion_venta" class="form-select">
+                    <option value="contado">Contado</option>
+                    <option value="cta_cte">Cuenta Corriente</option>
+                    <option value="codigo_608">Código 608</option>
+                    <option value="codigo_689">Código 689</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="condicion_impositiva" class="form-label">Condición Impositiva:</label>
+                <select id="condicion_impositiva" name="condicion_impositiva" class="form-select">
+                    <option value="consumidor_final">Consumidor Final</option>
+                    <option value="exento">Exento</option>
+                    <option value="no_responsable">No Responsable</option>
+                    <option value="responsable_monotributo">Responsable Monotributo</option>
+                    <option value="responsable_inscripto">Responsable Inscripto</option>
+                </select>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="agente" class="form-label">Agente:</label>
+            <button type="button" id="openAgentModal" class="btn btn-secondary btn-sm">Seleccionar Agente</button>
+            <span id="selectedAgent" class="ms-2">Ninguno</span>
+            <input type="hidden" id="agente" name="agente">
+        </div>
+        <div class="mb-3">
+            <label for="productos" class="form-label">Productos:</label>
+            <button type="button" id="addProduct" class="btn btn-primary btn-sm">Agregar Producto</button>
+            <table id="productosTable" class="table table-striped mt-3">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn btn-success">Guardar Factura</button>
+    </form>
+</div>
+
+<!-- Modal para seleccionar agente -->
+<div class="modal fade" id="agentModal" tabindex="-1" aria-labelledby="agentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agentModalLabel">Seleccionar Agente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="searchAgent" class="form-control" placeholder="Buscar agente...">
+                <ul id="agentList" class="list-group mt-3">
+                    <!-- Agentes se llenarán dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para agregar productos -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Seleccionar Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="searchProduct" class="form-control" placeholder="Buscar producto...">
+                <ul id="productList" class="list-group mt-3">
+                    <!-- Productos se llenarán dinámicamente -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/js/script.js"></script>
+</body>
+</html>
