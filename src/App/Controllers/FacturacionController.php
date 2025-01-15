@@ -17,6 +17,28 @@ class FacturacionController extends Controller
         ]);
     }
 
+    public function getAgentes()
+    {
+        // Simular una lista de agentes como datos de prueba
+        $listaAgentes = [
+            [
+                "id" => 4,
+                "nombre" => "Ana",
+                "apellido" => "López"
+            ],
+            [
+                "id" => 5,
+                "nombre" => "Luis",
+                "apellido" => "Martínez"
+            ]
+        ];
+    
+        // Establecer el encabezado para JSON
+        header('Content-Type: application/json');
+    
+        // Devolver la respuesta en formato JSON
+        echo json_encode($listaAgentes);
+    }
     
 
 }
