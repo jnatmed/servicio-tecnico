@@ -6,6 +6,7 @@ use Paw\Core\Controller;
 use Paw\App\Models\UserCollection;
 use Paw\App\Models\MailjetMailer;
 use Paw\App\Models\GoogleClient;
+use Paw\App\Models\LDAP;
 use Paw\Core\Traits\Loggable;
 
 use Exception;
@@ -13,13 +14,16 @@ use Exception;
 class UserController extends Controller
 {
     use Loggable;
+    public $ldap;
     public ?string $modelName = UserCollection::class;    
 
     public function __construct()
     {
-        global $log; 
+        global $log, $config; 
 
         parent::__construct();     
+
+        $this->ldap = new LDAP($config);
 
         $this->setLogger($log);
 
@@ -64,7 +68,7 @@ class UserController extends Controller
 
     public function haySession()
     {
-        return (session_status() == PHP_SESSION_ACTIVE) && isset($_SESSION['id_user']); 
+        return (session_status() == PHP_SESSION_ACTIVE) && isset($_SESSION['nombre_usuario']); 
     }
 
     public function login()
@@ -77,14 +81,14 @@ class UserController extends Controller
         {
             $username = htmlspecialchars($this->request->get('username'));
             $password = htmlspecialchars($this->request->get('password'));
-            $user = $this->model->getUserByUsernameAndPassword($username, $password);
+            $userInfo =  $this->ldap->authenticateUser($username, $password);   
 
-            if ($user) {
-                $_SESSION['nombre_usuario'] = $user['usuario'];
-                $_SESSION['tipo_usuario'] = $user['tipo_usuario'];
-                $_SESSION['id_user'] = $user['id'];
+            if ($userInfo) {
+                $_SESSION['nombre_usuario'] = $userInfo['name'];
+                $_SESSION['tipo_usuario'] = $userInfo['group'];
+                $_SESSION['email'] = $userInfo['email'];
 
-                $this->logger->debug("User: ",[$user]);
+                $this->logger->debug("UserInfo: ",[$userInfo]);
 
                 if(isset($_SESSION['redirect_url'])){
                     $this->logger->debug("Hay redirect_url");
@@ -164,10 +168,10 @@ class UserController extends Controller
         return $_SESSION['tipo_usuario'];
     }
 
-    public function getIdUser()
-    {
-        return $_SESSION['id_user'];
-    }
+    // public function getIdUser()
+    // {
+    //     return $_SESSION['id_user'];
+    // }
 
     public function logout()
     {
@@ -197,6 +201,16 @@ class UserController extends Controller
         }
     }
 
+    public function getUserName()
+    {
+        return $_SESSION['nombre_usuario'];
+    }
+
+    public function getUserEmail()
+    {
+        return $_SESSION['email'];
+    }
+
     public function verPerfil()
     {
         // Iniciar la sesión si no está ya iniciada
@@ -204,15 +218,18 @@ class UserController extends Controller
             session_start();
         }
         
-        // Suponiendo que `getIdUser` es un método que devuelve el ID del usuario actual
-        $userId = $this->getIdUser();  
-        $datos = $this->model->getUserById($userId);
+        $datos = [
+            'usuario' => [
+                'usuario' => $this->getUserName(),
+                'email' => $this->getUserEmail(),
+                'tipo_usuario' => $this->getUserType(),
+            ]
+        ];
         
         $this->logger->info("datos: ",[$datos]);
 
-        view('perfil.view', array_merge([
-            'usuario' => $datos
-        ], $this->menu));
+        view('perfil.view', array_merge(
+            $datos, $this->menu));
     }
 
     public function enviarMail()

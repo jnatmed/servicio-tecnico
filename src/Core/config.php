@@ -35,6 +35,12 @@ class Config
 
         $this->configs['JWT_SECRET'] =  getenv('JWT_SECRET') ?? '';
 
+        $this->configs['LDAP_HOST'] = getenv('LDAP_HOST') ?? '';
+        $this->configs['LDAP_PORT'] = getenv('LDAP_PORT') ?? 389;
+        $this->configs['LDAP_ADMIN_USER'] = getenv('LDAP_ADMIN_USER') ?? '';
+        $this->configs['LDAP_ADMIN_PASSWORD'] = getenv('LDAP_ADMIN_PASSWORD') ?? '';
+        $this->configs['LDAP_BASE_DN'] = getenv('LDAP_BASE_DN') ?? '';
+
     }
 
     public function joinPaths()

@@ -276,6 +276,6 @@ input[type="submit"]{
     background-position: center;
     background-repeat: no-repeat;
 
-    filter: blur(30px); /* Aplica el desenfoque */
+    filter: blur(40px); /* Aplica el desenfoque */
     z-index: -1; /* Envía el pseudo-elemento detrás del contenido */
 }

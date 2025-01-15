@@ -21,7 +21,8 @@
         "robmorgan/phinx": "^0.16.0",
         "twig/twig": "^3.10",
         "mailjet/mailjet-apiv3-php": "^1.6",
-        "firebase/php-jwt": "^6.10" 
+        "firebase/php-jwt": "^6.10",
+        "adldap2/adldap2": "^10.5" 
     },
     "autoload": {
         "psr-4": {
