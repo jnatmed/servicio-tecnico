@@ -94,6 +94,7 @@ class LDAP extends Model
             $user_dn = $entries[0]["dn"];
             // Extraer datos específicos
             $name = $entries[0]["cn"][0] ?? null; // Nombre (cn)
+            $account = $entries[0]["samaccountname"]["0"]; // Nombre (user account)
             $email = $entries[0]["userprincipalname"][0] ?? null; // Correo electrónico (userPrincipalName)
 
             // Extraer el primer grupo específico de "memberof" (ejemplo: DEPARTAMENTO DE ASISTENCIA TECNICA)
@@ -110,6 +111,7 @@ class LDAP extends Model
 
             return [
                 'name' => $name,
+                'account' => $account,
                 'group' => $group_name,
                 'email' => $email,
                 'dn' => $user_dn,

@@ -66,6 +66,11 @@ class UserController extends Controller
         }
     }
 
+    public function getAccount()
+    {
+        return $_SESSION['account'];
+    }
+
     public function haySession()
     {
         return (session_status() == PHP_SESSION_ACTIVE) && isset($_SESSION['nombre_usuario']); 
@@ -87,6 +92,7 @@ class UserController extends Controller
                 $_SESSION['nombre_usuario'] = $userInfo['name'];
                 $_SESSION['tipo_usuario'] = $userInfo['group'];
                 $_SESSION['email'] = $userInfo['email'];
+                $_SESSION['account'] = $userInfo['account'];
 
                 $this->logger->debug("UserInfo: ",[$userInfo]);
 
@@ -223,6 +229,7 @@ class UserController extends Controller
                 'usuario' => $this->getUserName(),
                 'email' => $this->getUserEmail(),
                 'tipo_usuario' => $this->getUserType(),
+                'account' => $this->getAccount(),
             ]
         ];
         
