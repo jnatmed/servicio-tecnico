@@ -67,6 +67,17 @@ class Controller
                     
                 ],
                 [
+                    'href' => '/facturacion/listar',
+                    'name' => 'FACTURACION',
+                    'submenu' => [
+                        [
+                            'href' => '/facturacion/new',
+                            'name' => 'Nueva Factura'
+                        ]
+                    ]
+                    
+                ],
+                [
                     'href' => '/user/login',
                     'name' => 'LOGIN'
                 ],

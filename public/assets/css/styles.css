@@ -279,3 +279,11 @@ input[type="submit"]{
     filter: blur(40px); /* Aplica el desenfoque */
     z-index: -1; /* Envía el pseudo-elemento detrás del contenido */
 }
+
+/*
+* Estilos Facturacion
+*/
+
+.modal-dialog-centered {
+    max-width: 800px;
+}

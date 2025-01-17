@@ -51,14 +51,23 @@ Class Router
         return explode('@', $this->routes[$http_method][$path]);
     }
 
-    public function call($controller, $method){
+    public function call($controller, $method) {
         $controller = "Paw\\App\\Controllers\\{$controller}";
-        $objController =  new $controller;
+        if (!class_exists($controller)) {
+            throw new Exception("Controller '{$controller}' no encontrado.");
+        }
+    
+        $objController = new $controller;
         if (method_exists($objController, 'setLogger')) {
             $objController->setLogger($this->logger);
-        }else{
-            $this->logger("El controlador " . $objController . "no tiene el metodo setLogger..");
+        } else {
+            $this->logger->warning("El controlador {$controller} no tiene el método setLogger.");
         }
+    
+        if (!method_exists($objController, $method)) {
+            throw new Exception("Método '{$method}' no encontrado en el controlador '{$controller}'.");
+        }
+    
         $objController->$method();
     }
 

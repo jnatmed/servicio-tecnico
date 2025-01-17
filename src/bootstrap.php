@@ -149,7 +149,6 @@ $router->get('/auth/google/callback', 'UserController@callback');
 
 $router->get('/enviar-mail', 'UserController@enviarMail');
 
-
 /**
  * 10) Datos de los internos trabajadores
  */
@@ -162,7 +161,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
  /**
   * 11) Facturacion
   */
-  $router->get('/facturacion/new', 'FacturacionController@nuevaFactura');
-  $router->get('/facturacion/api_get_agentes', 'FacturacionController@getAgentes');
-  $router->get('/facturacion/api_get_productos', 'FacturacionController@getProductos');
-  $router->get('/facturacion/api_get_precio_producto', 'FacturacionController@getPreciosProductos');
+  $router->get('/facturacion/new', 'Facturacion\\FacturacionController@nuevaFactura');
+  $router->get('/facturacion/api_get_agentes', 'Facturacion\\FacturacionController@getAgentes');
+  $router->get('/facturacion/api_get_productos', 'Facturacion\\FacturacionController@getProductos');
+  $router->get('/facturacion/api_get_precio_producto', 'Facturacion\\FacturacionController@getPreciosProductos');
