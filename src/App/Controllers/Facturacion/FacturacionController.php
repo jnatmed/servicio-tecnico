@@ -31,14 +31,26 @@ class FacturacionController extends Controller
     public function nuevaFactura() 
     {
 
-
-        $datos = [
+        $datosFactura = [
             'nro_factura' => 1234,
             'fecha_factura' => '12/12/2014',
         ];
 
+        $dependencias = [
+            'dependencias' => [
+                [
+                'id' => 'CPFCABA',
+                'nombre' => 'Complejo Penitenciario de la Ciudad Autonoma de Buenos Aires'    
+                ],
+                [
+                'id' => 'CFJA',
+                'nombre' => 'Complejo Penitenciario de Jovenes Adultos'    
+                ]
+            ]
+        ];
+
         view('facturacion/factura_new', array_merge(
-            $datos, $this->menu));        
+            $datosFactura, $dependencias, $this->menu));        
     }
 
     public function getAgentes()
@@ -94,6 +106,51 @@ class FacturacionController extends Controller
         // Devolver la respuesta en formato JSON
         echo json_encode($listaProductos);
     }
+
+    public function getPreciosProductos()
+    {
+        // Recibir el ID del producto desde la URL (por ejemplo, `api_get_precio_producto?id=1`)
+        $productId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+    
+        // Lista de precios con ID
+        $listaPrecios = [
+            [
+                "id" => 1,
+                "descripcion" => "Precio 1",
+                "valor" => 10
+            ],
+            [
+                "id" => 2,
+                "descripcion" => "Precio 2",
+                "valor" => 15
+            ],
+            [
+                "id" => 3,
+                "descripcion" => "Precio 3",
+                "valor" => 20
+            ],
+        ];
+    
+        // Buscar el precio correspondiente al ID recibido
+        $producto = null;
+        foreach ($listaPrecios as $precio) {
+            if ($precio['id'] === $productId) {
+                $producto = $precio;
+                break;
+            }
+        }
+    
+        // Si se encuentra el producto, devolverlo, si no, devolver un error
+        if ($producto) {
+            header('Content-Type: application/json');
+            echo json_encode(["precio" => $producto['valor']]);
+        } else {
+            // Si no se encuentra el producto, devolver error
+            header('Content-Type: application/json');
+            echo json_encode(["error" => "Producto no encontrado"]);
+        }
+    }
+    
 
 }
        

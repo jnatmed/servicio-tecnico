@@ -18,12 +18,10 @@
                     <div class="mb-3">
                         <label for="dependencia" class="form-label">Dependencia:</label>
                         <select id="dependencia" name="dependencia" class="form-select">
-                            <?php
-                            // Llenar opciones desde la base de datos
-                            foreach ($dependencias as $dependencia) {
-                                echo "<option value='{$dependencia['id']}'>{$dependencia['nombre']}</option>";
-                            }
-                            ?>
+                            <option value="" selected>Elija un destino</option>
+                            {% for dependencia in dependencias %}
+                                <option value="{{ dependencia.id }}">{{ dependencia.nombre }}</option>
+                            {% endfor %}
                         </select>
                     </div>
                     <div class="mb-3">
