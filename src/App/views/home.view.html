@@ -1,24 +1,15 @@
 {% include 'parts/modulos.view.html' %}
 
     <section class="home-page__section">
-        <article class="home-page__card">
-            <h2 class="home-page__card-title media_size">Órdenes de Trabajo</h2>
-            <p class="home-page__card-description">Accede a todas las órdenes de trabajo generadas.</p>
-            <a href="/orden-de-trabajo/listar" class="home-page__button">Ver Órdenes</a>
-        </article>
-
-        <article class="home-page__card">
-            <h2 class="home-page__card-title">Minutas</h2>
-            <p class="home-page__card-description">Consulta las minutas de reuniones anteriores.</p>
-            <a href="/minutas/listar" class="home-page__button">Ver Minutas</a>
-        </article>
-
-        <article class="home-page__card">
-            <h2 class="home-page__card-title">Internos Trabajadores</h2>
-            <p class="home-page__card-description">Establezca la Prioridad de Cupo Talleres a Internos.</p>
-            <a href="/talleres/ver_talleres" class="home-page__button">Ver Ranking</a>
-        </article>
+        {% for card in cards %}
+            <article class="home-page__card">
+                <h2 class="home-page__card-title {{ card.media_size_class|default('') }}">{{ card.title }}</h2>
+                <p class="home-page__card-description">{{ card.description }}</p>
+                <a href="{{ card.link }}" class="home-page__button">{{ card.button_text }}</a>
+            </article>
+        {% endfor %}
     </section>
+
 
 {% include "parts/cierre-modulos.view.html" %}
 

@@ -35,9 +35,40 @@ class PageController extends Controller
     {
         $this->usuario->verificarSesion();
         
+        // Datos dinámicos para las tarjetas
+        $cards = [
+            [
+                'title' => 'Órdenes de Trabajo',
+                'description' => 'Accede a todas las órdenes de trabajo generadas.',
+                'link' => '/orden-de-trabajo/listar',
+                'button_text' => 'Ver Órdenes',
+                'media_size_class' => 'media_size'
+            ],
+            [
+                'title' => 'Minutas',
+                'description' => 'Consulta las minutas de reuniones anteriores.',
+                'link' => '/minutas/listar',
+                'button_text' => 'Ver Minutas'
+            ],
+            [
+                'title' => 'Internos Trabajadores',
+                'description' => 'Establezca la Prioridad de Cupo Talleres a Internos.',
+                'link' => '/talleres/ver_talleres',
+                'button_text' => 'Ver Ranking'
+            ],
+            [
+                'title' => 'Modulo de Facturacion',
+                'description' => 'Gestion de Puntos de Venta.',
+                'link' => '/facturacion/new',
+                'button_text' => 'Nueva Factura'
+            ]
+        ];
+        
+        // Pasar los datos a la vista
         view('home.view', [
-            "datos" => ["action" => "nuevo"], 
+            "datos" => ["action" => "nuevo"],
+            "cards" => $cards, // Enviar las tarjetas a la vista
             ...$this->menu
-        ]);        
+        ]);
     }
 }
