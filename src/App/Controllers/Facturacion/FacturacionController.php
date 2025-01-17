@@ -65,5 +65,35 @@ class FacturacionController extends Controller
     }
     
 
+    public function getProductos() {
+        // Simular una lista de productos como datos de prueba
+        $listaProductos = [
+            [
+                "id" => 1,
+                "descripcion" => "Producto 1",
+                "stock" => 50,
+                "precio" => 100
+            ],
+            [
+                "id" => 2,
+                "descripcion" => "Producto 2",
+                "stock" => 30,
+                "precio" => 200
+            ],
+            [
+                "id" => 3,
+                "descripcion" => "Producto 3",
+                "stock" => 20,
+                "precio" => 150
+            ],
+        ];
+    
+        // Establecer el encabezado para JSON
+        header('Content-Type: application/json');
+        
+        // Devolver la respuesta en formato JSON
+        echo json_encode($listaProductos);
+    }
+
 }
        
