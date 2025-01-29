@@ -1,0 +1,66 @@
+.factura-container {
+    width: 80%;
+    max-width: 800px;
+    margin: 50px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.factura-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.factura-header img {
+    max-width: 120px;
+}
+.factura-header div {
+    text-align: right;
+}
+.factura-header div h1 {
+    margin: 0;
+    font-size: 24px;
+}
+.factura-header div p {
+    margin: 2px;
+    font-size: 14px;
+    color: #555;
+}
+.factura-details, .factura-items {
+    width: 100%;
+    margin-bottom: 30px;
+}
+.factura-details th, .factura-items th {
+    text-align: left;
+    padding: 10px;
+    background-color: #f0f0f0;
+}
+.factura-details td, .factura-items td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
+.factura-items th, .factura-items td {
+    border: 1px solid #ddd;
+}
+.factura-total {
+    text-align: right;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+.footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Ocultar pasos por defecto */
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+}

@@ -51,7 +51,7 @@ class UserController extends Controller
                 return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', 
                                                 '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo', 
                                                 '/minuta/new','/user/login', '/user/register', 
-                                                '/minutas/listar', '/talleres/ver_talleres' ]);
+                                                '/minutas/listar', '/talleres/ver_talleres', '/facturacion/listar', '/facturacion/new' ]);
                 // return $item['href'] !== '/user/logout';
             });
         }
@@ -84,15 +84,47 @@ class UserController extends Controller
 
         if($this->request->method() == 'POST')
         {
+            $this->logger->debug("Entrando al POST Login..");
+
             $username = htmlspecialchars($this->request->get('username'));
             $password = htmlspecialchars($this->request->get('password'));
+            /**
+             * autentico con la base de datos de Windows Server
+             */
             $userInfo =  $this->ldap->authenticateUser($username, $password);   
 
+
+             $this->logger->debug("UserInfo: ",[$userInfo]);
+
             if ($userInfo) {
-                $_SESSION['nombre_usuario'] = $userInfo['name'];
-                $_SESSION['tipo_usuario'] = $userInfo['group'];
-                $_SESSION['email'] = $userInfo['email'];
-                $_SESSION['account'] = $userInfo['account'];
+
+                /**
+                 * si el usuario existe en el servidor de windows
+                 * lo busco en la tabla interna USUARIOS,
+                 * sino existe inserto uno nuevo sino traigo su id
+                 * y lo guardo en la sesion
+                 */
+
+                $existeUsuario =  $this->model->existe($username);
+                if (not($existeUsuario[0])) {
+                    $this->logger->debug("No existe usuario en la BD");
+                    $nuevoIdUser = $this->model->guardarNuevoAcceso($username, $userInfo);
+                }else{
+                    $this->logger->debug("Existe usuario en la BD");
+                    $nuevoIdUser = $existeUsuario[1];
+                };
+
+                $userInfo['id_user'] = $nuevoIdUser;
+
+                $parametros = [
+                    'id_user' => $nuevoIdUser,
+                    'nombre_usuario' => 'name',
+                    'tipo_usuario' => 'group',
+                    'email' => 'email',
+                    'account' => 'account'
+                ];
+                
+                $this->cargarSesion($userInfo, $parametros);
 
                 $this->logger->debug("UserInfo: ",[$userInfo]);
 
@@ -106,11 +138,13 @@ class UserController extends Controller
                     redirect('');
                 }
             } else {
-                $error = 'Usuario o contraseña incorrectos';
-                view('login.view', [
-                    ['error' => $error],
-                    ...$this->menu
-                ]);
+
+                $datos = [
+                    'error' => 'Usuario o contraseña incorrectos'
+                ];
+
+                view('login.view', array_merge(
+                    $datos, $this->menu));
             }
         }else{                       
             $this->logger->debug("Entrando al Login..");
@@ -130,6 +164,18 @@ class UserController extends Controller
                 // 'authUrl' => $authUrl,
                 'authUrl' => "",
                 ...$this->menu]);
+        }
+    }
+
+    function cargarSesion($userInfo, $parametros) {
+        foreach ($parametros as $claveSesion => $claveUserInfo) {
+            if (isset($userInfo[$claveUserInfo])) {
+                $_SESSION[$claveSesion] = $userInfo[$claveUserInfo];
+            } else {
+                // Opcional: Manejar el caso en que una clave no exista en $userInfo
+                $_SESSION[$claveSesion] = null; // O lanzar un error/advertencia según corresponda
+                $this->logger->notice("No existe clave en userInfo");
+            }
         }
     }
 
@@ -174,10 +220,10 @@ class UserController extends Controller
         return $_SESSION['tipo_usuario'];
     }
 
-    // public function getIdUser()
-    // {
-    //     return $_SESSION['id_user'];
-    // }
+    public function getIdUser()
+    {
+        return $_SESSION['id_user'];
+    }
 
     public function logout()
     {
@@ -211,6 +257,10 @@ class UserController extends Controller
     {
         return $_SESSION['nombre_usuario'];
     }
+    // public function getIdUser()
+    // {
+    //     return $_SESSION['id_user'];
+    // }
 
     public function getUserEmail()
     {

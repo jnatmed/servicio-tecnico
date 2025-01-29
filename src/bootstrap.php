@@ -137,7 +137,7 @@ $router->get('/minutas/listar', 'MinutaController@listar');
 $router->get('/','PageController@home');
 
 /**
- * 9.1) Logeo de usuario
+ * 9.1) Logueo de usuario
  */
 $router->get('/user/login', 'UserController@login');
 $router->post('/user/login', 'UserController@login');
@@ -161,7 +161,13 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
  /**
   * 11) Facturacion
   */
-  $router->get('/facturacion/new', 'Facturacion\\FacturacionController@nuevaFactura');
+  $router->get('/facturacion/new', 'Facturacion\\FacturacionController@alta');
   $router->get('/facturacion/api_get_agentes', 'Facturacion\\FacturacionController@getAgentes');
   $router->get('/facturacion/api_get_productos', 'Facturacion\\FacturacionController@getProductos');
   $router->get('/facturacion/api_get_precio_producto', 'Facturacion\\FacturacionController@getPreciosProductos');
+
+  /**
+   * 12) Productos
+   */
+  $router->get('/facturacion/productos/listado', 'Facturacion\\ProductoController@listar');
+  $router->get('/facturacion/productos/ver', 'Facturacion\\ProductoController@ver');

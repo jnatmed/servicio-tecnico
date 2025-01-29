@@ -29,6 +29,7 @@ class Controller
             'menu' => [
                 [
                     'href' => '/orden-de-trabajo/listar',
+                    'class' => '.archivo',
                     'name' => 'ORDENES DE TRABAJO',                    
                     'submenu' => [
                         [
@@ -43,6 +44,7 @@ class Controller
                 ],
                 [
                     'href' => '/minutas/listar',
+                    'class' => '.edicion',
                     'name' => 'MINUTAS',
                     'submenu' => [
                         [
@@ -57,6 +59,7 @@ class Controller
                 ],
                 [
                     'href' => '/talleres/ver_talleres',
+                    'class' => '.lista',
                     'name' => 'TALLERES',
                     'submenu' => [
                         [
@@ -68,11 +71,16 @@ class Controller
                 ],
                 [
                     'href' => '/facturacion/listar',
+                    'class' => '.documento',
                     'name' => 'FACTURACION',
                     'submenu' => [
                         [
                             'href' => '/facturacion/new',
                             'name' => 'Nueva Factura'
+                        ],
+                        [
+                            'href' => '/facturacion/productos/listado',
+                            'name' => 'PRODUCTOS'
                         ]
                     ]
                     
@@ -83,14 +91,17 @@ class Controller
                 ],
                 [
                     'href' => '/user/logout',
+                    'class' => '.salir',
                     'name' => 'SALIR'
                 ],
                 [
                     'href' => '/user/register',
+                    'class' => '.archivo',
                     'name' => 'REGISTRO'
                 ],
                 [
                     'href' => '/user/ver-perfil',
+                    'class' => '.perfil',
                     'name' => 'PERFIL'
                 ]
             ]
@@ -105,6 +116,8 @@ class Controller
             $model->setQueryBuilder($this->qb);
             $model->setLogger($log); // todos los modelos tienen q ser logeables
             $this->setModel($model);
+        }else{
+            $log->error('No se encontro el modelo modelName', [$this->modelName] );
         }
         
     }

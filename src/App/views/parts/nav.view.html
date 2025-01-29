@@ -3,7 +3,7 @@
     <a href="/"><article class="header_icon"></article></a>
     <ul>
         {% for item in menu %}
-            <li>
+            <li class="{{ item.class }}">
                 <a href="{{ item.href }}">{{ item.name }}</a>
                 {% if item.submenu %}
                     <ul class="sub-menu">

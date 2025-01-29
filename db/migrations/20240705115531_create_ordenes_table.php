@@ -42,8 +42,7 @@ final class CreateOrdenesTable extends AbstractMigration
         
         // Definir las columnas de la tabla
         $table->addColumn('usuario', 'string', ['limit' => 50])
-              ->addColumn('contrasenia', 'string', ['limit' => 255])
-              ->addColumn('tipo_usuario', 'enum', ['values' => ['tecnico', 'administrativo']])
+              ->addColumn('tipo_usuario', 'string', ['limit' => 200, 'default' => null, 'collation' => 'utf8mb4_unicode_ci'])
               ->addColumn('email', 'string', ['limit' => 100])
               ->addTimestamps()  // Añade las columnas created_at y updated_at
               ->create();           

@@ -1,0 +1,28 @@
+{% include 'parts/modulos.view.html' %}
+
+    <section class="home-page__section">
+        
+        {% if producto %}
+
+            <article class="home-page__card">
+                <h2 class="home-page__card-title {{ producto.media_size_class|default('') }}">{{ producto.descripcion_proyecto }}</h2>
+                <p class="home-page__card-description">Estado: {{ producto.estado }}</p>
+                <p class="home-page__card-description">Stock Inicial: {{ producto.stock_inicial }} {{ producto.unidad_medida }}</p>
+                <p class="home-page__card-description">Creado el : {{ producto.created_at }}</p>
+                <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="home-page__button"> Ver Detalle </a>
+            </article>
+        
+        {% else %}
+            
+            <p>No hay productos para mostrar.</p>
+
+        {% endif %}
+        
+    </section>
+
+
+{% include "parts/cierre-modulos.view.html" %}
+
+{% include 'parts/footer.view.html' %}
+</body>
+</html>

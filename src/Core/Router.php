@@ -58,6 +58,8 @@ Class Router
         }
     
         $objController = new $controller;
+
+        $this->logger->info("Calling objController objController, model ", [$objController->modelName, $objController]);
         if (method_exists($objController, 'setLogger')) {
             $objController->setLogger($this->logger);
         } else {

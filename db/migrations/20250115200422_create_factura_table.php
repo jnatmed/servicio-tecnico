@@ -33,3 +33,4 @@ final class CreateFacturaTable extends AbstractMigration
               ->create();
     }
 }
+

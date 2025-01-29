@@ -6,17 +6,24 @@ use Paw\Core\Controller;
 use Paw\Core\Traits\Loggable;
 use Paw\App\Controllers\UserController;
 
+
+
 class FacturacionController extends Controller
 {
     use Loggable;
 
     public $usuario;
 
+    public $configFacturacion;
 
     public function __construct()
     {
+        include 'configFacturacion.php';        
+
         global $log;
          
+        $this->configFacturacion = $configFacturacion;
+        
         parent::__construct();     
 
         $this->usuario = new UserController();
@@ -28,29 +35,30 @@ class FacturacionController extends Controller
         $log->info("this->menu: ", [$this->menu]);
     }
     
-    public function nuevaFactura() 
+    public function alta() 
     {
 
-        $datosFactura = [
-            'nro_factura' => 1234,
-            'fecha_factura' => '12/12/2014',
-        ];
+        if ($this->request->method() == 'POST') {
+            /**
+             * Procesar los datos enviados 
+             */
 
-        $dependencias = [
-            'dependencias' => [
-                [
-                'id' => 'CPFCABA',
-                'nombre' => 'Complejo Penitenciario de la Ciudad Autonoma de Buenos Aires'    
-                ],
-                [
-                'id' => 'CFJA',
-                'nombre' => 'Complejo Penitenciario de Jovenes Adultos'    
-                ]
-            ]
-        ];
+            // 
 
-        view('facturacion/factura_new', array_merge(
-            $datosFactura, $dependencias, $this->menu));        
+             /**
+              * si estan todos los datos correctos, se inserta la factura
+              * y se envia confirmacion con los datos de la factura generada
+              */
+        }else {
+            $datosFactura = [
+                'fecha_factura' => date('d/m/Y'),
+            ];
+    
+            view('facturacion/factura_new', array_merge(
+                $datosFactura, $this->configFacturacion, $this->menu));        
+    
+        }
+
     }
 
     public function getAgentes()
