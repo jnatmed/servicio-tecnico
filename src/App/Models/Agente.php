@@ -8,32 +8,44 @@ use Exception;
 use PDOException;
 use Paw\Core\Traits\Loggable;
 
-class Producto extends Model
+class Agente extends Model
 {
     use Loggable;
 
 
-    public function getProductosALaVenta()
+    public function getAgentes($searchAgente = null) 
     {
         try {
-        $result = $this->queryBuilder->select('producto', '*');
-
-            if (!empty($result)) {
-                $this->logger->info("Datos de productos recuperados con éxito: ", $result);
-                $result[0]['exito'] = true;
-                return $result; // Suponiendo que select devuelve un array de resultados
+            // Si hay un término de búsqueda, usar selectAdHoc
+            if ($searchAgente !== null) {
+                $result = $this->queryBuilder->selectAdHoc(
+                    'agente',
+                    '*',
+                    'agente',
+                    $searchAgente,
+                    ['credencial', 'nombre', 'apellido', 'cuil', 'estado_agente']
+                );
             } else {
-                $this->logger->error("No se encontró listado de productos");
-                return ["exito" => false ];
+                $result = $this->queryBuilder->select('agente', '*');
+            }
+    
+            if (!empty($result)) {
+                $this->logger->info("Datos de agentes recuperados con éxito: ", $result);
+                $result[0]['exito'] = true;
+                return $result;
+            } else {
+                $this->logger->error("No se encontró listado de agentes");
+                return ["exito" => false];
             }
         } catch (PDOException $e) {
-            $this->logger->error("Error al recuperar los datos de los productos: " . $e->getMessage());
-            return ["exito" => false ];
+            $this->logger->error("Error al recuperar los datos de los agentes: " . $e->getMessage());
+            return ["exito" => false];
         } catch (Exception $e) {
-            $this->logger->error("Ocurrió un error al obtener los datos de los productos: " . $e->getMessage());
-            return ["exito" => false ];
+            $this->logger->error("Ocurrió un error al obtener los datos de los agentes: " . $e->getMessage());
+            return ["exito" => false];
         }        
     }
+    
 
     public function getDetalleProducto($id) 
     {

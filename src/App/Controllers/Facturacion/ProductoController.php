@@ -6,6 +6,8 @@ use Paw\Core\Controller;
 use Paw\Core\Traits\Loggable;
 use Paw\App\Controllers\UserController;
 
+use Exception;
+
 use Paw\App\Models\Producto;
 
 class ProductoController extends Controller
@@ -38,15 +40,54 @@ class ProductoController extends Controller
 
     public function listar()
     {
-        $listaProductos = $this->model->getProductosALaVenta();
+        $jsonList = $this->request->get('jsonList');
+        $searchItem = $this->request->get('search');
+    
+        if ($jsonList) {
 
-        $this->logger->info("listaProductos: ", [$listaProductos]);
+            if ($searchItem) {
+                try {
+                    $listaProductos = $this->model->getProductosYPrecios($searchItem);
+        
+                    // Enviar la respuesta en formato JSON
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, $listaProductos]);
+                    exit; // Detener la ejecución después de enviar la respuesta
 
-        view('facturacion/productos/listado', array_merge(
-            ['listaProductos' => $listaProductos],
-            $this->menu
-        ));
+                } catch (Exception $e) {
+                    // Manejo de errores en JSON
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }
+
+            }else{
+                try {
+                    $listaProductos = $this->model->getProductosYPrecios();
+        
+                    // Enviar la respuesta en formato JSON
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'data' => $listaProductos]);
+                    exit; // Detener la ejecución después de enviar la respuesta
+                } catch (Exception $e) {
+                    // Manejo de errores en JSON
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                    exit;
+                }    
+            }
+
+        } else {
+            $listaProductos = $this->model->getProductosALaVenta();
+            $this->logger->info("listaProductos: ", [$listaProductos]);
+    
+            view('facturacion/productos/listado', array_merge(
+                ['listaProductos' => $listaProductos],
+                $this->menu
+            ));
+        }
     }
+    
 
     public function ver()
     {

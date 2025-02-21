@@ -74,7 +74,51 @@ class QueryBuilder
         }
     }
     
+    public function selectAdHoc($table, $columns = '*', $searchField = null, $searchValue = null, $fieldsToSearch = [])
+    {
+        try {
+            $this->logger->info("searchValue: ", [$searchValue]);
     
+            $query = "SELECT $columns FROM $table";
+            $bindings = [];
+    
+            // Si hay un valor de búsqueda y una lista de campos para buscar
+            if (!empty($searchValue) && !empty($fieldsToSearch)) {
+                $likeClauses = [];
+                foreach ($fieldsToSearch as $field) {
+                    $likeClauses[] = "$field LIKE :searchValue";
+                }
+                $query .= " WHERE " . implode(' OR ', $likeClauses);
+                $bindings[":searchValue"] = "%$searchValue%";
+            }
+    
+            $this->logger->info("query: $query");
+    
+            // Preparar la sentencia
+            $stmt = $this->pdo->prepare($query);
+    
+            // Enlazar el valor de búsqueda
+            foreach ($bindings as $key => $value) {
+                $stmt->bindValue($key, $value, PDO::PARAM_STR);
+            }
+    
+            // Ejecutar y obtener resultados
+            $stmt->setFetchMode(PDO::FETCH_ASSOC);
+            $stmt->execute();
+            $result = $stmt->fetchAll();
+    
+            $this->logger->info("result: ", [$result]);
+            
+            return $result;
+        } catch (PDOException $e) {
+            $this->logger->error('Database error: ' . $e->getMessage());
+            throw new Exception('Error al realizar la consulta en la base de datos');
+        } catch (Exception $e) {
+            $this->logger->error('General error: ' . $e->getMessage());
+            throw new Exception('Ocurrió un error inesperado');
+        }
+    }
+        
 
     public function insert($table, $data, $username = null)
     {
@@ -249,4 +293,37 @@ class QueryBuilder
             throw new Exception("Error al ejecutar la consulta: " . $e->getMessage());
         }
     }
+
+    public function obtenerProductosConPrecioMasReciente($searchItem=null) {
+        try {
+            $sql = "SELECT 
+                        p.id AS id_producto,
+                        p.nro_proyecto_productivo,
+                        p.descripcion_proyecto,
+                        pr.precio
+                    FROM producto p
+                    INNER JOIN precio pr ON p.nro_proyecto_productivo = pr.id_producto
+                    WHERE pr.fecha_precio = (
+                        SELECT MAX(pr2.fecha_precio) 
+                        FROM precio pr2 
+                        WHERE pr2.id_producto = pr.id_producto
+                    )";
+    
+            if ($searchItem) {
+                $sql.= " AND p.descripcion_proyecto LIKE '%{$searchItem}%'";
+            }
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute();
+            $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+            $this->logger->info("Productos con precio más reciente obtenidos.", [$result]);
+    
+            return $result;
+        } catch (PDOException $e) {
+            $this->logger->error('Error en obtenerProductosConPrecioMasReciente: ' . $e->getMessage());
+            throw new Exception('Error al obtener productos con el precio más reciente.');
+        }
+    }
+    
 }

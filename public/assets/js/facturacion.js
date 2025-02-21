@@ -20,18 +20,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 const agentList = document.getElementById('agentList');
                 agentList.innerHTML = '';
 
-                data.forEach(agent => {
-                    const li = document.createElement('li');
-                    li.classList.add('list-group-item', 'list-group-item-action');
-                    li.textContent = `${agent.nombre} ${agent.apellido}`;
-                    li.addEventListener('click', () => {
-                        document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
-                        document.getElementById('agente').value = agent.id;
-                        console.log("Agente seleccionado:", agent);
-                        agentModal.hide();
+                if (data[0]){
+                    data[0].forEach(agent => {
+                        const li = document.createElement('li');
+                        li.classList.add('list-group-item', 'list-group-item-action');
+                        li.textContent = `${agent.nombre} ${agent.apellido}`;
+                        li.addEventListener('click', () => {
+                            document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
+                            document.getElementById('agente').value = agent.id;
+                            console.log("Agente seleccionado:", agent);
+                            agentModal.hide();
+                        });
+                        agentList.appendChild(li);
                     });
-                    agentList.appendChild(li);
-                });
+    
+                }
             });
     });
 
@@ -46,22 +49,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const searchValue = e.target.value;
         console.log("Buscando productos:", searchValue);
 
-        fetch(`api_get_productos?search=${searchValue}`)
+        fetch(`productos/listado?jsonList=true&search=${searchValue}`)
             .then(res => res.json())
             .then(data => {
                 const productList = document.getElementById('productList');
                 productList.innerHTML = '';
 
-                data.forEach(product => {
-                    const li = document.createElement('li');
-                    li.classList.add('list-group-item', 'list-group-item-action');
-                    li.textContent = `${product.descripcion} (${product.stock})`;
-                    li.addEventListener('click', () => {
-                        addProductToTable(product);
-                        productModal.hide();
+                if (data[0]) {
+                    data[0].forEach(product => {
+                        const li = document.createElement('li');
+                        li.classList.add('list-group-item', 'list-group-item-action');
+                        li.textContent = `${product.descripcion_proyecto} (${product.precio})`;
+                        li.addEventListener('click', () => {
+                            addProductToTable(product);
+                            productModal.hide();
+                        });
+                        productList.appendChild(li);
                     });
-                    productList.appendChild(li);
-                });
+                }
+
             });
     });
 
@@ -71,8 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.querySelector('#productosTable tbody');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${product.descripcion}</td>
-            <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.id}"></td>
+            <td>${product.descripcion_proyecto}</td>
+            <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.precio}"></td>
             <td><button class="btn btn-danger btn-sm remove-product">Eliminar</button></td>
         `;
         tr.querySelector('.remove-product').addEventListener('click', () => {
