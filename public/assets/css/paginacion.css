@@ -1,0 +1,26 @@
+#paginacion-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.page-button {
+    padding: 5px 10px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background-color: #f8f8f8;
+}
+
+.page-button.active {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

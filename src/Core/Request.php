@@ -15,7 +15,14 @@ class Request
     {
         return $_SERVER['REQUEST_METHOD'];
     }
-
+    public function isAjax(): bool
+    {
+        error_log("isAjax() llamado. HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'NO DEFINIDO'));
+    
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    }
+    
     public function getKeySession($key){
         return $_SESSION[$key] ?? null;
     }

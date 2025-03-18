@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const agentList = document.getElementById('agentList');
                 agentList.innerHTML = '';
 
-                if (data[0]){
+                if (data[0]) {
                     data[0].forEach(agent => {
                         const li = document.createElement('li');
                         li.classList.add('list-group-item', 'list-group-item-action');
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         li.addEventListener('click', () => {
                             document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
                             document.getElementById('agente').value = agent.id;
+                            document.getElementById('destino_agente').textContent = `(Destino: ${agent.descripcion_dependencia})`;
                             console.log("Agente seleccionado:", agent);
                             agentModal.hide();
                         });
                         agentList.appendChild(li);
                     });
-    
                 }
             });
     });
@@ -67,43 +67,63 @@ document.addEventListener('DOMContentLoaded', () => {
                         productList.appendChild(li);
                     });
                 }
-
             });
     });
 
-    // Agregar producto a la tabla
+    // Agregar producto a la tabla con cálculo de subtotal
     function addProductToTable(product) {
         console.log("Agregando producto:", product);
         const tbody = document.querySelector('#productosTable tbody');
         const tr = document.createElement('tr');
+
         tr.innerHTML = `
+            <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.id_producto}" data-precio="${product.precio}"></td>
             <td>${product.descripcion_proyecto}</td>
-            <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.precio}"></td>
+            <td>${product.nro_proyecto_productivo}</td>
+            <td class="precio-unitario">${parseFloat(product.precio).toFixed(2)}</td>
+            <td class="subtotal">${parseFloat(product.precio).toFixed(2)}</td>
             <td><button class="btn btn-danger btn-sm remove-product">Eliminar</button></td>
         `;
+
+        // Evento para eliminar producto y actualizar total
         tr.querySelector('.remove-product').addEventListener('click', () => {
             tr.remove();
             updateTotal();
         });
+
+        // Evento para actualizar subtotal cuando cambia la cantidad
+        tr.querySelector('.cantidad-producto').addEventListener('input', () => {
+            updateSubtotal(tr);
+            updateTotal();
+        });
+
         tbody.appendChild(tr);
         updateTotal();
     }
 
-    // Actualizar total
+    // Actualizar subtotal de un producto específico
+    function updateSubtotal(row) {
+        const cantidadInput = row.querySelector('.cantidad-producto');
+        const precioUnitario = parseFloat(cantidadInput.dataset.precio);
+        const cantidad = parseInt(cantidadInput.value, 10) || 0;
+        const subtotalCell = row.querySelector('.subtotal');
+        const subtotal = cantidad * precioUnitario;
+        subtotalCell.textContent = subtotal.toFixed(2);
+    }
+
+    // Actualizar total facturado sumando todos los subtotales
     function updateTotal() {
-        const cantidades = document.querySelectorAll('.cantidad-producto');
         let total = 0;
+        document.querySelectorAll('#productosTable tbody tr').forEach(row => {
+            const cantidadInput = row.querySelector('.cantidad-producto');
+            const precioUnitario = parseFloat(cantidadInput.dataset.precio);
+            const cantidad = parseInt(cantidadInput.value, 10) || 0;
+            const subtotal = cantidad * precioUnitario;
 
-        cantidades.forEach(input => {
-            const productId = input.getAttribute('data-id');
-            const cantidad = parseInt(input.value, 10) || 0;
-
-            fetch(`api_get_precio_producto?id=${productId}`)
-                .then(res => res.json())
-                .then(data => {
-                    total += data.precio * cantidad;
-                    document.getElementById('total_facturado').textContent = total.toFixed(2);
-                });
+            row.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+            total += subtotal;
         });
+
+        document.getElementById('total_facturado').textContent = total.toFixed(2);
     }
 });

@@ -1,0 +1,49 @@
+{% include "parts/modulos.view.html" %}
+
+<section class="section-ingreso">
+    <form action="/facturacion/agentes/nuevo" method="post" enctype="multipart/form-data">
+        <h2>{{ datos.action == 'editar' ? 'Formulario de Edición de Agente' : 'Formulario de Ingreso de Agente' }}</h2>
+        <hr>
+
+        {% if datos.id is defined %}
+            <h3 class="tipo-nro">Agente ID # {{ datos.id }}</h3>
+        {% endif %}
+
+        <input type="hidden" name="id_agente" value="{{ datos.id is defined ? datos.id : '' }}">
+
+        <label for="credencial">Credencial:</label>
+        <input type="text" id="credencial" name="credencial" value="{{ datos.credencial is defined ? datos.credencial : '' }}" required>
+
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" value="{{ datos.nombre is defined ? datos.nombre : '' }}" required>
+
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" name="apellido" value="{{ datos.apellido is defined ? datos.apellido : '' }}" required>
+
+        <label for="cuil">CUIL (11 dígitos sin guiones):</label>
+        <input type="text" id="cuil" name="cuil" value="{{ datos.cuil is defined ? datos.cuil : '' }}" required pattern="\d{11}" title="Debe ingresar exactamente 11 números sin guiones.">
+
+        <label for="dependencia">Dependencia:</label>
+        <input type="number" id="dependencia" name="dependencia" value="{{ datos.dependencia is defined ? datos.dependencia : '' }}" required>
+
+        <label for="estado_agente">Estado del Agente:</label>
+        <select id="estado_agente" name="estado_agente" required>
+            <option value="activo" {{ datos.estado_agente is defined and datos.estado_agente == 'activo' ? 'selected' : '' }}>Activo</option>
+            <option value="retirado" {{ datos.estado_agente is defined and datos.estado_agente == 'retirado' ? 'selected' : '' }}>Retirado</option>
+        </select>
+
+        {% if datos.action == 'editar' %}
+            <div class="drop-zone" id="drop-zone">Arrastra y suelta tu archivo aquí o haz clic para subir</div>
+            <input type="file" id="file-input" name="file" class="hidden" accept=".pdf,.doc,.docx">
+        {% endif %}
+
+        <button type="submit" name="action" value="{{ datos.action == 'editar' ? 'update' : 'new' }}">
+            {{ datos.action == 'editar' ? 'Actualizar Agente' : 'Registrar Nuevo Agente' }}
+        </button>
+    </form>
+</section>
+
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
+</body>
+</html>

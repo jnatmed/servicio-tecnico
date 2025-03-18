@@ -72,15 +72,19 @@ class Controller
                 [
                     'href' => '/facturacion/listar',
                     'class' => '.documento',
-                    'name' => 'FACTURACION',
+                    'name' => 'VENTAS',
                     'submenu' => [
                         [
                             'href' => '/facturacion/new',
-                            'name' => 'Nueva Factura'
+                            'name' => 'Nueva Venta'
                         ],
                         [
                             'href' => '/facturacion/productos/listado',
                             'name' => 'PRODUCTOS'
+                        ],
+                        [
+                            'href' => '/facturacion/agentes/listado',
+                            'name' => 'AGENTES'
                         ]
                     ]
                     
@@ -107,7 +111,6 @@ class Controller
             ]
         ];
     
-
         $this->qb = new QueryBuilder($connection, $log);
         $this->request = new Request();
 
@@ -116,6 +119,7 @@ class Controller
             $model->setQueryBuilder($this->qb);
             $model->setLogger($log); // todos los modelos tienen q ser logeables
             $this->setModel($model);
+            $log->info('Seteando Querybuilder: ' , [$model]);
         }else{
             $log->error('No se encontro el modelo modelName', [$this->modelName] );
         }
@@ -131,5 +135,23 @@ class Controller
         return $this->qb;
     }
 
-
+    // 🔥 Método genérico para sanitizar inputs de formularios
+    public function sanitize(array $data): array
+    {
+        $sanitizedData = [];
+    
+        foreach ($data as $key => $value) {
+            if (is_string($value)) {
+                $sanitizedData[$key] = trim(htmlspecialchars(strip_tags($value), ENT_QUOTES, 'UTF-8'));
+            } elseif (is_numeric($value)) {
+                $sanitizedData[$key] = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+            } elseif (is_array($value)) {
+                $sanitizedData[$key] = $this->sanitize($value); // Sanitización recursiva para arrays
+            } else {
+                $sanitizedData[$key] = $value;
+            }
+        }
+    
+        return $sanitizedData;
+    }
 }

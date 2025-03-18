@@ -17,5 +17,10 @@ class Model
     {
         $this->queryBuilder = $qb;
     }
+    public function toArray()
+    {
+        // 🔥 Obtiene todas las propiedades públicas y filtra las excluidas
+        return array_filter(get_object_vars($this), fn($key) => !in_array($key, ['queryBuilder', 'logger']), ARRAY_FILTER_USE_KEY);
+    }
 }
 

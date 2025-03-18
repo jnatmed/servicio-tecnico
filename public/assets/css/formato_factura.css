@@ -1,0 +1,477 @@
+* {
+    box-sizing: border-box;
+}
+.main_container {
+    display: flex;
+    flex-direction: column;
+    max-width: 630px;
+    margin: 0 auto;
+    background-color: white;
+}
+.container_factura {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 200px;
+    border: 1px solid black;
+    border-radius: 10px;
+    text-align: center;
+}
+.cabecera_i {
+    width: 50%;
+    border-right: 1px solid black;
+    padding: 10px 30px;
+    height: inherit;
+    position: relative;
+}
+
+.cabecera_i::after {
+    content: "C";
+    position: absolute;
+    top: .5px;
+    left: 90.5%;
+    padding: 1px 10px;
+    font-size: 3.5rem;
+    border: 1px solid black;
+    border-radius: 10px;
+    background-color: white;
+    z-index: 9999;
+    box-shadow: 5px 0 1px rgba(0, 0, 0, 1);
+}
+
+.cabecera_d {
+    flex-grow: 1;
+    height: inherit;
+    display: flex;
+    flex-direction: column;
+}
+.cabecera_d section {
+    display: flex;
+    align-items: flex-end;
+}
+.cabecera_d section article {
+    line-height: 0.2;
+    font-size: .7rem;
+    width: 60%;
+    border-left: 1px dotted black;
+    align-self: flex-end;
+    position: relative;
+}
+.cabecera_d section article:first-child::before {
+    content: "";
+    display: block; /* Asegura que el pseudoelemento tenga dimensiones */
+    width: 150px; /* Ajusta el tamaño según necesites */
+    height: 100px;
+    background-image: url('/assets/imgs/logo-encope-negro.png'); /* Cambia por la ruta correcta */
+    background-size: cover; /* Ajusta la imagen para cubrir el área */
+    background-position: center;
+    position: absolute; /* Si necesitas posicionarlo sobre el contenido */
+    top: -93px;
+    left: 0;
+}
+.cabecera_d h1::before {
+    content: "FACTURA";
+    margin-right: 50px;            
+    align-self: left;
+    
+}
+
+.cabecera_d > h1 {
+    align-self: flex-end;
+    padding-right: 5px;
+    font-size: 1em;
+    margin-block-start: 1.33em;
+    margin-block-end: 1.33em;
+}
+
+.cabecera_d > h2 {
+    font-size: 1.5em;
+    margin-block-start: 0.83em;
+    margin-block-end: 0.83em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    font-weight: bold;
+    unicode-bidi: isolate;
+}
+
+.cabecera_i article {
+    line-height: 0.2;
+}
+.cabecera_i > p {
+    
+    margin-top: 0;
+}
+.subtitulo > p:nth-child(1) {
+    line-height: 1rem;
+    margin-bottom: 0;
+}
+.subtitulo > p:nth-child(2) {
+    line-height: 1rem;
+    margin-top: 0;
+}
+.body_factura {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    width: 100%;
+    border-bottom: 1px solid black;
+}
+
+.datos_agente {
+    display: flex;
+
+}
+.datos_agente label:last-child {
+    width: 100%;
+    padding-left: 10px;
+    border-bottom: 1px solid black;
+}
+.datos_iva {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se acomoden en varias líneas si es necesario */
+    justify-content: space-between;
+    align-items: stretch; /* Hace que los elementos ocupen toda la altura */
+    border: 1px solid black;
+    margin-top: 1px;
+    text-align: center;
+}
+
+.datos_iva > p {
+    width: 20%; /* Reducimos el ancho del título IVA */
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.datos_iva article {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1; /* Permite que los artículos ocupen el mismo espacio */
+    padding: 10px;
+}
+
+.datos_iva article:nth-of-type(1) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 50%;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+    padding: 10px;
+}
+
+.datos_iva article:nth-of-type(1) label,
+.datos_iva article:nth-of-type(1) input {
+    margin: 5px;
+    white-space: nowrap; /* Evita que los textos se desborden */
+}
+
+.datos_iva article:nth-of-type(2) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding-left: 10px;
+    width: 30%;
+    text-align: left;
+}
+
+.datos_iva article:nth-of-type(2) p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+.condicion_venta {
+    display: flex;
+    border: 1px solid black;
+    
+}
+.condicion_venta > article:nth-of-type(1)::before {
+    content: "CONDICION DE VENTA";
+    padding-right: 10px;
+}
+.condicion_venta > article:nth-of-type(1) {
+    display: flex;
+    border-right: 1px solid black;
+    padding: 10px;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+}
+.condicion_venta > article:nth-of-type(2) {
+    width: 30%;
+    align-self: center;
+    text-align: center;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+thead {
+    background-color: #007bff;
+    color: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    text-transform: uppercase;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+tfoot {
+    background-color: #e9ecef;
+    font-weight: bold;
+}
+
+tfoot td {
+    text-align: right;
+}
+
+tfoot td:first-child {
+    text-align: left;
+    font-size: 18px;
+    font-style: italic;
+}
+
+.titulo {
+    font-size: .8rem;
+}
+.subtitulo {
+    font-size: .8rem;
+    color: #6c757d;
+}
+.subtitulo:first-child {
+    line-height: 10px;
+}
+
+
+/*
+* estilos checked 
+*/
+
+.opciones_iva {
+    display: flex;
+    flex-wrap: wrap; /* Permite que las opciones bajen si no caben */
+}
+
+.opcion {
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Espaciado entre ícono y texto */
+    font-size: 1rem;
+    padding: 0px 10px 0px 10px;
+    border-radius: 5px;
+}
+
+.check-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: green;
+}
+
+.opcion.seleccionada .check-icon::before {
+    content: "✔"; /* Ícono de tilde */
+}
+
+.opcion label {
+    cursor: default;
+}        
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    body {
+        background-color: white !important; /* Asegura que el fondo no se omita*/
+    }
+    img {
+        display: block !important; /* Asegura que las imagenes no sean ocultadas*/
+    }
+    .cabecera_d section article:first-child::before {
+        background-image: url("imgs/logo-encope-negro.png");
+        background-size: cover;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+
+    }
+    .cabecera_d section article {
+        font-size: .6rem;
+    }            
+}
+@media screen and (max-width: 700px) {
+    .main_container {
+        width: 100%; /* Asegura que el contenedor principal se adapte al ancho */
+        padding: 10px;
+    }
+
+    .container_factura {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .cabecera_i, .cabecera_d {
+        width: 100%;
+        height: auto;
+        text-align: center;
+        padding: 10px;
+    }
+
+    .cabecera_d section {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cabecera_d section article {
+        width: 100%;
+        border-left: none;
+        text-align: center;
+    }
+
+    .cabecera_i::after {
+        font-size: 2.5rem; /* Reduce el tamaño de la letra "C" */
+        left: auto;
+        right: 10px;
+        top: 10px;
+        padding: 5px;
+    }
+
+    .datos_iva {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .datos_iva p, .datos_iva article {
+        width: 100%;
+        text-align: center;
+    }
+
+    .condicion_venta {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .condicion_venta > article {
+        width: 100%;
+        padding: 10px;
+    }
+
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    /* Hacer que la tabla se comporte como bloques en móvil */
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    /* Oculta el encabezado en modo responsivo */
+    thead {
+        display: none;
+    }
+
+    /* Formato de las filas */
+    tbody tr {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #ddd;
+        margin-bottom: 10px;
+        padding: 10px;
+        background-color: white;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Cada celda se mostrará en una nueva línea */
+    tbody tr td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px;
+        text-align: right;
+        border-bottom: 1px solid #ccc;
+        font-size: 16px;
+    }
+
+    /* Agregar los nombres de las columnas en cada fila */
+    tbody tr td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        text-align: left;
+        color: #007bff;
+        flex: 1;
+        padding-right: 10px;
+    }
+
+    /* Mantener el pie de tabla estructurado */
+    tfoot {
+        display: block;
+        width: 100%;
+        background-color: #e9ecef;
+        font-weight: bold;
+        padding: 10px;
+        text-align: right;
+        border: 2px solid #ddd;
+    }
+
+    tfoot tr {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 10px;
+    }
+
+    tfoot td {
+        width: 100%;
+        text-align: right;
+        padding: 5px;
+        font-size: 1.2rem;
+    }
+
+    tfoot td:first-child {
+        text-align: left;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    /* Resaltar la última fila del pie de tabla */
+    tfoot tr:last-child {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background-color: #ddd;
+        text-align: right;
+    }
+
+    /* Resaltar la última fila del pie de tabla */
+    tfoot tr:last-child {
+        font-size: 1.5rem;
+        font-weight: bold;
+        background-color: #ddd;
+        text-align: right;
+    }             
+    .cabecera_d h1, .cabecera_d h2 {
+        font-size: 1rem; /* Reduce los títulos */
+    }
+
+    .cabecera_d h1::before {
+        margin-right: 10px;
+    }
+
+}

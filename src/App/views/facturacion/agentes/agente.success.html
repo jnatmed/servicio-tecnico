@@ -1,0 +1,16 @@
+{% include "parts/modulos.view.html" %}
+
+<div class="success-container">
+    <h1>Operación Exitosa</h1>
+    <p>{{ mensaje is defined ? mensaje : "La operación se realizó correctamente." }}</p>
+
+    <div class="success-actions">
+        <a href="/facturacion/agentes/listar" class="btn btn-primary">Volver a la lista de agentes</a>
+        <a href="/facturacion/agentes/nuevo" class="btn btn-secondary">Agregar otro agente</a>
+    </div>
+</div>
+
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
+</body>
+</html>

@@ -12,6 +12,18 @@ class Producto extends Model
 {
     use Loggable;
 
+    public function getDependencias(){
+        try {
+            $dependencias = $this->queryBuilder->select('dependencia', '*');
+            return $dependencias;
+        } catch (Exception $e) {
+            // Registrar el error (puedes usar un logger en lugar de echo)
+            error_log('Error en getDependencias: ' . $e->getMessage());
+    
+            // Retornar un valor por defecto o manejar el error según la lógica de tu aplicación
+            return [];
+        }
+    }
 
     public function getProductosALaVenta()
     {
@@ -52,12 +64,29 @@ class Producto extends Model
             $this->logger->error("Error al recuperar los datos del producto: " . $e->getMessage());
         }
     }
+    public function getDetalleProductoYUltimoPrecio($id) 
+    {
+        try {
+            $result = $this->queryBuilder->obtenerProductosConPrecioMasReciente(null, $id);
+
+            if (!empty($result)) {
+                $this->logger->info("Datos de producto recuperados con éxito: ", $result);
+                // $result[0]['exito'] = true;
+                return $result; // Suponiendo que select devuelve un array de resultados
+            } else {
+                $this->logger->error("No se encontró detalle del producto");
+                return ["exito" => false ];
+            }            
+        }catch (PDOException $e) {
+            $this->logger->error("Error al recuperar los datos del producto: " . $e->getMessage());
+        }
+    }
 
     public function getProductosYPrecios($searchItem=null)
     {
         try {
 
-            $productos = $this->queryBuilder->obtenerProductosConPrecioMasReciente($searchItem);
+            $productos = $this->queryBuilder->obtenerProductosConPrecioMasReciente($searchItem, null);
 
             return $productos;
 
@@ -69,4 +98,6 @@ class Producto extends Model
             throw new Exception('Ocurrió un error inesperado.');
         }
     }
+
+
 }

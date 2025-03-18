@@ -162,6 +162,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   * 11) Facturacion
   */
   $router->get('/facturacion/new', 'Facturacion\\FacturacionController@alta');
+  $router->get('/facturacion/listar', 'Facturacion\\FacturacionController@listar');
   $router->get('/facturacion/api_get_agentes', 'Facturacion\\AgenteController@getAgentes');
   $router->get('/facturacion/api_get_productos', 'Facturacion\\FacturacionController@getProductos');
   $router->get('/facturacion/api_get_precio_producto', 'Facturacion\\FacturacionController@getPreciosProductos');
@@ -171,3 +172,11 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
    */
   $router->get('/facturacion/productos/listado', 'Facturacion\\ProductoController@listar');
   $router->get('/facturacion/productos/ver', 'Facturacion\\ProductoController@ver');
+/**
+ * 13) Agentes
+ *  */  
+
+  $router->get('/facturacion/agentes/listado', 'Facturacion\\AgenteController@getAgentes');
+  $router->get('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new');
+  $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new');
+//   $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@nuevo');

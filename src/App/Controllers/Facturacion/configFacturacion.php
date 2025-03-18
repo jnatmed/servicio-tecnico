@@ -8,5 +8,5 @@ $configFacturacion = [
         // Añadir más dependencias aquí si es necesario
     ],
     'condicion_venta' => ['contado', 'efectivo', 'codigo608', 'codigo689'],
-    'condicion_impositiva' => ['Responsable Inscripto', 'Monotributista']
+    'condicion_impositiva' => ['consumidor_final','exento','no_responsable','responsable_monotributo','responsable_inscripto']
 ];

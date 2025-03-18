@@ -1,0 +1,206 @@
+{% include "parts/modulos.view.html" %}
+
+<div class="agentes-container">
+    <h1>Lista de Agentes</h1>
+
+    <!-- Formulario de Búsqueda -->
+    <input type="text" id="search-input" placeholder="Buscar agentes..." value="{{ search is defined ? search : '' }}">
+    <button id="search-btn">Buscar</button>
+
+    <table class="agentes-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Credencial</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>CUIL</th>
+                <th>Dependencia</th>
+                <th>Estado</th>
+                <th>Ver</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody id="agentes-list">
+            {% for agente in agentes %}
+                <tr>
+                    <td>{{ agente.id }}</td>
+                    <td>{{ agente.credencial }}</td>
+                    <td>{{ agente.nombre }}</td>
+                    <td>{{ agente.apellido }}</td>
+                    <td>{{ agente.cuil }}</td>
+                    <td>{{ agente.dependencia }}</td>
+                    <td class="{{ agente.estado_agente == 'retirado' ? 'estado-retirado' : 'estado-activo' }}">
+                        {{ agente.estado_agente | capitalize }}
+                    </td>
+                    <td><a href="/agente/ver?id={{ agente.id }}">Ver</a></td>
+                    <td><a href="/agente/editar?id={{ agente.id }}">Editar</a></td>
+                    <td><a href="/agente/eliminar?id={{ agente.id }}" class="eliminar-link">Eliminar</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if agentes is empty %}
+        <p class="agentes-message">No hay agentes para mostrar.</p>
+    {% endif %}
+
+    <div id="paginacion-container">
+        <span id="pagination-numbers"></span>
+    </div>
+    
+</div>
+
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let searchInput = document.getElementById("search-input");
+        let searchBtn = document.getElementById("search-btn");
+        let prevPageBtn = document.getElementById("prevPage");
+        let nextPageBtn = document.getElementById("nextPage");
+        let paginationContainer = document.getElementById("pagination-numbers");
+    
+        let currentPage = 1;
+        let limit = 10;
+        let totalPages = 1;
+    
+        if (searchBtn) {
+            searchBtn.addEventListener("click", function () {
+                let searchValue = searchInput.value;
+                currentPage = 1; // Reiniciar la paginación
+                fetchAgentes(currentPage, searchValue, true);
+            });
+        }
+    
+        function fetchAgentes(page, search, clearTable) {
+            fetch(`/facturacion/agentes/listado?page=${page}&search=${encodeURIComponent(search)}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log("Respuesta AJAX:", data);
+    
+                if (data.success) {
+                    let tbody = document.getElementById("agentes-list");
+                    if (clearTable) tbody.innerHTML = ''; // Limpiar si es una nueva búsqueda
+    
+                    limit = data.limit;
+                    let total = data.total;
+                    totalPages = Math.ceil(total / limit);
+                    currentPage = parseInt(data.currentPage);
+    
+                    console.log(`🔍 Página: ${currentPage}, Total páginas: ${totalPages}, Filtro: ${search}`);
+    
+                    data.agentes.forEach(agente => {
+                        let row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${agente.id}</td>
+                            <td>${agente.credencial}</td>
+                            <td>${agente.nombre}</td>
+                            <td>${agente.apellido}</td>
+                            <td>${agente.cuil ? agente.cuil : 'No disponible'}</td>
+                            <td>${agente.dependencia}</td>
+                            <td class="${agente.estado_agente === 'retirado' ? 'estado-retirado' : 'estado-activo'}">
+                                ${agente.estado_agente.charAt(0).toUpperCase() + agente.estado_agente.slice(1)}
+                            </td>
+                            <td><a href="/agente/ver?id=${agente.id}">Ver</a></td>
+                            <td><a href="/agente/editar?id=${agente.id}">Editar</a></td>
+                            <td><a href="/agente/eliminar?id=${agente.id}" class="eliminar-link">Eliminar</a></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+    
+                    updatePagination(search);
+                }
+            })
+            .catch(error => console.error("Error cargando más agentes:", error));
+        }
+    
+        function updatePagination(search) {
+            // 🔥 Limpiar el contenedor antes de agregar nuevos elementos
+            paginationContainer.innerHTML = '';
+        
+            const maxVisiblePages = 5;
+            const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+            // 🔹 Botón "Anterior" (solo agregar si no existe)
+            if (currentPage > 1) {
+                let prevBtn = document.createElement("button");
+                prevBtn.textContent = "Anterior";
+                prevBtn.addEventListener("click", function () {
+                    fetchAgentes(currentPage - 1, search, true);
+                });
+                paginationContainer.appendChild(prevBtn);
+            }
+        
+            // 🔹 Mostrar primera página y puntos suspensivos si es necesario
+            if (startPage > 1) {
+                let firstPageBtn = document.createElement("button");
+                firstPageBtn.textContent = "1";
+                firstPageBtn.addEventListener("click", function () {
+                    fetchAgentes(1, search, true);
+                });
+                paginationContainer.appendChild(firstPageBtn);
+        
+                if (startPage > 2) {
+                    let dots = document.createElement("span");
+                    dots.textContent = "...";
+                    paginationContainer.appendChild(dots);
+                }
+            }
+        
+            // 🔹 Generar las páginas visibles
+            for (let i = startPage; i <= endPage; i++) {
+                let pageBtn = document.createElement("button");
+                pageBtn.textContent = i;
+                pageBtn.classList.add("page-button");
+                if (i === currentPage) pageBtn.classList.add("active");
+        
+                pageBtn.addEventListener("click", function () {
+                    fetchAgentes(i, search, true);
+                });
+        
+                paginationContainer.appendChild(pageBtn);
+            }
+        
+            // 🔹 Mostrar última página y puntos suspensivos si es necesario
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    let dots = document.createElement("span");
+                    dots.textContent = "...";
+                    paginationContainer.appendChild(dots);
+                }
+        
+                let lastPageBtn = document.createElement("button");
+                lastPageBtn.textContent = totalPages;
+                lastPageBtn.addEventListener("click", function () {
+                    fetchAgentes(totalPages, search, true);
+                });
+                paginationContainer.appendChild(lastPageBtn);
+            }
+        
+            // 🔹 Botón "Siguiente" (solo agregar si no existe)
+            if (currentPage < totalPages) {
+                let nextBtn = document.createElement("button");
+                nextBtn.textContent = "Siguiente";
+                nextBtn.addEventListener("click", function () {
+                    fetchAgentes(currentPage + 1, search, true);
+                });
+                paginationContainer.appendChild(nextBtn);
+            }
+        }
+        
+        
+    
+        // Cargar primera página al iniciar
+        fetchAgentes(currentPage, '', true);
+        });
+    
+</script>

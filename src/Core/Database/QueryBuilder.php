@@ -79,7 +79,15 @@ class QueryBuilder
         try {
             $this->logger->info("searchValue: ", [$searchValue]);
     
-            $query = "SELECT $columns FROM $table";
+            // Verificar si la consulta es sobre la tabla 'agente' para incluir el JOIN
+            if ($table === 'agente') {
+                $query = "SELECT agente.*, dependencia.descripcion AS descripcion_dependencia 
+                          FROM agente 
+                          INNER JOIN dependencia ON agente.dependencia = dependencia.id";
+            } else {
+                $query = "SELECT $columns FROM $table";
+            }
+    
             $bindings = [];
     
             // Si hay un valor de búsqueda y una lista de campos para buscar
@@ -108,8 +116,9 @@ class QueryBuilder
             $result = $stmt->fetchAll();
     
             $this->logger->info("result: ", [$result]);
-            
+    
             return $result;
+    
         } catch (PDOException $e) {
             $this->logger->error('Database error: ' . $e->getMessage());
             throw new Exception('Error al realizar la consulta en la base de datos');
@@ -118,27 +127,48 @@ class QueryBuilder
             throw new Exception('Ocurrió un error inesperado');
         }
     }
+    
         
 
     public function insert($table, $data, $username = null)
     {
-        $columnas = implode(', ', array_keys($data));
-        $valores = ':' . implode(', :', array_keys($data));
-        $query = "INSERT INTO $table ($columnas) VALUES ($valores)";
-        $sentencia = $this->pdo->prepare($query);
+        try {
+            // 🔥 Si recibe un objeto, intenta convertirlo en un array
+            if (is_object($data) && method_exists($data, 'toArray')) {
+                $data = $data->toArray();
+            }
     
-        foreach ($data as $clave => $valor) {
-            $sentencia->bindValue(":$clave", $valor);
+            $columnas = implode(', ', array_keys($data));
+            $valores = ':' . implode(', :', array_keys($data));
+            $query = "INSERT INTO $table ($columnas) VALUES ($valores)";
+            $sentencia = $this->pdo->prepare($query);
+    
+            // Asignar valores a los parámetros
+            foreach ($data as $clave => $valor) {
+                $sentencia->bindValue(":$clave", $valor);
+            }
+    
+            // Ejecutar la consulta
+            $resultado = $sentencia->execute();
+            $idGenerado = $this->pdo->lastInsertId();
+    
+            // Registrar en la auditoría
+            $this->registrarAuditoria($table, 'INSERT', $username, null, $data, $idGenerado);
+    
+            return [$idGenerado, $resultado];
+    
+        } catch (PDOException $e) {
+            // 🔴 Error específico de PDO (errores de base de datos)
+            $this->logger->error("Error de base de datos en insert: " . $e->getMessage());
+            throw new Exception("Error al insertar en la base de datos. Contacte con el administrador.");
+    
+        } catch (Exception $e) {
+            // 🔴 Cualquier otro error
+            $this->logger->error("Error general en insert: " . $e->getMessage());
+            throw new Exception("Ocurrió un error inesperado. Contacte con el administrador.");
         }
-    
-        $resultado = $sentencia->execute();
-        $idGenerado = $this->pdo->lastInsertId();
-    
-        // Registrar en la auditoría
-        $this->registrarAuditoria($table, 'INSERT', $username, null, $data, $idGenerado);
-    
-        return [$idGenerado, $resultado];
     }
+    
     
 
     public function update($table, $data, $conditions = [])
@@ -294,7 +324,7 @@ class QueryBuilder
         }
     }
 
-    public function obtenerProductosConPrecioMasReciente($searchItem=null) {
+    public function obtenerProductosConPrecioMasReciente($searchItem = null, $idProducto = null) {
         try {
             $sql = "SELECT 
                         p.id AS id_producto,
@@ -302,21 +332,48 @@ class QueryBuilder
                         p.descripcion_proyecto,
                         pr.precio
                     FROM producto p
-                    INNER JOIN precio pr ON p.nro_proyecto_productivo = pr.id_producto
+                    INNER JOIN precio pr ON p.id = pr.id_producto
                     WHERE pr.fecha_precio = (
                         SELECT MAX(pr2.fecha_precio) 
                         FROM precio pr2 
                         WHERE pr2.id_producto = pr.id_producto
                     )";
     
-            if ($searchItem) {
-                $sql.= " AND p.descripcion_proyecto LIKE '%{$searchItem}%'";
+            // Arreglo de parámetros para bind
+            $params = [];
+    
+            // Si se envía un idProducto, agregar condición
+            if (!is_null($idProducto)) { // Asegurar que no es NULL
+                $sql .= " AND pr.id_producto = :idProducto";
+                $params['idProducto'] = $idProducto;
             }
-
+    
+            // Si se envía un término de búsqueda, agregar condición
+            if (!is_null($searchItem) && $searchItem !== '') { // Evita agregar si está vacío
+                $sql .= " AND p.descripcion_proyecto LIKE :searchItem";
+                $params['searchItem'] = "%{$searchItem}%";
+            }
+    
+            // Agregar ORDER BY para asegurar que se obtienen los datos más recientes
+            $sql .= " ORDER BY pr.fecha_precio DESC";
+    
+            // Log de la consulta SQL antes de ejecutarla
+            $this->logger->info("Consulta SQL generada: " . $sql);
+            $this->logger->info("Parámetros: " . json_encode($params));
+    
             $stmt = $this->pdo->prepare($sql);
+    
+            // Enlazar parámetros con bindValue() solo si existen
+            if (!empty($params)) {
+                foreach ($params as $key => $value) {
+                    $stmt->bindValue(":$key", $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+                }
+            }
+    
             $stmt->execute();
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
+            // Log de los resultados obtenidos
             $this->logger->info("Productos con precio más reciente obtenidos.", [$result]);
     
             return $result;
@@ -326,4 +383,57 @@ class QueryBuilder
         }
     }
     
+    public function getPaginatedWithSearch($table, $limit, $offset, $search = '')
+    {
+        try {
+            $query = "SELECT * FROM {$table}";
+    
+            if (!empty($search)) {
+                $query .= " WHERE nombre LIKE :search OR apellido LIKE :search OR cuil LIKE :search";
+            }
+    
+            $query .= " ORDER BY id LIMIT :limit OFFSET :offset";
+    
+            $stmt = $this->pdo->prepare($query);
+    
+            if (!empty($search)) {
+                $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+            }
+    
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+            $stmt->execute();
+    
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logger->error("Error en getPaginatedWithSearch: " , [$e->getMessage()]);
+            throw new Exception("Error al obtener los datos.");
+        }
+    }
+    
+    public function countRowsWithSearch($table, $search = '')
+    {
+        try {
+            $query = "SELECT COUNT(*) as total FROM {$table}";
+    
+            if (!empty($search)) {
+                $query .= " WHERE nombre LIKE :search OR apellido LIKE :search OR cuil LIKE :search";
+            }
+    
+            $stmt = $this->pdo->prepare($query);
+    
+            if (!empty($search)) {
+                $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+            }
+    
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+        } catch (PDOException $e) {
+            $this->logger->error("Error en countRowsWithSearch: " , [$e->getMessage()]);
+            throw new Exception("Error al contar los registros.");
+        }
+    }
+    
+        
+     
 }
