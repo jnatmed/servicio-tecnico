@@ -86,7 +86,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Capturar los datos del formulario
         const formData = new FormData(e.target);
-    
+
+        // 🔹 Capturar el total facturado desde el DOM
+        const totalFacturado = document.getElementById('total_facturado').textContent.trim();
+        formData.append('total_facturado', totalFacturado);    
+        
         // Capturar los productos de la tabla
         let productos = [];
         document.querySelectorAll('#productosTable tbody tr').forEach(row => {
@@ -103,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Agregar los productos al formData como JSON
         formData.append('productos', JSON.stringify(productos));
+
+        // Mostrar los datos del formulario en consola para depuración
+        console.debug("Enviando datos del formulario:", Object.fromEntries(formData.entries()));
     
         // Enviar la solicitud al backend
         fetch('/facturacion/new', {
@@ -112,15 +119,15 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                alert("Factura guardada correctamente. ID: " + data.factura_id);
+                console.error("Factura guardada correctamente. ID: " + data.factura_id);
                 window.location.reload(); // Opcional: Recargar la página o redirigir a otra vista
             } else {
-                alert("Error al guardar la factura: " + data.error);
+                console.error("Error al guardar la factura: " + data.error);
             }
         })
         .catch(error => {
             console.error("Error en la petición:", error);
-            alert("Hubo un problema al enviar la factura.");
+            console.error("Hubo un problema al enviar la factura.");
         });
     });
     

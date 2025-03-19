@@ -158,14 +158,14 @@ class QueryBuilder
             return [$idGenerado, $resultado];
     
         } catch (PDOException $e) {
-            // 🔴 Error específico de PDO (errores de base de datos)
+            // Error específico de PDO (errores de base de datos)
             $this->logger->error("Error de base de datos en insert: " . $e->getMessage());
-            throw new Exception("Error al insertar en la base de datos. Contacte con el administrador.");
+            throw new Exception("Error al insertar en la base de datos. Contacte con el administrador." . $e->getMessage());
     
         } catch (Exception $e) {
-            // 🔴 Cualquier otro error
+            // Cualquier otro error
             $this->logger->error("Error general en insert: " . $e->getMessage());
-            throw new Exception("Ocurrió un error inesperado. Contacte con el administrador.");
+            throw new Exception("Ocurrió un error inesperado. Contacte con el administrador." . $e->getMessage());
         }
     }
     

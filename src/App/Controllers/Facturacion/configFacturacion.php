@@ -7,6 +7,6 @@ $configFacturacion = [
         ['id' => 'CPF1', 'nombre' => 'Complejo Penitenciario Federal I de Ezeiza'],
         // Añadir más dependencias aquí si es necesario
     ],
-    'condicion_venta' => ['contado', 'efectivo', 'codigo608', 'codigo689'],
+    'condicion_venta' => ['contado','cta_cte','codigo_608','codigo_689'],
     'condicion_impositiva' => ['consumidor_final','exento','no_responsable','responsable_monotributo','responsable_inscripto']
 ];

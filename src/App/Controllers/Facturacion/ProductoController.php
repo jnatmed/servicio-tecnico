@@ -8,11 +8,11 @@ use Paw\App\Controllers\UserController;
 
 use Exception;
 
-use Paw\App\Models\Producto;
+use Paw\App\Models\ProductosCollection;
 
 class ProductoController extends Controller
 {   
-    public ?string $modelName = Producto::class; 
+    public ?string $modelName = ProductosCollection::class; 
     use Loggable;
     public $usuario;
     public $producto;

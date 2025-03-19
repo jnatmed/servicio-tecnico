@@ -8,7 +8,10 @@ use Paw\App\Controllers\UserController;
 
 use Paw\App\Models\Producto;
 use Paw\App\Models\Factura;
+use Paw\App\Models\FacturasCollection;
+use Paw\App\Models\ProductosCollection;
 use Exception;
+use Paw\App\Models\DetalleFactura;
 
 class FacturacionController extends Controller
 {
@@ -20,7 +23,7 @@ class FacturacionController extends Controller
     public $configFacturacion;
     public $dependencias;
 
-    public ?string $modelName = Producto::class; 
+    public ?string $modelName = FacturasCollection::class; 
 
     public function __construct()
     {
@@ -31,7 +34,6 @@ class FacturacionController extends Controller
         $this->configFacturacion = $configFacturacion;
         
         parent::__construct();     
-
         
         $this->usuario = new UserController();
         $this->usuario->setLogger($log);
@@ -45,51 +47,98 @@ class FacturacionController extends Controller
     public function alta() 
     {
         if ($this->request->method() == 'POST') {
-            $data = [
-                'nro_comprobante' => $this->request->get('nro_comprobante'),
-                'agente' => $this->request->get('agente'),
-                'dependencia' => $this->request->get('dependencia'),
-                'condicion_venta' => $this->request->get('condicion_venta'),
-                'condicion_impositiva' => $this->request->get('condicion_impositiva'),
-                'total_facturado' => $this->request->get('total_facturado'),
-                'productos' => json_decode($this->request->get('productos'), true) // Decodificar JSON
-            ];
-        
-            // Validación simple
-            if (empty($data['nro_comprobante']) || empty($data['agente']) || empty($data['productos'])) {
-                header('Content-Type: application/json');
-                echo json_encode(['success' => false, 'error' => "Faltan datos obligatorios."]);
-                exit;
-            }
-        
             try {
-                $facturaId = $this->model->insertFactura($data);
-        
-                // Insertar productos en la base de datos
-                foreach ($data['productos'] as $producto) {
-                    $this->model->insertDetalleFactura([
-                        'factura_id' => $facturaId,
-                        'producto_id' => $producto['id'],
-                        'cantidad' => $producto['cantidad'],
-                        'precio_unitario' => $producto['precio_unitario']
-                    ]);
+                // Capturar los datos del formulario
+                $data = [
+                    'nro_factura' => $this->request->get('nro_comprobante'),
+                    'id_agente' => $this->request->get('agente'),
+                    'unidad_que_factura' => $this->request->get('dependencia'),
+                    'condicion_venta' => $this->request->get('condicion_venta'),
+                    'condicion_impositiva' => $this->request->get('condicion_impositiva'),
+                    'total_facturado' => $this->request->get('total_facturado'),
+                ];
+    
+                $productos = json_decode($this->request->get('productos'), true);
+    
+                $this->sanitize($data);
+                $this->logger->debug("Data recibida: ", [$data]);
+    
+                // Validación de datos obligatorios
+                if (empty($data['nro_factura']) || empty($data['id_agente']) || empty($productos)) {
+                    throw new Exception("Faltan datos obligatorios.");
                 }
-        
+    
+                $this->logger->debug("Comenzando a instanciar Factura.");
+                // Crear instancia de Factura (con validaciones en el constructor)
+                $factura = new Factura($data, $this->logger);
+    
+                // Insertar la factura en la base de datos
+                $facturaId = $this->model->insertFactura([
+                    'nro_factura' => $factura->getNroFactura(),
+                    'fecha_factura' => $factura->getFechaFactura(), 
+                    'unidad_que_factura' => $factura->getUnidadQueFactura(),
+                    'total_facturado' => $factura->getTotalFacturado(),
+                    'condicion_venta' => $factura->getCondicionVenta(),
+                    'condicion_impositiva' => $factura->getCondicionImpositiva(),
+                    'id_agente' => $factura->getIdAgente()
+                ]);
+    
+                $this->logger->debug("Factura insertada con ID: ", [$facturaId]);
+                $this->logger->debug("Comenzando a insertar detalle de factura.");
+    
+                // Iteramos sobre la lista de productos para insertar cada detalle
+                foreach ($productos as $productoData) {
+                    try {
+                        $this->logger->debug("Producto Data para inserción: ", [$productoData]);
+    
+                        $queryProducto = new ProductosCollection($this->qb);
+
+                        // Validar que el producto exista en la BD antes de agregarlo al detalle
+                        $productoExistente = $queryProducto->getById($productoData['id']);
+                        if (!$productoExistente) {
+                            throw new Exception("El producto con ID {$productoData['id']} no existe en la base de datos.");
+                        }
+                        $this->logger->debug("Producto Existente, ", [$productoExistente]);
+    
+                        // Crear instancia de DetalleFactura para cada producto
+                        $detalleFactura = new DetalleFactura([
+                            'factura_id' => $facturaId,
+                            'producto_id' => $productoData['id'], 
+                            'cantidad_facturada' => $productoData['cantidad'],
+                            'precio_unitario' => $productoData['precio_unitario']
+                        ], $this->logger);
+    
+                        // Insertar en la tabla detalle_factura
+                        $this->model->insertDetalleFactura([
+                            'factura_id' => $detalleFactura->getFacturaId(),
+                            'producto_id' => $detalleFactura->getProductoId(),
+                            'cantidad_facturada' => $detalleFactura->getCantidadFacturada(),
+                            'precio_unitario' => $detalleFactura->getPrecioUnitario()
+                        ]);
+    
+                    } catch (Exception $e) {
+                        throw new Exception("Error en producto: " . $e->getMessage());
+                    }
+                }
+    
+                // Respuesta de éxito
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'factura_id' => $facturaId]);
                 exit;
-        
+    
             } catch (Exception $e) {
+                // Captura de errores
+                $this->logger->error("Error en alta de factura", ['error' => $e->getMessage()]);
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                 exit;
             }
         } else {
-            // 🔹 Si es una solicitud GET, se muestra el formulario
+            // Si es una solicitud GET, se muestra el formulario
             $datosFactura = ['fecha_factura' => date('d/m/Y')];
     
             $this->dependencias = $this->model->getDependencias();
-            $this->logger->info("Dependencias: ", ['dependencias' => $this->dependencias]);
+            $this->logger->info("Dependencias: __", ['dependencias' => $this->dependencias]);
     
             return view('facturacion/factura_new', array_merge(
                 $datosFactura, 
@@ -100,39 +149,6 @@ class FacturacionController extends Controller
         }
     }
     
- 
-    public function getPreciosProductos()
-    {
-        try {
-            // Recibir el ID del producto desde la URL
-            $productId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-    
-            // Obtener detalles del producto
-            $detalleProducto = $this->model->getDetalleProductoYUltimoPrecio($productId);
-    
-            // Configurar la respuesta como JSON
-            header('Content-Type: application/json');
-    
-            if (!empty($detalleProducto) && is_array($detalleProducto) && isset($detalleProducto[0])) {
-                // Si la consulta devuelve datos, enviar el primer resultado
-                echo json_encode($detalleProducto[0]);
-                exit;
-            } else {
-                // Si no hay resultados, devolver un JSON válido con error
-                http_response_code(404);
-                echo json_encode(["error" => "Producto no encontrado"]);
-                exit;
-            }
-        } catch (Exception $e) {
-            // Si ocurre un error, devolverlo en formato JSON
-            http_response_code(500);
-            echo json_encode(["error" => "Error interno en el servidor", "detalle" => $e->getMessage()]);
-            exit;
-        }
-    }
-    
-    
-    
-
+          
 }
        
