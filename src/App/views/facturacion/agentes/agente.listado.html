@@ -1,3 +1,10 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+
+
 {% include "parts/modulos.view.html" %}
 
 <div class="agentes-container">
@@ -10,7 +17,6 @@
     <table class="agentes-table">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Credencial</th>
                 <th>Nombre</th>
                 <th>Apellido</th>
@@ -25,7 +31,6 @@
         <tbody id="agentes-list">
             {% for agente in agentes %}
                 <tr>
-                    <td>{{ agente.id }}</td>
                     <td>{{ agente.credencial }}</td>
                     <td>{{ agente.nombre }}</td>
                     <td>{{ agente.apellido }}</td>
@@ -49,7 +54,7 @@
     <div id="paginacion-container">
         <span id="pagination-numbers"></span>
     </div>
-    
+
 </div>
 
 {% include "parts/cierre-modulos.view.html" %}
@@ -100,7 +105,6 @@
                     data.agentes.forEach(agente => {
                         let row = document.createElement("tr");
                         row.innerHTML = `
-                            <td>${agente.id}</td>
                             <td>${agente.credencial}</td>
                             <td>${agente.nombre}</td>
                             <td>${agente.apellido}</td>

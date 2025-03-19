@@ -13,30 +13,41 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchAgent').addEventListener('input', (e) => {
         const searchValue = e.target.value;
         console.log("Buscando agentes:", searchValue);
+    
+        fetch(`api_get_agentes?search=${searchValue}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Esto ayuda a que el backend detecte que es una solicitud AJAX
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const agentList = document.getElementById('agentList');
+            agentList.innerHTML = '';
 
-        fetch(`api_get_agentes?search=${searchValue}`)
-            .then(res => res.json())
-            .then(data => {
-                const agentList = document.getElementById('agentList');
-                agentList.innerHTML = '';
-
-                if (data[0]) {
-                    data[0].forEach(agent => {
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item', 'list-group-item-action');
-                        li.textContent = `${agent.nombre} ${agent.apellido}`;
-                        li.addEventListener('click', () => {
-                            document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
-                            document.getElementById('agente').value = agent.id;
-                            document.getElementById('destino_agente').textContent = `(Destino: ${agent.descripcion_dependencia})`;
-                            console.log("Agente seleccionado:", agent);
-                            agentModal.hide();
-                        });
-                        agentList.appendChild(li);
+    
+            // Accedemos correctamente a data.agentes
+            if (data.success && Array.isArray(data.agentes)) {
+                data.agentes.forEach(agent => {
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item', 'list-group-item-action');
+                    li.textContent = `${agent.nombre} ${agent.apellido}`;
+                    li.addEventListener('click', () => {
+                        document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
+                        document.getElementById('agente').value = agent.id;
+                        document.getElementById('destino_agente').textContent = `(Destino: ${agent.dependencia ?? "No especificado"})`;
+                        console.log("Agente seleccionado:", agent);
+                        agentModal.hide();
                     });
-                }
-            });
+                    agentList.appendChild(li);
+                });
+            } else {
+                console.warn("No se encontraron agentes.");
+            }
+        })
+        .catch(error => console.error("Error en fetch:", error));
     });
+    
 
     // Abrir modal de productos
     document.getElementById('addProduct').addEventListener('click', () => {
@@ -69,6 +80,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
     });
+
+    document.getElementById('facturaForm').addEventListener('submit', (e) => {
+        e.preventDefault(); // Evitar la recarga de la página
+    
+        // Capturar los datos del formulario
+        const formData = new FormData(e.target);
+    
+        // Capturar los productos de la tabla
+        let productos = [];
+        document.querySelectorAll('#productosTable tbody tr').forEach(row => {
+            const cantidad = row.querySelector('.cantidad-producto').value;
+            const precioUnitario = row.querySelector('.cantidad-producto').dataset.precio;
+            const idProducto = row.querySelector('.cantidad-producto').dataset.id;
+    
+            productos.push({
+                id: idProducto,
+                cantidad: cantidad,
+                precio_unitario: precioUnitario
+            });
+        });
+    
+        // Agregar los productos al formData como JSON
+        formData.append('productos', JSON.stringify(productos));
+    
+        // Enviar la solicitud al backend
+        fetch('/facturacion/new', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert("Factura guardada correctamente. ID: " + data.factura_id);
+                window.location.reload(); // Opcional: Recargar la página o redirigir a otra vista
+            } else {
+                alert("Error al guardar la factura: " + data.error);
+            }
+        })
+        .catch(error => {
+            console.error("Error en la petición:", error);
+            alert("Hubo un problema al enviar la factura.");
+        });
+    });
+    
 
     // Agregar producto a la tabla con cálculo de subtotal
     function addProductToTable(product) {

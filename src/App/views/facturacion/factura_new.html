@@ -1,247 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+    <script src="/assets/js/facturacion.js"></script>
+</head>
+
 {% include "parts/modulos.view.html" %}
 
-        <section class="container_facturacion">
-            <div class="container mt-5">
-                <h1 class="mb-4">Registrar Nueva Venta</h1>
+<section class="container_facturacion">
+    <div class="container mt-5">
+        <h1 class="mb-4">Registrar Nueva Venta</h1>
 
-                <div id="multistepContainer">
-                    <!-- Paso 1: Formulario -->
-                    <div id="step1" class="step active">
-                        <form id="facturaForm" class="needs-validation" novalidate>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="fecha_factura" class="form-label">Fecha de Factura:</label>
-                                    <label class="form-control-plaintext" id="fecha_factura">{{ fecha_factura }}</label>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="nro_comprobante" class="form-label">Nro de Comprobante:</label>
-                                <input class="form-control" id="nro_comprobante" type="text">
-                            </div>                            
-                            <div class="mb-3">
-                                <label for="dependencia" class="form-label">Dependencia:</label>
-                                <select id="dependencia" name="dependencia" class="form-select">
-                                    <option value="" selected>Elija un destino</option>
-                                    {% for dependencia in dependencias %}
-                                        <option value="{{ dependencia.id }}">
-                                            {% if dependencia.descripcion == "Falta descripción" %}
-                                                {{ dependencia.nombre_dependencia }}
-                                            {% else %}
-                                                {{ dependencia.descripcion }}
-                                            {% endif %}
-                                        </option>
-                                    {% endfor %} {# <-- Esto es lo que faltaba #}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="condicion_venta" class="form-label">Condición de Venta:</label>
-                                <select id="condicion_venta" name="condicion_venta" class="form-select">
-                                    <option value="" selected>Seleccione una opción</option>
-                                    {% for condicion in condicion_venta %}
-                                        <option value="{{ condicion }}">{{ condicion|capitalize }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="condicion_impositiva" class="form-label">Condición Impositiva:</label>
-                                <select id="condicion_impositiva" name="condicion_impositiva" class="form-select">
-                                    <option value="" selected>Seleccione una opción</option>
-                                     {% for condicion in condicion_impositiva %}
-                                        <option value="{{ condicion }}">{{ condicion|replace({'_': ' '})|capitalize }}</option>
-                                     {% endfor %}
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="total_facturado" class="form-label">Total Facturado:</label>
-                                <div class="form-control" id="total_facturado">0.00</div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="agente" class="form-label">Agente:</label>
-                                <button type="button" id="openAgentModal" class="btn btn-secondary btn-sm">Seleccionar Agente</button>
-                                <span id="selectedAgent" class="ms-2">Ninguno</span>
-                                <span id="destino_agente" class="ms-2" name="destino_agente">Ningun Destino</span>
-                                <input type="hidden" id="agente" name="agente">
-                            </div>
-                            <div class="mb-3">
-                                <label for="productos" class="form-label">Productos:</label>
-                                <button type="button" id="addProduct" class="btn btn-primary btn-sm">Agregar Producto</button>
-                                <table id="productosTable" class="table table-striped mt-3">
-                                    <thead>
-                                        <tr>
-                                            <th>Cantidad</th>
-                                            <th>Descripcion</th>
-                                            <th>Proyecto Productivo</th>
-                                            <th>Precio Unitario</th>
-                                            <th>Importe</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody></tbody>
-                                </table>
-                            </div>
-                            <div class="text-end">
-                                <button type="button" id="nextStep" class="btn btn-primary">Vista Previa</button>
-                            </div>
-                        </form>
-                    </div>
-                    <!-- Paso 2: Vista previa -->
-                    <div id="step2" class="step d-none">
-                        <div class="mb-3">
-                            <ul id="preview_productos" class="list-group"></ul>
-                        </div>
-
-                        <section class="main_container">
-                            <section class="container_factura">
-                                <section class="cabecera_i">
-                                    <h1 class="titulo">ENTE DE COOPERACION TECNICA Y FINANCIERA DEL SERVICIO PENITENCIARIO FEDERAL (LEY 24.372)</h1>
-                                    <article class="subtitulo">
-                                        <p id="preview_dependencia"></p>
-                                        <p>Tel.: 02302-436610</p>
-                                    </article>
-                                    <P>I.V.A. EXENTO</P>
-                                </section>
-                                <section class="cabecera_d">
-                                    <h1 id="preview_fecha_factura"></h1>
-                                    <h2>Nro. 00XX-0000XXXXX</h2>                    
-                                    <section>
-                                        <article></article>
-                                        <article>
-                                            <p>CUIT: 30-68203812-4</p>
-                                            <p>Ganancias Exento</p>
-                                            <p>Ingresos Brutos Exento</p>
-                                            <p >Inicio de Actividades: 12/12/94</p>
-                                        </article>
-                                    </section>
-                                </section>
-                           </section> 
-                           <section class="body_factura">
-                                <article>
-                                    <article class="datos_agente">
-                                        <label for="lbl_agente">Señor/a:</label>
-                                        <label id="preview_agente"></label>
-                                    </article>
-                                    <article class="datos_agente">
-                                        <label for="lbl_agente">Domicilio:</label>
-                                        <label>Mafalda 884 CABA</label>
-                                    </article>
-                                </article>
-                                <article class="datos_iva">
-                                    <p>IVA</p>
-                                    <article class="opciones_iva">
-                                        <div class="opcion seleccionada">
-                                            <span class="check-icon"></span>
-                                            <label>Cons. Final</label>
-                                        </div>
-                                        <div class="opcion">
-                                            <span class="check-icon"></span>
-                                            <label>Exento</label>
-                                        </div>
-                                        <div class="opcion">
-                                            <span class="check-icon"></span>
-                                            <label>No Responsable</label>
-                                        </div>
-                                        <div class="opcion">
-                                            <span class="check-icon"></span>
-                                            <label>Resp. Monotributista</label>
-                                        </div>
-                                        <div class="opcion">
-                                            <span class="check-icon"></span>
-                                            <label>Responsable Inscripto</label>
-                                        </div>
-                                    </article>
-                                    <article>
-                                        <p>Credencial: 40117</p>
-                                        <p>CUIT:</p>
-                                        <p>CUIL: 20-34304947-2</p>
-                                    </article>
-                                </article>
-                                <article class="condicion_venta">
-                                    <article>
-                                        <label for="contado_option">Contado</label>
-                                        <input type="radio" name="contado_option" id="contado_option">                       
-                                        <label for="cta_cte_option">Cta. Cte.</label> 
-                                        <input type="radio" name="cta_cte_option" id="cta_cte_option">                       
-                                        <label for="cod_608_option">Cod. 608</label>
-                                        <input type="radio" name="cod_608_option" id="cod_608_option" checked>                        
-                                        <label for="cod_689_option">Cod. 689</label> 
-                                        <input type="radio" name="cod_689_option" id="cod_689_option">
-                                    </article>
-                                    <article>
-                                        Remito N° 000-00015364
-                                    </article>
-                                </article>
-                                <article>
-                                    <table id="table_preview">
-                                        <thead>
-                                            <tr>
-                                                <th>Cantidad</th>
-                                                <th>Descripcion</th>
-                                                <th>Proyecto Productivo</th>
-                                                <th>P. Unitario</th>
-                                                <th>Importe</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-
-
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <td colspan="3"><h6>Exceptuado al Cumplimiento de la R.G. 3419 DGI (Art. 3 Inc. a)</h6></td>
-                                                <td >Total $</td>
-                                                <td id="preview_total_facturado"></td>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </article>
-                           </section>
-                    
-                        </section>      
-                        <div class="text-end">
-                            <button type="button" id="prevStep" class="btn btn-secondary">Atrás</button>
-                            <button type="submit" id="submitFactura" class="btn btn-success">Confirmar</button>
-                        </div>                  
-                    </div>
-
+        <form id="facturaForm" class="needs-validation" novalidate>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="fecha_factura" class="form-label">Fecha de Factura:</label>
+                    <label class="form-control-plaintext" id="fecha_factura">{{ fecha_factura }}</label>
                 </div>
             </div>
-        </section>
 
-        <!-- Modal: Seleccionar Agente -->
-        <div class="modal fade" id="agentModal" tabindex="-1" aria-labelledby="agentModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="agentModalLabel">Seleccionar Agente</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" id="searchAgent" class="form-control mb-3" placeholder="Buscar agente">
-                        <ul id="agentList" class="list-group"></ul>
-                    </div>
-                </div>
+            <div class="mb-3">
+                <label for="nro_comprobante" class="form-label">Nro de Comprobante:</label>
+                <input class="form-control" id="nro_comprobante" name="nro_comprobante" type="text" required>
+            </div>                            
+
+            <div class="mb-3">
+                <label for="dependencia" class="form-label">Dependencia:</label>
+                <select id="dependencia" name="dependencia" class="form-select" required>
+                    <option value="" selected>Elija un destino</option>
+                    {% for dependencia in dependencias %}
+                        <option value="{{ dependencia.id }}">
+                            {% if dependencia.descripcion == "Falta descripción" %}
+                                {{ dependencia.nombre_dependencia }}
+                            {% else %}
+                                {{ dependencia.descripcion }}
+                            {% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="condicion_venta" class="form-label">Condición de Venta:</label>
+                <select id="condicion_venta" name="condicion_venta" class="form-select" required>
+                    <option value="" selected>Seleccione una opción</option>
+                    {% for condicion in condicion_venta %}
+                        <option value="{{ condicion }}">{{ condicion|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="condicion_impositiva" class="form-label">Condición Impositiva:</label>
+                <select id="condicion_impositiva" name="condicion_impositiva" class="form-select" required>
+                    <option value="" selected>Seleccione una opción</option>
+                    {% for condicion in condicion_impositiva %}
+                        <option value="{{ condicion }}">{{ condicion|replace({'_': ' '})|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="total_facturado" class="form-label">Total Facturado:</label>
+                <div class="form-control" id="total_facturado">0.00</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="agente" class="form-label">Agente:</label>
+                <button type="button" id="openAgentModal" class="btn btn-secondary btn-sm">Seleccionar Agente</button>
+                <span id="selectedAgent" class="ms-2">Ninguno</span>
+                <span id="destino_agente" class="ms-2" name="destino_agente">Ningun Destino</span>
+                <input type="hidden" id="agente" name="agente">
+            </div>
+
+            <div class="mb-3">
+                <label for="productos" class="form-label">Productos:</label>
+                <button type="button" id="addProduct" class="btn btn-primary btn-sm">Agregar Producto</button>
+                <table id="productosTable" class="table table-striped mt-3">
+                    <thead>
+                        <tr>
+                            <th>Cantidad</th>
+                            <th>Descripción</th>
+                            <th>Proyecto Productivo</th>
+                            <th>Precio Unitario</th>
+                            <th>Importe</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="text-end">
+                <button type="submit" id="submitFactura" class="btn btn-success">Confirmar Venta</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<!-- Modal: Seleccionar Agente -->
+<div class="modal fade" id="agentModal" tabindex="-1" aria-labelledby="agentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agentModalLabel">Seleccionar Agente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="searchAgent" class="form-control mb-3" placeholder="Buscar agente">
+                <ul id="agentList" class="list-group"></ul>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Modal: Seleccionar Producto -->
-        <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="productModalLabel">Seleccionar Producto</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="text" id="searchProduct" class="form-control mb-3" placeholder="Buscar producto">
-                        <ul id="productList" class="list-group"></ul>
-                    </div>
-                </div>
+<!-- Modal: Seleccionar Producto -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Seleccionar Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="searchProduct" class="form-control mb-3" placeholder="Buscar producto">
+                <ul id="productList" class="list-group"></ul>
             </div>
         </div>
-   
+    </div>
+</div>
 
-        {% include "parts/cierre-modulos.view.html" %}
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
 
-        {% include 'parts/footer.view.html' %}
-    </body>
+</body>
 </html>

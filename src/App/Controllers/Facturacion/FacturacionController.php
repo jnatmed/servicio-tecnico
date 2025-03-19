@@ -44,93 +44,63 @@ class FacturacionController extends Controller
     
     public function alta() 
     {
-
         if ($this->request->method() == 'POST') {
-            /**
-             * Procesar los datos enviados 
-             */
-
-            // 
-
-             /**
-              * si estan todos los datos correctos, se inserta la factura
-              * y se envia confirmacion con los datos de la factura generada
-              */
-        }else {
-            $datosFactura = [
-                'fecha_factura' => date('d/m/Y'),
+            $data = [
+                'nro_comprobante' => $this->request->get('nro_comprobante'),
+                'agente' => $this->request->get('agente'),
+                'dependencia' => $this->request->get('dependencia'),
+                'condicion_venta' => $this->request->get('condicion_venta'),
+                'condicion_impositiva' => $this->request->get('condicion_impositiva'),
+                'total_facturado' => $this->request->get('total_facturado'),
+                'productos' => json_decode($this->request->get('productos'), true) // Decodificar JSON
             ];
-            
+        
+            // Validación simple
+            if (empty($data['nro_comprobante']) || empty($data['agente']) || empty($data['productos'])) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => "Faltan datos obligatorios."]);
+                exit;
+            }
+        
+            try {
+                $facturaId = $this->model->insertFactura($data);
+        
+                // Insertar productos en la base de datos
+                foreach ($data['productos'] as $producto) {
+                    $this->model->insertDetalleFactura([
+                        'factura_id' => $facturaId,
+                        'producto_id' => $producto['id'],
+                        'cantidad' => $producto['cantidad'],
+                        'precio_unitario' => $producto['precio_unitario']
+                    ]);
+                }
+        
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'factura_id' => $facturaId]);
+                exit;
+        
+            } catch (Exception $e) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit;
+            }
+        } else {
+            // 🔹 Si es una solicitud GET, se muestra el formulario
+            $datosFactura = ['fecha_factura' => date('d/m/Y')];
+    
             $this->dependencias = $this->model->getDependencias();
-
-            $this->logger->info("Dependencias: ", $this->dependencias);
-
-            view('facturacion/factura_new', array_merge(
-                $datosFactura, $this->configFacturacion, ["dependencias" => $this->dependencias], $this->menu));        
+            $this->logger->info("Dependencias: ", ['dependencias' => $this->dependencias]);
     
+            return view('facturacion/factura_new', array_merge(
+                $datosFactura, 
+                $this->configFacturacion, 
+                ["dependencias" => $this->dependencias], 
+                $this->menu
+            ));
         }
-
-    }
-
-    public function listar()
-    {
-        
-    }
-
-    public function getAgentes()
-    {
-        // Simular una lista de agentes como datos de prueba
-        $listaAgentes = [
-            [
-                "id" => 4,
-                "nombre" => "Ana",
-                "apellido" => "López"
-            ],
-            [
-                "id" => 5,
-                "nombre" => "Luis",
-                "apellido" => "Martínez"
-            ]
-        ];
-    
-        // Establecer el encabezado para JSON
-        header('Content-Type: application/json');
-    
-        // Devolver la respuesta en formato JSON
-        echo json_encode($listaAgentes);
     }
     
-
-    public function getProductos() {
-        // Simular una lista de productos como datos de prueba
-        $listaProductos = [
-            [
-                "id" => 1,
-                "descripcion" => "Producto 1",
-                "stock" => 50,
-                "precio" => 100
-            ],
-            [
-                "id" => 2,
-                "descripcion" => "Producto 2",
-                "stock" => 30,
-                "precio" => 200
-            ],
-            [
-                "id" => 3,
-                "descripcion" => "Producto 3",
-                "stock" => 20,
-                "precio" => 150
-            ],
-        ];
-    
-        // Establecer el encabezado para JSON
-        header('Content-Type: application/json');
-        
-        // Devolver la respuesta en formato JSON
-        echo json_encode($listaProductos);
-    }
-
+ 
     public function getPreciosProductos()
     {
         try {

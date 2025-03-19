@@ -82,9 +82,17 @@ class Controller
                             'href' => '/facturacion/productos/listado',
                             'name' => 'PRODUCTOS'
                         ],
+                    ]
+                    
+                ],
+                [
+                    'href' => '/facturacion/agentes/listado',
+                    'class' => '.lista',
+                    'name' => 'AGENTES',
+                    'submenu' => [
                         [
-                            'href' => '/facturacion/agentes/listado',
-                            'name' => 'AGENTES'
+                            'href' => '/facturacion/agentes/nuevo',
+                            'name' => 'Nuevo Agente'
                         ]
                     ]
                     
