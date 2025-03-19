@@ -77,6 +77,16 @@ class FacturasCollection extends Model
         }
     }
 
+    public function getFacturasPaginated($limit, $offset, $search = '')
+    {
+        return $this->queryBuilder->getFacturasPaginatedQuery($limit, $offset, $search);
+    }
     
+    public function countFacturas($search = '')
+    {
+        return $this->queryBuilder->countFacturasQuery($search);
+    }
+
+        
 
 }

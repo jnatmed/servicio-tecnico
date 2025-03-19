@@ -149,6 +149,62 @@ class FacturacionController extends Controller
         }
     }
     
-          
+    public function listar()
+    {
+        $page = (int) ($this->request->get('page') ?? 1);
+        $searchItem = trim($this->request->get('search') ?? '');
+        $limit = 10;
+        $offset = ($page - 1) * $limit;
+    
+        try {
+            // Obtener facturas paginadas
+            $facturas = $this->model->getFacturasPaginated($limit, $offset, $searchItem);
+            $totalFacturas = $this->model->countFacturas($searchItem);
+    
+            // Si es AJAX, devolver JSON
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'facturas' => $facturas,
+                    'total' => $totalFacturas,
+                    'limit' => $limit,
+                    'currentPage' => $page,
+                    'search' => $searchItem
+                ]);
+                exit;
+            }
+    
+            // Si es una solicitud normal, renderizar la vista
+            return view('facturacion/factura.listado', array_merge([
+                'facturas' => $facturas,
+                'total' => $totalFacturas,
+                'limit' => $limit,
+                'currentPage' => $page,
+                'search' => $searchItem], 
+                $this->menu)
+            );
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error en listar facturas: " . $e->getMessage());
+    
+            // Si es AJAX, devolver el error en JSON
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit;
+            }
+    
+            // Si es una solicitud normal, mostrar la vista con el error
+            try {
+                return view('facturacion/factura.listado', ['error' => $e->getMessage()]);
+            } catch (Exception $viewError) {
+                $this->logger->error("Error al cargar la vista: " . $viewError->getMessage());
+                return "Ocurrió un error al cargar la página.";
+            }
+        }
+    }
+    
+    
 }
        

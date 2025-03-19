@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+
+<body>
+    {% include "parts/modulos.view.html" %}
+
+    <section class="container_facturacion">
+        <div class="container mt-5">
+            <h1 class="mb-4">Listado de Facturas</h1>
+
+            <!-- Barra de búsqueda -->
+            <div class="mb-3">
+                <input type="text" id="searchFactura" class="form-control" placeholder="Buscar por número de factura o agente..." value="{{ search }}">
+            </div>
+
+            <!-- Tabla de facturas -->
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nro. Factura</th>
+                            <th>Fecha</th>
+                            <th>Unidad Facturadora</th>
+                            <th>Agente</th>
+                            <th>Total Facturado</th>
+                            <th>Condición de Venta</th>
+                            <th>Condición Impositiva</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="facturaList">
+                        {% if facturas %}
+                            {% for factura in facturas %}
+                                <tr>
+                                    <td>{{ loop.index + (limit * (currentPage - 1)) }}</td>
+                                    <td>{{ factura.nro_factura }}</td>
+                                    <td>{{ factura.fecha_factura }}</td>
+                                    <td>{{ factura.unidad_facturadora }}</td>
+                                    <td>{{ factura.nombre_agente }} {{ factura.apellido_agente }}</td>
+                                    <td>${{ factura.total_facturado|number_format(2, ',', '.') }}</td>
+                                    <td>{{ factura.condicion_venta|replace({'_': ' '})|capitalize }}</td>
+                                    <td>{{ factura.condicion_impositiva|replace({'_': ' '})|capitalize }}</td>
+                                    <td>
+                                        <a href="/facturacion/ver/{{ factura.id }}" class="btn btn-sm btn-info">Ver</a>
+                                        <a href="/facturacion/editar/{{ factura.id }}" class="btn btn-sm btn-warning">Editar</a>
+                                        <button class="btn btn-sm btn-danger deleteFactura" data-id="{{ factura.id }}">Eliminar</button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center">No se encontraron facturas.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <nav>
+                <ul class="pagination">
+                    {% set totalPages = total > 0 and limit > 0 ? (total / limit)|round(0, 'ceil') : 1 %}
+                    {% if currentPage > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ currentPage - 1 }}&search={{ search }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    {% for i in range(1, totalPages) %}
+                        <li class="page-item {% if i == currentPage %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}&search={{ search }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if currentPage < totalPages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ currentPage + 1 }}&search={{ search }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    {% include 'parts/footer.view.html' %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('searchFactura');
+            const facturaList = document.getElementById('facturaList');
+        
+            // 🔹 Buscar facturas dinámicamente
+            searchInput.addEventListener('input', function (e) {
+                const searchValue = e.target.value.trim();
+                console.log("Buscando facturas:", searchValue);
+        
+                fetch(`/facturacion/listar?search=${searchValue}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest' // 🔥 Importante para detectar AJAX en PHP
+                    }
+                })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error(`Error en la respuesta: ${res.status}`);
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    facturaList.innerHTML = '';
+        
+                    if (data.success && data.facturas.length) {
+                        data.facturas.forEach((factura, index) => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${index + 1}</td>
+                                <td>${factura.nro_factura}</td>
+                                <td>${factura.fecha_factura}</td>
+                                <td>${factura.unidad_facturadora}</td>
+                                <td>${factura.nombre_agente} ${factura.apellido_agente}</td>
+                                <td>$${parseFloat(factura.total_facturado).toFixed(2)}</td>
+                                <td>${factura.condicion_venta.replace('_', ' ')}</td>
+                                <td>${factura.condicion_impositiva.replace('_', ' ')}</td>
+                                <td>
+                                    <a href="/facturacion/ver/${factura.id}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/editar/${factura.id}" class="btn btn-sm btn-warning">Editar</a>
+                                    <button class="btn btn-sm btn-danger deleteFactura" data-id="${factura.id}">Eliminar</button>
+                                </td>
+                            `;
+                            facturaList.appendChild(row);
+                        });
+                    } else {
+                        facturaList.innerHTML = `<tr><td colspan="9" class="text-center">No se encontraron facturas.</td></tr>`;
+                    }
+                })
+                .catch(error => console.error("Error en fetch:", error));
+            });
+        
+            // 🔹 Eliminar facturas
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('deleteFactura')) {
+                    const facturaId = e.target.dataset.id;
+        
+                    if (confirm("¿Seguro que deseas eliminar esta factura?")) {
+                        fetch(`/facturacion/eliminar/${facturaId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                console.info(`Factura ${facturaId} eliminada correctamente.`);
+                                document.querySelector(`button[data-id="${facturaId}"]`).closest('tr').remove();
+                            } else {
+                                console.warn("Error al eliminar la factura:", data.error);
+                            }
+                        })
+                        .catch(error => console.error("Error en la eliminación:", error));
+                    }
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

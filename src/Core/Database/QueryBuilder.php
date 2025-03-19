@@ -434,6 +434,79 @@ class QueryBuilder
         }
     }
     
-        
+    public function getFacturasPaginatedQuery($limit, $offset, $search = '')
+    {
+        try {
+            $query = "SELECT f.*, 
+                             d.descripcion AS unidad_facturadora, 
+                             a.nombre AS nombre_agente, 
+                             a.apellido AS apellido_agente
+                      FROM factura f
+                      LEFT JOIN dependencia d ON f.unidad_que_factura = d.id
+                      LEFT JOIN agente a ON f.id_agente = a.id";
+            
+            $params = [];
+    
+            // Agregar filtro de búsqueda si se proporciona un término
+            if (!empty($search)) {
+                $query .= " WHERE f.nro_factura LIKE :search OR a.nombre LIKE :search OR a.apellido LIKE :search";
+                $params['search'] = "%{$search}%";
+            }
+    
+            $query .= " ORDER BY f.fecha_factura DESC LIMIT :limit OFFSET :offset";
+    
+            // Preparar la consulta
+            $stmt = $this->pdo->prepare($query);
+    
+            // Enlazar parámetros
+            if (!empty($search)) {
+                $stmt->bindValue(':search', $params['search'], PDO::PARAM_STR);
+            }
+            $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+    
+            // Ejecutar la consulta
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logger->error("Error en getFacturasPaginatedQuery: " . $e->getMessage());
+            throw new Exception("Error al obtener las facturas.");
+        }
+    }
+    
+    
+    public function countFacturasQuery($search = '')
+    {
+        try {
+            $query = "SELECT COUNT(*) as total FROM factura";
+            
+            $params = [];
+    
+            if (!empty($search)) {
+                $query .= " WHERE nro_factura LIKE :search OR id_agente LIKE :search";
+                $params['search'] = "%{$search}%";
+            }
+    
+            // Preparar la consulta manualmente en lugar de usar select()
+            $stmt = $this->pdo->prepare($query);
+    
+            // Enlazar parámetros de búsqueda si existen
+            if (!empty($search)) {
+                $stmt->bindValue(':search', $params['search'], PDO::PARAM_STR);
+            }
+    
+            $stmt->execute();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+            return $resultado['total'] ?? 0;
+        } catch (PDOException $e) {
+            $this->logger->error("Error en countFacturasQuery: " . $e->getMessage());
+            throw new Exception("Error al contar las facturas.");
+        }
+    }
+    
+    
+    
      
 }

@@ -163,6 +163,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   */
   $router->get('/facturacion/new', 'Facturacion\\FacturacionController@alta');
   $router->post('/facturacion/new', 'Facturacion\\FacturacionController@alta');
+  $router->post('/facturacion/listar', 'Facturacion\\FacturacionController@listar');
 
   $router->get('/facturacion/listar', 'Facturacion\\FacturacionController@listar');
   $router->get('/facturacion/api_get_agentes', 'Facturacion\\AgenteController@getAgentes');

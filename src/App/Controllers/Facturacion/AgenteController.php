@@ -138,9 +138,13 @@ class AgenteController extends Controller
             $this->logger->info("Solicitud detectada como vista normal. Renderizando HTML.");
     
             return view('facturacion/agentes/agente.listado', array_merge(
-                ['agentes' => $listaAgentes, 'total' => $totalAgentes, 'limit' => $limit, 'currentPage' => $page, 'search' => $searchItem],
-                $this->menu
-            ));
+                ['agentes' => $listaAgentes, 
+                 'total' => $totalAgentes, 
+                 'limit' => $limit, 
+                 'currentPage' => $page, 
+                 'search' => $searchItem],
+                $this->menu)
+            );
     
         } catch (Exception $e) {
             $this->logger->error("Error en getAgentes()", ['error' => $e->getMessage()]);
