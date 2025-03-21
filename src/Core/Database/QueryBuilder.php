@@ -507,6 +507,60 @@ class QueryBuilder
     }
     
     
+    public function getFacturaById($id)
+    {
+        try {
+            $query = "SELECT f.*, 
+                             d.descripcion AS unidad_facturadora, 
+                             a.nombre AS nombre_agente, 
+                             a.apellido AS apellido_agente 
+                      FROM factura f 
+                      LEFT JOIN dependencia d ON f.unidad_que_factura = d.id 
+                      LEFT JOIN agente a ON f.id_agente = a.id 
+                      WHERE f.id = :id";
     
-     
+            return $this->query($query, [':id' => $id])[0] ?? null;
+        } catch (Exception $e) {
+            $this->logger->error("Error en getFacturaById: " . $e->getMessage());
+            throw new Exception("Error al obtener la factura.");
+        }
+    }
+    
+    public function getDetalleFacturaByFacturaId($id)
+    {
+        try {
+            $query = "SELECT df.*, p.descripcion_proyecto, p.nro_proyecto_productivo 
+                      FROM detalle_factura df
+                      INNER JOIN producto p ON df.producto_id = p.id
+                      WHERE df.factura_id = :id";
+    
+            return $this->query($query, [':id' => $id]);
+        } catch (PDOException $e) {
+            $this->logger->error("Error en getDetalleFacturaByFacturaId: " . $e->getMessage());
+            throw new Exception("Error al obtener los productos de la factura.");
+        }
+    }
+    
+        
+    public function query($sql, $params = [])
+    {
+        try {
+            $this->logger->info("Ejecutando query:", ['sql' => $sql, 'params' => $params]);
+    
+            $stmt = $this->pdo->prepare($sql);
+    
+            // Enlazar parámetros dinámicamente
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
+            }
+    
+            $stmt->execute();
+    
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            $this->logger->error("Error en query(): " . $e->getMessage(), ['sql' => $sql, 'params' => $params]);
+            throw new Exception("Error al ejecutar la consulta en la base de datos.");
+        }
+    }
+         
 }

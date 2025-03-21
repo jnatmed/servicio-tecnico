@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             if (data.success) {
                 console.error("Factura guardada correctamente. ID: " + data.factura_id);
-                window.location.reload(); // Opcional: Recargar la página o redirigir a otra vista
+                window.location.href = '/facturacion/listar'; // Opcional: Recargar la página o redirigir a otra vista
             } else {
                 console.error("Error al guardar la factura: " + data.error);
             }

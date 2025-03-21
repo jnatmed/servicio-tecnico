@@ -87,6 +87,15 @@ class FacturasCollection extends Model
         return $this->queryBuilder->countFacturasQuery($search);
     }
 
-        
+    public function getFacturaById($id)
+    {
+        return $this->queryBuilder->getFacturaById($id);
+    }
+    
+    public function getDetalleFacturaByFacturaId($id)
+    {
+        return $this->queryBuilder->getDetalleFacturaByFacturaId($id);
+    }
+    
 
 }

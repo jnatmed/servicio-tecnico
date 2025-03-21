@@ -45,8 +45,8 @@
                                     <td>{{ factura.condicion_venta|replace({'_': ' '})|capitalize }}</td>
                                     <td>{{ factura.condicion_impositiva|replace({'_': ' '})|capitalize }}</td>
                                     <td>
-                                        <a href="/facturacion/ver/{{ factura.id }}" class="btn btn-sm btn-info">Ver</a>
-                                        <a href="/facturacion/editar/{{ factura.id }}" class="btn btn-sm btn-warning">Editar</a>
+                                        <a href="/facturacion/ver?id={{ factura.id }}" class="btn btn-sm btn-info">Ver</a>
+                                        <a href="/facturacion/editar?id={{ factura.id }}" class="btn btn-sm btn-warning">Editar</a>
                                         <button class="btn btn-sm btn-danger deleteFactura" data-id="{{ factura.id }}">Eliminar</button>
                                     </td>
                                 </tr>
@@ -124,8 +124,8 @@
                                 <td>${factura.condicion_venta.replace('_', ' ')}</td>
                                 <td>${factura.condicion_impositiva.replace('_', ' ')}</td>
                                 <td>
-                                    <a href="/facturacion/ver/${factura.id}" class="btn btn-sm btn-info">Ver</a>
-                                    <a href="/facturacion/editar/${factura.id}" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="/facturacion/ver?id=${factura.id}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/editar?id=${factura.id}" class="btn btn-sm btn-warning">Editar</a>
                                     <button class="btn btn-sm btn-danger deleteFactura" data-id="${factura.id}">Eliminar</button>
                                 </td>
                             `;

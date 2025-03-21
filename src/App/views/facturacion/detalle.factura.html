@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+    <title>Detalle de Factura</title>
+</head>
+<body>
+    {% include "parts/modulos.view.html" %}
+    <section class="container mt-5">
+        <h1 class="mb-4">Detalle de Factura</h1>
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h4>Factura N° {{ factura.nro_factura }}</h4>
+                </div>
+                <div class="card-body">
+                    <p><strong>Fecha:</strong> {{ factura.fecha_factura }}</p>
+                    <p><strong>Unidad que factura:</strong> {{ factura.unidad_facturadora }}</p>
+                    <p><strong>Agente:</strong> {{ factura.nombre_agente }} {{ factura.apellido_agente }}</p>
+                    <p><strong>Condición de Venta:</strong> {{ factura.condicion_venta|replace({'_': ' '}) }}</p>
+                    <p><strong>Condición Impositiva:</strong> {{ factura.condicion_impositiva|replace({'_': ' '}) }}</p>
+                    <p><strong>Total Facturado:</strong> ${{ factura.total_facturado|number_format(2, '.', ',') }}</p>
+                </div>
+            </div>
+
+            <h3 class="mt-4">Productos</h3>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Descripción</th>
+                        <th>Proyecto Productivo</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ producto.descripcion_proyecto }}</td>
+                            <td>{{ producto.nro_proyecto_productivo }}</td>
+                            <td>{{ producto.cantidad_facturada }}</td>
+                            <td>${{ producto.precio_unitario|number_format(2, '.', ',') }}</td>
+                            <td>${{ (producto.cantidad_facturada * producto.precio_unitario)|number_format(2, '.', ',') }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay productos asociados a esta factura.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <a href="/facturacion/listar" class="btn btn-primary mt-3">Volver</a>
+    </section>
+    {% include "parts/footer.view.html" %}
+</body>
+</html>

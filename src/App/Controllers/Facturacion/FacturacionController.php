@@ -204,7 +204,28 @@ class FacturacionController extends Controller
             }
         }
     }
+    public function ver()
+    {
+        try {
+            $id = (int) $this->request->get('id');
+
+            $factura = $this->model->getFacturaById($id);
+            $productos = $this->model->getDetalleFacturaByFacturaId($id);
     
+            if (!$factura) {
+                throw new Exception("Factura no encontrada.");
+            }
+    
+            return view('facturacion/detalle.factura', array_merge([
+                'factura' => $factura,
+                'productos' => $productos
+            ], $this->menu));
+        } catch (Exception $e) {
+            $this->logger->error("Error en ver factura: " . $e->getMessage());
+            return view('facturacion/detalle.factura', ['error' => $e->getMessage()]);
+        }
+    }
+     
     
 }
        
