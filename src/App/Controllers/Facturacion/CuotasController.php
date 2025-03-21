@@ -13,7 +13,7 @@ use Paw\App\Models\ProductosCollection;
 use Exception;
 use Paw\App\Models\DetalleFactura;
 
-class FacturacionController extends Controller
+class CuotasController extends Controller
 {
     
     use Loggable;
@@ -137,13 +137,13 @@ class FacturacionController extends Controller
             // Si es una solicitud GET, se muestra el formulario
             $datosFactura = ['fecha_factura' => date('d/m/Y')];
     
+            $this->dependencias = $this->model->getDependencias();
             $this->logger->info("Dependencias: __", ['dependencias' => $this->dependencias]);
     
             return view('facturacion/factura_new', array_merge(
                 $datosFactura, 
                 $this->configFacturacion, 
-                ["dependencias" => $this->model->getDependencias()], 
-                ['monto_minimo_cuota' => 10000],
+                ["dependencias" => $this->dependencias], 
                 $this->menu
             ));
         }
