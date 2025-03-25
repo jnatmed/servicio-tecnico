@@ -21,7 +21,12 @@
                     <input type="date" id="fechaHasta" name="hasta" class="form-control" value="{{ hasta }}">
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                    <button type="button" id="btnFiltrar" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <button id="btnExportarTxt" class="btn btn-outline-primary" disabled>
+                        📄 Exportar TXT
+                    </button>
                 </div>
             </form>
 
@@ -97,14 +102,150 @@
     </section>
 
     {% include 'parts/footer.view.html' %}
-
     <script>
-        // Mostrar/Ocultar cuotas pagadas
-        document.getElementById('mostrarPagadas')?.addEventListener('change', function () {
-            document.querySelectorAll('.cuota-pagada').forEach(row => {
-                row.classList.toggle('d-none', !this.checked);
+        document.addEventListener('DOMContentLoaded', function () {
+            const btnFiltrar = document.getElementById('btnFiltrar');
+            const inputDesde = document.getElementById('fechaDesde');
+            const inputHasta = document.getElementById('fechaHasta');
+            const tbody = document.querySelector('#tablaCuotas tbody');
+            const paginacion = document.querySelector('.pagination');
+            const contenedorAlert = document.querySelector('.alert-success');
+            const btnExportarTxt = document.getElementById('btnExportarTxt');
+
+            // 🔄 Función para cargar cuotas desde el backend
+            function cargarCuotas(page = 1) {
+                const desde = inputDesde.value;
+                const hasta = inputHasta.value;
+        
+                fetch(`/facturacion/cuotas/listado?desde=${desde}&hasta=${hasta}&page=${page}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success) throw new Error('Error al cargar cuotas');
+        
+                    // Limpiar y renderizar tabla
+                    tbody.innerHTML = '';
+                    if (data.cuotas.length > 0) {
+                        data.cuotas.forEach((cuota, index) => {
+                            const row = document.createElement('tr');
+                            row.className = cuota.estado === 'pagada' ? 'cuota-pagada d-none' : '';
+                            row.innerHTML = `
+                                <td>${index + 1 + ((data.currentPage - 1) * data.limit)}</td>
+                                <td>${cuota.nro_factura}</td>
+                                <td>${cuota.nro_cuota}</td>
+                                <td>${cuota.fecha_vencimiento}</td>
+                                <td>
+                                    ${cuota.estado === 'pagada'
+                                        ? '<span class="badge bg-success">Pagada</span>'
+                                        : '<span class="badge bg-warning text-dark">Pendiente</span>'}
+                                </td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No se encontraron cuotas para el período indicado.</td></tr>';
+                    }
+        
+                    // Mostrar u ocultar alerta de cuotas pagadas
+                    if (data.hayPagadas) {
+                        contenedorAlert?.classList.remove('d-none');
+                    } else {
+                        contenedorAlert?.classList.add('d-none');
+                    }
+        
+                    // Generar paginación dinámica
+                    let totalPages = Math.ceil(data.total / data.limit);
+                    let paginacionHTML = '';
+        
+                    if (data.currentPage > 1) {
+                        paginacionHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${data.currentPage - 1}">Anterior</a></li>`;
+                    }
+        
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginacionHTML += `
+                            <li class="page-item ${i === data.currentPage ? 'active' : ''}">
+                                <a class="page-link" href="#" data-page="${i}">${i}</a>
+                            </li>`;
+                    }
+        
+                    if (data.currentPage < totalPages) {
+                        paginacionHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${data.currentPage + 1}">Siguiente</a></li>`;
+                    }
+        
+                    paginacion.innerHTML = paginacionHTML;
+                    habilitarExportar(desde, hasta);
+        
+                })
+                .catch(error => {
+                    console.error('Error al traer cuotas:', error);
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Ocurrió un error al cargar las cuotas.</td></tr>';
+                });
+            }
+        
+            // Habilitar exportar TXT solo si la búsqueda fue exitosa
+            function habilitarExportar(desde, hasta) {
+                btnExportarTxt.disabled = false;
+                btnExportarTxt.dataset.desde = desde;
+                btnExportarTxt.dataset.hasta = hasta;
+            }
+            
+            
+
+            // Click en Exportar TXT
+            btnExportarTxt.addEventListener('click', function () {
+                const desde = this.dataset.desde;
+                const hasta = this.dataset.hasta;
+            
+                fetch(`/facturacion/cuotas/exportar-txt?desde=${desde}&hasta=${hasta}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(texto => {
+                    // Crear blob y descargar como archivo
+                    const blob = new Blob([texto], { type: 'text/plain' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `cuotas_${desde}_a_${hasta}.txt`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                })
+                .catch(error => {
+                    console.error('Error al exportar:', error);
+                    alert('Ocurrió un error al generar el archivo.');
+                });
+            });
+            
+            
+            // Click en el botón Filtrar
+            btnFiltrar.addEventListener('click', function () {
+                cargarCuotas(1);
+            });
+        
+            // Click en la paginación (delegado)
+            paginacion.addEventListener('click', function (e) {
+                if (e.target.tagName === 'A') {
+                    e.preventDefault();
+                    const page = parseInt(e.target.dataset.page);
+                    cargarCuotas(page);
+                }
+            });
+        
+            // Mostrar/Ocultar cuotas pagadas
+            document.getElementById('mostrarPagadas')?.addEventListener('change', function () {
+                document.querySelectorAll('.cuota-pagada').forEach(row => {
+                    row.classList.toggle('d-none', !this.checked);
+                });
             });
         });
-    </script>
+        </script>
+        
 </body>
 </html>

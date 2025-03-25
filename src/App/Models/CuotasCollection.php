@@ -8,6 +8,8 @@ use Exception;
 use PDOException;
 use Paw\Core\Traits\Loggable;
 
+use PDO;
+
 class CuotasCollection extends Model
 {
     use Loggable;
@@ -77,8 +79,132 @@ class CuotasCollection extends Model
     }
 
 
-    public function getAllFilteredByDate()
+    public function getCuotasByFecha($desde, $hasta, $limit, $offset)
     {
-
+        try {
+            $this->logger->info("Obteniendo cuotas entre $desde y $hasta con limit $limit y offset $offset.");
+    
+            return $this->queryBuilder->query("
+                SELECT cuota.*, factura.nro_factura
+                FROM cuota
+                INNER JOIN factura ON factura.id = cuota.factura_id
+                WHERE cuota.fecha_vencimiento BETWEEN :desde AND :hasta
+                ORDER BY cuota.fecha_vencimiento ASC
+                LIMIT :limit OFFSET :offset
+            ", [
+                ':desde' => $desde,
+                ':hasta' => $hasta,
+                ':limit' => (int)$limit,
+                ':offset' => (int)$offset
+            ]);
+        } catch (Exception $e) {
+            $this->logger->error("Error en getCuotasByFecha: " . $e->getMessage());
+            return [];
+        }
     }
+    
+
+    public function countCuotasByFecha($desde, $hasta)
+    {
+        try {
+            $this->logger->info("Contando cuotas entre $desde y $hasta.");
+    
+            $result = $this->queryBuilder->query("
+                SELECT COUNT(*) as total
+                FROM cuota
+                WHERE fecha_vencimiento BETWEEN :desde AND :hasta
+            ", [
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ]);
+    
+            return $result[0]['total'] ?? 0;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error en countCuotasByFecha: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+
+    public function hayCuotasPagadas($desde, $hasta)
+    {
+        try {
+            $this->logger->info("Verificando cuotas pagadas entre $desde y $hasta.");
+    
+            $result = $this->queryBuilder->query("
+                SELECT COUNT(*) as total
+                FROM cuota
+                WHERE estado = 'pagada'
+                AND fecha_vencimiento BETWEEN :desde AND :hasta
+            ", [
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ]);
+    
+            return $result[0]['total'] > 0;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error en hayCuotasPagadas: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function generarTextoExportacion($desde, $hasta)
+    {
+        try {
+            $this->logger->info("Generando texto exportable de cuotas entre $desde y $hasta.");
+    
+            $registros = $this->queryBuilder->query("
+                SELECT 
+                    d.nombre_dependencia,
+                    a.credencial,
+                    a.apellido,
+                    a.nombre,
+                    a.cuil
+                FROM cuota c
+                INNER JOIN factura f ON f.id = c.factura_id
+                INNER JOIN agente a ON a.id = f.id_agente
+                INNER JOIN dependencia d ON d.id = a.dependencia
+                WHERE c.fecha_vencimiento BETWEEN :desde AND :hasta
+            ", [
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ]);
+    
+            $contenido = "";
+            $this->logger->debug("resultado consulta generarTextoExportacion: ", [$registros]);    
+            foreach ($registros as $r) {
+                // Concatenar nombre completo
+                $nombreCompleto = strtoupper(trim($r['apellido'] . ' ' . $r['nombre']));
+                $nombreFormateado = str_pad(substr($nombreCompleto, 0, 30), 30, ' ', STR_PAD_RIGHT);
+    
+                // CUIT/CUIL: asegurar 11 dígitos (rellenar con ceros si hiciera falta)
+                $cuilLimpio = $r['cuil'] !== null ? preg_replace('/\D/', '', $r['cuil']) : '';
+                $cuil = str_pad($cuilLimpio, 11, '0', STR_PAD_LEFT);
+    
+                // Línea formateada
+                $linea = sprintf(
+                    "%-4s %-6s%s%s+ 00       608\n",
+                    substr($r['nombre_dependencia'], 0, 4), // Abreviado a 4 caracteres si es largo
+                    $r['credencial'],
+                    $nombreFormateado,
+                    $cuil
+                );
+    
+                $contenido .= $linea;
+            }
+    
+            $this->logger->debug("Contenido TXT generado:", [$contenido]);
+            return $contenido;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error en generarTextoExportacion: " . $e->getMessage());
+            return "ERROR EN EXPORTACIÓN";
+        }
+    }
+        
+    
+
+    
 }
