@@ -131,6 +131,10 @@ $router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete');
 $router->get('/orden-de-trabajo/descargar', 'OrdenController@download');
 $router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarEstado');
 
+/**
+ *  MINUTAS DE REUNION
+ */
+
 $router->get('/minuta/new', 'MinutaController@new');
 $router->get('/minutas/listar', 'MinutaController@listar');
 
@@ -152,10 +156,10 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
 /**
  * 10) Datos de los internos trabajadores
  */
- $router->get('/interno', 'InternoController@datosInternos');
- $router->get('/internos/ver_internos', 'InternoController@verInternosTrabajadores');
- $router->get('/taller/ver_asignaciones', 'InternoController@verInternosAsignados');
- $router->get('/talleres/ver_talleres', 'TalleresController@verTalleres');
+//  $router->get('/interno', 'InternoController@datosInternos');
+//  $router->get('/internos/ver_internos', 'InternoController@verInternosTrabajadores');
+//  $router->get('/taller/ver_asignaciones', 'InternoController@verInternosAsignados');
+//  $router->get('/talleres/ver_talleres', 'TalleresController@verTalleres');
  // /interno?id=1
 
  /**
@@ -187,3 +191,9 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->get('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new');
   $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new');
 //   $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@nuevo');
+
+/**
+ *  13) Cuotas
+ */
+
+ $router->get('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar');

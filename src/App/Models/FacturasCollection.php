@@ -77,6 +77,17 @@ class FacturasCollection extends Model
         }
     }
 
+    public function getCuotasByFacturaId($id)
+    {
+        try {
+            return $this->queryBuilder->select('cuota', '*', ['factura_id' => $id]);
+        } catch (Exception $e) {
+            $this->logger->error("Error en getCuotasByFacturaId: " . $e->getMessage());
+            throw new Exception("Error al obtener las cuotas de la factura.");
+        }
+    }
+    
+
     public function getFacturasPaginated($limit, $offset, $search = '')
     {
         return $this->queryBuilder->getFacturasPaginatedQuery($limit, $offset, $search);

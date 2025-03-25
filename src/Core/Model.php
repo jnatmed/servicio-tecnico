@@ -12,6 +12,12 @@ class Model
 
     public $queryBuilder;
     public $logger;
+
+    public function __construct($qb = null, $logger = null)
+    {
+        $this->queryBuilder = $qb;
+        $this->logger = $logger;
+    }
     
     public function setQueryBuilder(QueryBuilder $qb)
     {
@@ -19,7 +25,7 @@ class Model
     }
     public function toArray()
     {
-        // 🔥 Obtiene todas las propiedades públicas y filtra las excluidas
+        // Obtiene todas las propiedades públicas y filtra las excluidas
         return array_filter(get_object_vars($this), fn($key) => !in_array($key, ['queryBuilder', 'logger']), ARRAY_FILTER_USE_KEY);
     }
 }

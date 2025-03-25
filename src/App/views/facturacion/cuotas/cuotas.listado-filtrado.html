@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+<body>
+    {% include "parts/modulos.view.html" %}
+
+    <section class="container_cuotas">
+        <div class="container mt-5">
+            <h1 class="mb-4">Listado de Cuotas</h1>
+
+            <!-- Filtro por rango de fechas -->
+            <form method="get" class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label for="fechaDesde" class="form-label">Desde</label>
+                    <input type="date" id="fechaDesde" name="desde" class="form-control" value="{{ desde }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="fechaHasta" class="form-label">Hasta</label>
+                    <input type="date" id="fechaHasta" name="hasta" class="form-control" value="{{ hasta }}">
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                </div>
+            </form>
+
+            <!-- Aviso de cuotas pagadas -->
+            {% if hayPagadas %}
+                <div class="alert alert-success d-flex align-items-center justify-content-between" role="alert">
+                    Hay cuotas dentro del período que ya fueron pagadas.
+                    <div class="form-check form-switch ms-3">
+                        <input class="form-check-input" type="checkbox" id="mostrarPagadas">
+                        <label class="form-check-label" for="mostrarPagadas">Mostrar cuotas pagadas</label>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Tabla de cuotas -->
+            <div class="table-responsive">
+                <table class="table table-striped" id="tablaCuotas">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nro. Factura</th>
+                            <th>Nro. Cuota</th>
+                            <th>Fecha Vencimiento</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if cuotas %}
+                            {% for cuota in cuotas %}
+                                <tr class="{% if cuota.estado == 'pagada' %}cuota-pagada d-none{% endif %}">
+                                    <td>{{ loop.index + (limit * (currentPage - 1)) }}</td>
+                                    <td>{{ cuota.nro_factura }}</td>
+                                    <td>{{ cuota.nro_cuota }}</td>
+                                    <td>{{ cuota.fecha_vencimiento }}</td>
+                                    <td>
+                                        {% if cuota.estado == 'pagada' %}
+                                            <span class="badge bg-success">Pagada</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="5" class="text-center">No se encontraron cuotas para el período indicado.</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación -->
+            <nav>
+                <ul class="pagination">
+                    {% set totalPages = total > 0 and limit > 0 ? (total / limit)|round(0, 'ceil') : 1 %}
+                    {% if currentPage > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ currentPage - 1 }}&desde={{ desde }}&hasta={{ hasta }}">Anterior</a>
+                        </li>
+                    {% endif %}
+                    {% for i in range(1, totalPages) %}
+                        <li class="page-item {% if i == currentPage %}active{% endif %}">
+                            <a class="page-link" href="?page={{ i }}&desde={{ desde }}&hasta={{ hasta }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if currentPage < totalPages %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ currentPage + 1 }}&desde={{ desde }}&hasta={{ hasta }}">Siguiente</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </section>
+
+    {% include 'parts/footer.view.html' %}
+
+    <script>
+        // Mostrar/Ocultar cuotas pagadas
+        document.getElementById('mostrarPagadas')?.addEventListener('change', function () {
+            document.querySelectorAll('.cuota-pagada').forEach(row => {
+                row.classList.toggle('d-none', !this.checked);
+            });
+        });
+    </script>
+</body>
+</html>

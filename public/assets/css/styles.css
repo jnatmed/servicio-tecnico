@@ -214,6 +214,9 @@ input[type="submit"]{
 .side-nav ul li:nth-child(7) a::before { content: "\f2f5"; } /* Salir */
 .side-nav ul li:nth-child(8) a::before { content: "\f007"; } /* Perfil */
 
+
+
+
 /* Sublistas */
 .side-nav ul li ul.sub-menu {
     list-style: none; /* Elimina los puntos de lista */
@@ -222,10 +225,16 @@ input[type="submit"]{
     margin: 0; /* Elimina márgenes */
 }
 
-/* Muestra la sublista cuando el li principal es hovered */
-.side-nav ul li:hover > ul.sub-menu {
-    display: block; /* Muestra la sublista cuando el elemento se pasa por encima */
+
+.side-nav ul li ul.sub-menu.open {
+    display: block;
 }
+
+/* Muestra la sublista cuando el li principal es hovered */
+/* .side-nav ul li:hover > ul.sub-menu {
+    display: block; // Muestra la sublista cuando el elemento se pasa por encima 
+}
+ */
 
 /* Estilo para los enlaces en las sublistas */
 .side-nav ul li ul.sub-menu li a {

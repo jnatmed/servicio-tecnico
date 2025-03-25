@@ -133,9 +133,21 @@ class QueryBuilder
     public function insert($table, $data, $username = null)
     {
         try {
-            // 🔥 Si recibe un objeto, intenta convertirlo en un array
-            if (is_object($data) && method_exists($data, 'toArray')) {
-                $data = $data->toArray();
+
+            // Verificar si $data es un objeto y tiene el método toArray
+            if (is_object($data)) {
+                if (method_exists($data, 'toArray')) {
+                    $data = $data->toArray();
+                } else {
+                    $this->logger->error("El objeto de tipo " . get_class($data) . " no tiene el método toArray.", [$data]);
+                    throw new Exception("El objeto de tipo " . get_class($data) . " no tiene el método toArray.");
+                }
+            }
+
+            // Validar que $data sea un array después de la conversión
+            if (!is_array($data)) {
+                $this->logger->error("Los datos proporcionados no son un array válido.", [$data]);
+                throw new Exception("Los datos proporcionados no son un array válido.");
             }
     
             $columnas = implode(', ', array_keys($data));
@@ -440,19 +452,24 @@ class QueryBuilder
             $query = "SELECT f.*, 
                              d.descripcion AS unidad_facturadora, 
                              a.nombre AS nombre_agente, 
-                             a.apellido AS apellido_agente
+                             a.apellido AS apellido_agente,
+                             COUNT(c.id) AS cantidad_cuotas
                       FROM factura f
                       LEFT JOIN dependencia d ON f.unidad_que_factura = d.id
-                      LEFT JOIN agente a ON f.id_agente = a.id";
+                      LEFT JOIN agente a ON f.id_agente = a.id
+                      LEFT JOIN cuota c ON f.id = c.factura_id"; // Relación con cuotas
             
             $params = [];
     
             // Agregar filtro de búsqueda si se proporciona un término
             if (!empty($search)) {
-                $query .= " WHERE f.nro_factura LIKE :search OR a.nombre LIKE :search OR a.apellido LIKE :search";
+                $query .= " WHERE f.nro_factura LIKE :search 
+                            OR a.nombre LIKE :search 
+                            OR a.apellido LIKE :search";
                 $params['search'] = "%{$search}%";
             }
     
+            $query .= " GROUP BY f.id, d.descripcion, a.nombre, a.apellido"; // Agrupar por factura
             $query .= " ORDER BY f.fecha_factura DESC LIMIT :limit OFFSET :offset";
     
             // Preparar la consulta
@@ -474,6 +491,7 @@ class QueryBuilder
             throw new Exception("Error al obtener las facturas.");
         }
     }
+    
     
     
     public function countFacturasQuery($search = '')

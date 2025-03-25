@@ -9,8 +9,12 @@
             <ul>
                 {% for item in menu %}
                     <li> <!-- Clase dinámica -->
-                        <a href="{{ item.href }}">{{ item.name }}</a>
-                        {% if item.submenu %}
+                        <a href="{{ item.submenu ? '#' : item.href }}" class="menu-toggle">
+                            {{ item.name }}
+                            {% if item.submenu %}
+                                <span class="arrow">▶</span>
+                            {% endif %}
+                        </a>                        {% if item.submenu %}
                             <ul class="sub-menu">
                                 {% for subitem in item.submenu %}
                                     <li><a href="{{ subitem.href }}">{{ subitem.name }}</a></li>

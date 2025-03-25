@@ -5,13 +5,13 @@ namespace Paw\App\Controllers\Facturacion;
 use Paw\Core\Controller;
 use Paw\Core\Traits\Loggable;
 use Paw\App\Controllers\UserController;
-
-use Paw\App\Models\Producto;
 use Paw\App\Models\Factura;
 use Paw\App\Models\FacturasCollection;
 use Paw\App\Models\ProductosCollection;
-use Exception;
+use Paw\App\Models\CuotasCollection;
 use Paw\App\Models\DetalleFactura;
+
+use Exception;
 
 class FacturacionController extends Controller
 {
@@ -22,6 +22,7 @@ class FacturacionController extends Controller
 
     public $configFacturacion;
     public $dependencias;
+    public $cuotasCollection;
 
     public ?string $modelName = FacturasCollection::class; 
 
@@ -56,6 +57,8 @@ class FacturacionController extends Controller
                     'condicion_venta' => $this->request->get('condicion_venta'),
                     'condicion_impositiva' => $this->request->get('condicion_impositiva'),
                     'total_facturado' => $this->request->get('total_facturado'),
+                    'cantidad_cuotas' => $this->request->get('cantidad_cuotas') // Cantidad de cuotas seleccionadas
+
                 ];
     
                 $productos = json_decode($this->request->get('productos'), true);
@@ -84,6 +87,29 @@ class FacturacionController extends Controller
                 ]);
     
                 $this->logger->debug("Factura insertada con ID: ", [$facturaId]);
+
+                // Si la condición de venta es en cuotas, generar las cuotas
+                try {
+                    $this->logger->debug("Datos de cuotas: ", [$data['condicion_venta'],$data['cantidad_cuotas']]);
+                    // Generación de cuotas si la condición de venta lo requiere
+                    if (in_array($data['condicion_venta'], ['codigo_608', 'codigo_689']) && $data['cantidad_cuotas'] > 0) {
+                        $this->logger->info("Solicitando generación de cuotas para la factura ID: " . $facturaId);
+                
+                        // Instanciar la colección de cuotas
+                        $this->cuotasCollection = new CuotasCollection($this->qb, $this->logger);
+                
+                        // Delegar la lógica al modelo
+                        $this->cuotasCollection->generarCuotas($facturaId, $data['total_facturado'], $data['cantidad_cuotas']);
+                    }else{
+                        $this->logger->info("No se solicita la generación de cuotas para la condición de venta {$data['condicion_venta']} o la cantidad de cuotas es 0.");
+                    }
+                
+                    $this->logger->info("Proceso de facturación finalizado correctamente para la factura ID: " . $facturaId);
+                } catch (Exception $e) {
+                    $this->logger->error("Error en el proceso de facturación para la factura ID {$facturaId}: " . $e->getMessage());
+                    throw new Exception("Error al procesar la factura: " . $e->getMessage());
+                }
+
                 $this->logger->debug("Comenzando a insertar detalle de factura.");
     
                 // Iteramos sobre la lista de productos para insertar cada detalle
@@ -211,14 +237,16 @@ class FacturacionController extends Controller
 
             $factura = $this->model->getFacturaById($id);
             $productos = $this->model->getDetalleFacturaByFacturaId($id);
-    
+            $cuotas = $this->model->getCuotasByFacturaId($id);
+
             if (!$factura) {
                 throw new Exception("Factura no encontrada.");
             }
     
             return view('facturacion/detalle.factura', array_merge([
                 'factura' => $factura,
-                'productos' => $productos
+                'productos' => $productos,
+                'cuotas' => $cuotas
             ], $this->menu));
         } catch (Exception $e) {
             $this->logger->error("Error en ver factura: " . $e->getMessage());

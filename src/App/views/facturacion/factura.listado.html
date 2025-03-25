@@ -7,6 +7,26 @@
 <body>
     {% include "parts/modulos.view.html" %}
 
+    <!-- Modal de Confirmación -->
+    <div class="modal fade" id="modalEliminarFactura" tabindex="-1" aria-labelledby="modalEliminarFacturaLabel" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="modalEliminarFacturaLabel">Confirmar Eliminación</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+            ¿Estás seguro de que deseas eliminar esta factura?
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
+
     <section class="container_facturacion">
         <div class="container mt-5">
             <h1 class="mb-4">Listado de Facturas</h1>
@@ -27,6 +47,7 @@
                             <th>Unidad Facturadora</th>
                             <th>Agente</th>
                             <th>Total Facturado</th>
+                            <th>Cantidad de Cuotas</th>
                             <th>Condición de Venta</th>
                             <th>Condición Impositiva</th>
                             <th>Acciones</th>
@@ -42,6 +63,7 @@
                                     <td>{{ factura.unidad_facturadora }}</td>
                                     <td>{{ factura.nombre_agente }} {{ factura.apellido_agente }}</td>
                                     <td>${{ factura.total_facturado|number_format(2, ',', '.') }}</td>
+                                    <td>{{ factura.cantidad_cuotas }}</td>
                                     <td>{{ factura.condicion_venta|replace({'_': ' '})|capitalize }}</td>
                                     <td>{{ factura.condicion_impositiva|replace({'_': ' '})|capitalize }}</td>
                                     <td>
@@ -90,8 +112,13 @@
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('searchFactura');
             const facturaList = document.getElementById('facturaList');
-        
-            // 🔹 Buscar facturas dinámicamente
+
+            // Referencias al modal y botón de confirmar
+            const modalEliminar = new bootstrap.Modal(document.getElementById('modalEliminarFactura'));
+            const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
+            let facturaIdAEliminar = null;        
+
+            // Buscar facturas dinámicamente
             searchInput.addEventListener('input', function (e) {
                 const searchValue = e.target.value.trim();
                 console.log("Buscando facturas:", searchValue);
@@ -121,6 +148,7 @@
                                 <td>${factura.unidad_facturadora}</td>
                                 <td>${factura.nombre_agente} ${factura.apellido_agente}</td>
                                 <td>$${parseFloat(factura.total_facturado).toFixed(2)}</td>
+                                <td>${factura.cantidad_cuotas}</td>  
                                 <td>${factura.condicion_venta.replace('_', ' ')}</td>
                                 <td>${factura.condicion_impositiva.replace('_', ' ')}</td>
                                 <td>
@@ -138,31 +166,41 @@
                 .catch(error => console.error("Error en fetch:", error));
             });
         
-            // 🔹 Eliminar facturas
+            // Eliminar facturas
+            // Preparar el modal de eliminación
             document.addEventListener('click', function (e) {
                 if (e.target.classList.contains('deleteFactura')) {
-                    const facturaId = e.target.dataset.id;
-        
-                    if (confirm("¿Seguro que deseas eliminar esta factura?")) {
-                        fetch(`/facturacion/eliminar/${facturaId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            if (data.success) {
-                                console.info(`Factura ${facturaId} eliminada correctamente.`);
-                                document.querySelector(`button[data-id="${facturaId}"]`).closest('tr').remove();
-                            } else {
-                                console.warn("Error al eliminar la factura:", data.error);
-                            }
-                        })
-                        .catch(error => console.error("Error en la eliminación:", error));
-                    }
+                    facturaIdAEliminar = e.target.dataset.id;
+                    modalEliminar.show();
                 }
             });
+
+            // Confirmar eliminación
+            btnConfirmarEliminar.addEventListener('click', function () {
+                if (!facturaIdAEliminar) return;
+
+                fetch(`/facturacion/eliminar/${facturaIdAEliminar}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        console.info(`Factura ${facturaIdAEliminar} eliminada correctamente.`);
+                        document.querySelector(`button[data-id="${facturaIdAEliminar}"]`).closest('tr').remove();
+                    } else {
+                        console.warn("Error al eliminar la factura:", data.error);
+                    }
+                    modalEliminar.hide();
+                })
+                .catch(error => {
+                    console.error("Error en la eliminación:", error);
+                    modalEliminar.hide();
+                });
+            });
+
         });
     </script>
 

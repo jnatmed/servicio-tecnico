@@ -128,11 +128,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Capturar los datos del formulario
         const formData = new FormData(e.target);
-
-        // 🔹 Capturar el total facturado desde el DOM
+    
+        // Capturar el total facturado desde el DOM
         const totalFacturado = document.getElementById('total_facturado').textContent.trim();
         formData.append('total_facturado', totalFacturado);    
-        
+    
+        // Capturar la cantidad de cuotas (si aplica)
+        const selectCuotas = document.getElementById('selectCuotas');
+        if (selectCuotas && selectCuotas.value) {
+            formData.append('selectCuotas', selectCuotas.value);
+        }
+    
         // Capturar los productos de la tabla
         let productos = [];
         document.querySelectorAll('#productosTable tbody tr').forEach(row => {
@@ -149,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Agregar los productos al formData como JSON
         formData.append('productos', JSON.stringify(productos));
-
+    
         // Mostrar los datos del formulario en consola para depuración
         console.debug("Enviando datos del formulario:", Object.fromEntries(formData.entries()));
     
@@ -161,8 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                console.error("Factura guardada correctamente. ID: " + data.factura_id);
-                window.location.href = '/facturacion/listar'; // Opcional: Recargar la página o redirigir a otra vista
+                console.info("Factura guardada correctamente. ID: " + data.factura_id);
+                window.location.href = '/facturacion/listar'; // Redirigir a la lista de facturas
             } else {
                 console.error("Error al guardar la factura: " + data.error);
             }
@@ -172,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Hubo un problema al enviar la factura.");
         });
     });
+    
     
 
     /***
@@ -205,18 +212,18 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.querySelector('.remove-product').addEventListener('click', () => {
             tr.remove();
             updateTotal();
-            actualizarCuotas(); // 🔹 Recalcular cuotas cuando se elimina un producto
+            actualizarCuotas(); // Recalcular cuotas cuando se elimina un producto
         });
     
         tr.querySelector('.cantidad-producto').addEventListener('input', () => {
             updateSubtotal(tr);
             updateTotal();
-            actualizarCuotas(); // 🔹 Recalcular cuotas cuando cambia la cantidad de un producto
+            actualizarCuotas(); // Recalcular cuotas cuando cambia la cantidad de un producto
         });
     
         tbody.appendChild(tr);
         updateTotal();
-        actualizarCuotas(); // 🔹 Recalcular cuotas cuando se agrega un producto
+        actualizarCuotas(); // Recalcular cuotas cuando se agrega un producto
     }
     // Actualizar subtotal de un producto específico
     function updateSubtotal(row) {
@@ -241,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     
         document.getElementById('total_facturado').textContent = total.toFixed(2);
-        actualizarCuotas(); // 🔹 Recalcular cuotas cuando cambia el total
+        actualizarCuotas(); // Recalcular cuotas cuando cambia el total
     }
     function actualizarCuotas() {
         const totalFacturado = parseFloat(document.getElementById('total_facturado').textContent) || 0;

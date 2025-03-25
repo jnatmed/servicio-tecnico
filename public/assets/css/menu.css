@@ -1,0 +1,11 @@
+/* Flechita por defecto */
+.side-nav .arrow {
+    display: inline-block;
+    margin-left: 6px;
+    transition: transform 0.3s ease;
+}
+
+/* Rotación cuando el submenú está abierto */
+.side-nav .arrow.rotated {
+    transform: rotate(90deg);
+}

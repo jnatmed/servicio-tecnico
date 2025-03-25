@@ -27,56 +27,64 @@ class Controller
 
         $this->menu = [
             'menu' => [
-                [
-                    'href' => '/orden-de-trabajo/listar',
-                    'class' => '.archivo',
-                    'name' => 'ORDENES DE TRABAJO',                    
-                    'submenu' => [
-                        [
-                            'href' => '/orden-de-trabajo/nuevo',
-                            'name' => 'NUEVA ORDEN DE TRABAJO'
-                        ],
-                        [
-                            'href' => '/orden-de-trabajo/listado_pcs',
-                            'name' => 'LISTADO PCS'
-                        ],
-                    ]
-                ],
-                [
-                    'href' => '/minutas/listar',
-                    'class' => '.edicion',
-                    'name' => 'MINUTAS',
-                    'submenu' => [
-                        [
-                            'href' => '/minuta/new',
-                            'name' => 'NUEVA MINUTA',
-                        ],
-                        [
-                            'href' => '/minutas/listar',
-                            'name' => 'VER MINUTAS'
-                        ],
-                    ]                    
-                ],
-                [
-                    'href' => '/talleres/ver_talleres',
-                    'class' => '.lista',
-                    'name' => 'TALLERES',
-                    'submenu' => [
-                        [
-                            'href' => '/internos/ver_internos',
-                            'name' => 'LISTADO INTERNOS'
-                        ]
-                    ]
+                // [
+                //     'href' => '/orden-de-trabajo/listar',
+                //     'class' => '.archivo',
+                //     'name' => 'ORDENES DE TRABAJO',                    
+                //     'submenu' => [
+                //         [
+                //             'href' => '/orden-de-trabajo/nuevo',
+                //             'name' => 'NUEVA ORDEN DE TRABAJO'
+                //         ],
+                //         [
+                //             'href' => '/orden-de-trabajo/listado_pcs',
+                //             'name' => 'LISTADO PCS'
+                //         ],
+                //     ]
+                // ],
+                // [
+                //     'href' => '/minutas/listar',
+                //     'class' => '.edicion',
+                //     'name' => 'MINUTAS',
+                //     'submenu' => [
+                //         [
+                //             'href' => '/minuta/new',
+                //             'name' => 'NUEVA MINUTA',
+                //         ],
+                //         [
+                //             'href' => '/minutas/listar',
+                //             'name' => 'VER MINUTAS'
+                //         ],
+                //     ]                    
+                // ],
+                // [
+                //     'href' => '/talleres/ver_talleres',
+                //     'class' => '.lista',
+                //     'name' => 'TALLERES',
+                //     'submenu' => [
+                //         [
+                //             'href' => '/internos/ver_internos',
+                //             'name' => 'LISTADO INTERNOS'
+                //         ]
+                //     ]
                     
-                ],
+                // ],
                 [
                     'href' => '/facturacion/listar',
                     'class' => '.documento',
                     'name' => 'VENTAS',
                     'submenu' => [
                         [
+                            'href' => '/facturacion/listar',
+                            'name' => 'VENTAS'
+                        ],
+                        [
+                            'href' => '/facturacion/cuotas/listado',
+                            'name' => 'REPORTES'
+                        ],
+                        [
                             'href' => '/facturacion/new',
-                            'name' => 'Nueva Venta'
+                            'name' => 'NUEVA VENTA'
                         ],
                         [
                             'href' => '/facturacion/productos/listado',
@@ -91,8 +99,12 @@ class Controller
                     'name' => 'AGENTES',
                     'submenu' => [
                         [
+                            'href' => '/facturacion/agentes/listado',
+                            'name' => 'LISTADO'
+                        ],
+                        [
                             'href' => '/facturacion/agentes/nuevo',
-                            'name' => 'Nuevo Agente'
+                            'name' => 'NUEVO AGENTE'
                         ]
                     ]
                     
