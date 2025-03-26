@@ -15,7 +15,7 @@
 }
 
 .minutas-table th {
-    background-color: #f2f2f2;
+    background-color: #007bff;
 }
 
 /* Estilos para el contenedor principal de minutas */
@@ -71,4 +71,65 @@
 .minutas-table td.no-archivo {
     color: #6c757d;
     font-style: italic;
+}
+
+/*
+*  Estilos para vista minuta
+*/
+
+@media print {
+    .no-print, .side-nav, .pie_pagina {
+        display: none !important;
+    }
+
+    .dynamic-content::before {
+        content: none !important;
+        display: none !important;
+        background: none !important;
+    }
+
+    thead {
+        background-color: transparent !important;
+    }
+    .minuta-firma {
+        display: inline-block !important;
+    }
+}
+
+.minuta-section {
+    margin-bottom: 20px;
+}
+
+.minuta-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.minuta-table th, .minuta-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.minuta-table th {
+    background-color: #f2f2f2;
+}
+
+.minuta-firma {
+    display: none;
+    border: 1px solid black;
+    width: 300px;
+    height: 100px;
+    text-align: center;
+    padding-top: 10px;
+    position: absolute;
+}
+
+.minuta-firma.izquierda {
+    bottom: -150px;
+    right: 55%;
+}
+
+.minuta-firma.derecha {
+    bottom: -150px;
+    left: 55%;
 }

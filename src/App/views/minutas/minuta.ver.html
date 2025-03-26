@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+
+<body class="home">
+
+<section class="main-container">
+
+    {% include 'parts/nav.view.html' %}
+
+    <section class="dynamic-content">
+        <h1 class="text-center">Minuta de Reunión</h1>
+
+        {% if minuta %}
+        <main class="container mt-4">
+
+            <section class="minuta-section">
+                <p><strong>Nombre de la Organización:</strong> {{ minuta.orgName }}</p>
+                <p><strong>Título de la Reunión:</strong> {{ minuta.meetingTitle }}</p>
+                <p><strong>Fecha:</strong> {{ minuta.meetingDate|date('d/m/Y') }}</p>
+                <p><strong>Hora:</strong> {{ minuta.meetingTime }}</p>
+                <p><strong>Lugar:</strong> {{ minuta.meetingPlace }}</p>
+                <p><strong>Facilitador:</strong> {{ minuta.facilitator }}</p>
+                <p><strong>Secretario:</strong> {{ minuta.secretary }}</p>
+            </section>
+
+            <section class="minuta-section">
+                <h2 class="titulo-detalles">División Producción</h2>
+                <table class="minuta-table">
+                    <thead>
+                        <tr>
+                            <th>Presentes</th>
+                            <th>Ausentes</th>
+                            <th>Invitados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <ul>
+                                    {% for p in minuta.attendees|split(',') %}
+                                        <li>{{ p|trim }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    {% for a in minuta.absentees|split(',') %}
+                                        <li>{{ a|trim }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                            <td>
+                                <ul>
+                                    {% for g in minuta.guests|split(',') %}
+                                        <li>{{ g|trim }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="minuta-section">
+                <h2 class="titulo-detalles">Orden del Día</h2>
+                <ol>
+                    {% for item in minuta.agenda|split('\n') %}
+                        <li>{{ item|trim }}</li>
+                    {% endfor %}
+                </ol>
+            </section>
+
+            <section class="minuta-section">
+                <h2 class="titulo-detalles">Desarrollo de la Reunión</h2>
+                <p>{{ minuta.discussion|nl2br }}</p>
+            </section>
+
+            <section class="minuta-section">
+                <h2 class="titulo-detalles">Temas Nuevos</h2>
+                <p>{{ minuta.newTopics|nl2br }}</p>
+            </section>
+
+            <section class="minuta-section">
+                <h2 class="titulo-detalles">Próxima Reunión</h2>
+                <p>{{ minuta.nextMeeting }}</p>
+            </section>
+
+            <footer>
+                <h2 class="titulo-detalles">Clausura</h2>
+                <p><strong>Hora de finalización:</strong> {{ minuta.closingTime }}</p>
+                <p><strong>Palabras finales:</strong> {{ minuta.closingRemarks|nl2br }}</p>
+                <p class="minuta-firma izquierda">Firma</p>
+                <p class="minuta-firma derecha">Firma</p>
+            </footer>
+
+        </main>
+
+        {% else %}
+            <div class="alert alert-warning">Minuta no encontrada.</div>
+        {% endif %}
+    </section>
+</section>
+
+<footer class="pie_pagina no-print"></footer>
+
+</body>
+</html>

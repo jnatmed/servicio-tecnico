@@ -61,7 +61,12 @@ class AgentesCollection extends Model
 
     public function getAgentesPaginated($limit, $offset, $search = '')
     {
-        return $this->queryBuilder->getPaginatedWithSearch('agente', $limit, $offset, $search);
+        return $this->queryBuilder->getPaginatedWithSearch(
+            'agente', 
+            $limit, 
+            $offset, 
+            $search,['credencial', 'nombre', 'apellido', 'cuil', 'dependencia', 'estado_agente']
+        );
     }
     
     public function countAgentes($search = '')

@@ -136,6 +136,8 @@ $router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarE
  */
 
 $router->get('/minuta/new', 'MinutaController@new');
+$router->post('/minuta/new', 'MinutaController@new');
+$router->get('/minuta/ver', 'MinutaController@ver');
 $router->get('/minutas/listar', 'MinutaController@listar');
 
 $router->get('/','PageController@home');

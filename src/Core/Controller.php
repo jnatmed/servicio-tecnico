@@ -42,21 +42,21 @@ class Controller
                 //         ],
                 //     ]
                 // ],
-                // [
-                //     'href' => '/minutas/listar',
-                //     'class' => '.edicion',
-                //     'name' => 'MINUTAS',
-                //     'submenu' => [
-                //         [
-                //             'href' => '/minuta/new',
-                //             'name' => 'NUEVA MINUTA',
-                //         ],
-                //         [
-                //             'href' => '/minutas/listar',
-                //             'name' => 'VER MINUTAS'
-                //         ],
-                //     ]                    
-                // ],
+                [
+                    'href' => '/minutas/listar',
+                    'class' => '.edicion',
+                    'name' => 'MINUTAS',
+                    'submenu' => [
+                        [
+                            'href' => '/minuta/new',
+                            'name' => 'NUEVA MINUTA',
+                        ],
+                        [
+                            'href' => '/minutas/listar',
+                            'name' => 'VER MINUTAS'
+                        ],
+                    ]                    
+                ],
                 // [
                 //     'href' => '/talleres/ver_talleres',
                 //     'class' => '.lista',

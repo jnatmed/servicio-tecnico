@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/assets/css/styles.css">
+<link rel="stylesheet" href="/assets/css/not-found.css">
+<link rel="stylesheet" href="/assets/css/formato-tabla.css">
+<link rel="stylesheet" href="/assets/css/styles-resumen.css">
+<link rel="stylesheet" href="/assets/css/input-drag-and-drop.css">
+<link rel="stylesheet" href="/assets/css/login_registro.css">
+<link rel="stylesheet" href="/assets/css/estilos-print.css">
+<link rel="stylesheet" href="/assets/css/home.css">
+<link rel="stylesheet" href="/assets/css/header.css">
+<link rel="stylesheet" href="/assets/css/minutas.css">
+<link rel="stylesheet" href="/assets/css/talleres.css">
+<link rel="stylesheet" href="/assets/css/internos.css">
+<link rel="stylesheet" href="/assets/css/perfil.css">
+<link rel="stylesheet" href="/assets/css/asignaciones.css">
+<link rel="stylesheet" href="/assets/css/tooltips.css">
+<link rel="stylesheet" href="/assets/css/facturacion.css">
+<link rel="stylesheet" href="/assets/css/formato_factura.css">
+<link rel="stylesheet" href="/assets/css/paginacion.css">
+<link rel="stylesheet" href="/assets/css/menu.css">
+
+<script src="/assets/js/menu.js"></script>
+
+
+<title>DAT</title>
+<link rel="icon" type="image/svg+xml" href="/assets/imgs/icono-sistema.svg">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</head>
+
+
+
+<body class="home">
+
+    <section class="main-container">
+        
+                <nav class="side-nav">
+            <a href="/"><article class="header_icon"></article></a>
+            <ul>
+                                    <li> <!-- Clase dinámica -->
+                        <a href="#" class="menu-toggle">
+                            MINUTAS
+                                                            <span class="arrow">▶</span>
+                                                    </a>                                                    <ul class="sub-menu">
+                                                                    <li><a href="/minuta/new">NUEVA MINUTA</a></li>
+                                                                    <li><a href="/minutas/listar">VER MINUTAS</a></li>
+                                                            </ul>
+                                            </li>
+                                    <li> <!-- Clase dinámica -->
+                        <a href="#" class="menu-toggle">
+                            VENTAS
+                                                            <span class="arrow">▶</span>
+                                                    </a>                                                    <ul class="sub-menu">
+                                                                    <li><a href="/facturacion/listar">VENTAS</a></li>
+                                                                    <li><a href="/facturacion/cuotas/listado">REPORTES</a></li>
+                                                                    <li><a href="/facturacion/new">NUEVA VENTA</a></li>
+                                                                    <li><a href="/facturacion/productos/listado">PRODUCTOS</a></li>
+                                                            </ul>
+                                            </li>
+                                    <li> <!-- Clase dinámica -->
+                        <a href="#" class="menu-toggle">
+                            AGENTES
+                                                            <span class="arrow">▶</span>
+                                                    </a>                                                    <ul class="sub-menu">
+                                                                    <li><a href="/facturacion/agentes/listado">LISTADO</a></li>
+                                                                    <li><a href="/facturacion/agentes/nuevo">NUEVO AGENTE</a></li>
+                                                            </ul>
+                                            </li>
+                                    <li> <!-- Clase dinámica -->
+                        <a href="/user/logout" class="menu-toggle">
+                            SALIR
+                                                    </a>                                            </li>
+                                    <li> <!-- Clase dinámica -->
+                        <a href="/user/ver-perfil" class="menu-toggle">
+                            PERFIL
+                                                    </a>                                            </li>
+                            </ul>
+        </nav>
+            
+    <section class="dynamic-content">      <h1>Minuta de Reunión</h1>
+</header>
+
+<main class="container mt-4">
+
+            <section>
+            <p><strong>Nombre de la Organización:</strong> ENCOPE</p>
+            <p><strong>Título de la Reunión:</strong> Avances sobre sistema Comercial</p>
+            <p><strong>Fecha:</strong> 26/03/2025</p>
+            <p><strong>Hora:</strong> 12:00:00</p>
+            <p><strong>Lugar:</strong> Direccion Comercial - Seccion Codigo608</p>
+            <p><strong>Facilitador:</strong> Subalc. Ezequiel H. LUPIS</p>
+            <p><strong>Secretario:</strong> Ayte 2da Juan Natello</p>
+
+            <h2 class="titulo-detalles">División Producción</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Presentes</th>
+                        <th>Ausentes</th>
+                        <th>Invitados</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <ul>
+                                                                    <li>Se discuten los avances del sistema de comercial.</li>
+                                                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                                                    <li>nadie</li>
+                                                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                                                    <li>Adjutor Kolaja</li>
+                                                            </ul>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2 class="titulo-detalles">Orden del Día</h2>
+            <ol>
+                                    <li>Se muestran los avances del sistema de comercial.</li>
+                            </ol>
+        </section>
+
+        <section>
+            <h2 class="titulo-detalles">Desarrollo de la Reunión</h2>
+            <p>Se muestran las vistas: <br />
+- Registro de ventas<br />
+- Vista de ventas<br />
+- Vista de cuotas<br />
+- Vista de Agentes<br />
+- Reportes de Descuentos de haberes</p>
+        </section>
+
+        <section>
+            <h2 class="titulo-detalles">Temas Nuevos</h2>
+            <p>A definir.</p>
+        </section>
+
+        <section>
+            <h2 class="titulo-detalles">Próxima Reunión</h2>
+            <p>A definir.</p>
+        </section>
+
+        <footer>
+            <h2 class="titulo-detalles">Clausura</h2>
+            <p><strong>Hora de finalización:</strong> 13:00:00</p>
+            <p><strong>Palabras finales:</strong> A definir.</p>
+            <p class="firma firma-izquierda">Firma</p>
+            <p class="firma firma-derecha">Firma</p>
+        </footer>
+
+    
+</main>
+
+<footer class="pie_pagina">
+    
+</footer></body>
+</html>

@@ -45,15 +45,68 @@ class MinutaController extends Controller
     }
 
     public function ver(){
-        $this->usuario->verificarSesion();
+        
+        $minuta = $this->request->get('id');
+        $this->logger->info("id_minuta: ", [$minuta]);
+        $minuta = $this->model->getMinutaById($minuta);
+        if($minuta)
+        {
+            view('minutas/minuta.ver', array_merge(
+                ['minuta' => $minuta],
+                $this->menu
+            ));
+        }else{
+            $this->logger->error("Error al obtener el id_minuta");
+            view('errors/not-found.view', $this->menu);
+        }
+
     }
 
 
     public function new()
     {
-        view('minutas/minuta.new', [
-            "datos" => ["action" => "nuevo"], 
+        if ($this->request->method() == 'POST') {
+            try {
+                $datosMinuta = [
+                    'orgName'        => $this->request->get('orgName'),
+                    'meetingTitle'   => $this->request->get('meetingTitle'),
+                    'meetingDate'    => $this->request->get('meetingDate'),
+                    'meetingTime'    => $this->request->get('meetingTime'),
+                    'meetingPlace'   => $this->request->get('meetingPlace'),
+                    'facilitator'    => $this->request->get('facilitator'),
+                    'secretary'      => $this->request->get('secretary'),
+                    'attendees'      => $this->request->get('attendees'),
+                    'absentees'      => $this->request->get('absentees'),
+                    'guests'         => $this->request->get('guests'),
+                    'agenda'         => $this->request->get('agenda'),
+                    'discussion'     => $this->request->get('discussion'),
+                    'newTopics'      => $this->request->get('newTopics'),
+                    'nextMeeting'    => $this->request->get('nextMeeting'),
+                    'closingTime'    => $this->request->get('closingTime'),
+                    'closingRemarks' => $this->request->get('closingRemarks'),
+                ];
+                
+    
+                $this->model->insertMinuta($datosMinuta);
+    
+                // Redirigir 
+                redirect("minutas/listar");
+    
+            } catch (Exception $e) {
+                $this->logger->error("Error al insertar minuta: " . $e->getMessage());
+    
+                return view('minutas/minuta.new', [
+                    'error' => 'Error al guardar la minuta. Intente nuevamente.',
+                    ...$this->menu
+                ]);
+            }
+        }
+    
+        // Si es GET, mostrar el formulario
+        return view('minutas/minuta.new', [
+            "datos" => ["action" => "nuevo"],
             ...$this->menu
-        ]);        
+        ]);
     }
+    
 }

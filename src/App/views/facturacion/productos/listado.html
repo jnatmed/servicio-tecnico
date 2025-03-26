@@ -14,7 +14,7 @@
                 <h2 class="home-page__card-title {{ producto.media_size_class|default('') }}">{{ producto.descripcion_proyecto }}</h2>
                 <p class="home-page__card-description">Estado: {{ producto.estado }}</p>
                 <p class="home-page__card-description">Expte: {{ producto.nro_proyecto_productivo }}</p>
-                <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="home-page__button"> Agregar al carrito </a>
+                <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="home-page__button"> Ver Detalle </a>
             </article>
         {% endfor %}
     </section>

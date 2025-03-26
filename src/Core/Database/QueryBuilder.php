@@ -81,9 +81,11 @@ class QueryBuilder
     
             // Verificar si la consulta es sobre la tabla 'agente' para incluir el JOIN
             if ($table === 'agente') {
-                $query = "SELECT agente.*, dependencia.descripcion AS descripcion_dependencia 
+                $query = "
+                    SELECT agente.*, dependencia.descripcion AS descripcion_dependencia 
                           FROM agente 
-                          INNER JOIN dependencia ON agente.dependencia = dependencia.id";
+                          INNER JOIN dependencia ON agente.dependencia = dependencia.id
+                    ";
             } else {
                 $query = "SELECT $columns FROM $table";
             }
@@ -395,33 +397,43 @@ class QueryBuilder
         }
     }
     
-    public function getPaginatedWithSearch($table, $limit, $offset, $search = '')
+    public function getPaginatedWithSearch($table, $limit, $offset, $search = '', array $searchFields = [])
     {
         try {
             $query = "SELECT * FROM {$table}";
+            $params = [];
     
-            if (!empty($search)) {
-                $query .= " WHERE nombre LIKE :search OR apellido LIKE :search OR cuil LIKE :search";
+            if (!empty($search) && !empty($searchFields)) {
+                $conditions = [];
+                foreach ($searchFields as $field) {
+                    $conditions[] = "{$field} LIKE :search";
+                }
+                $query .= " WHERE " . implode(' OR ', $conditions);
+                $params[':search'] = '%' . $search . '%';
             }
     
             $query .= " ORDER BY id LIMIT :limit OFFSET :offset";
     
             $stmt = $this->pdo->prepare($query);
     
-            if (!empty($search)) {
-                $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+            // Bind valores
+            if (isset($params[':search'])) {
+                $stmt->bindValue(':search', $params[':search'], PDO::PARAM_STR);
             }
     
             $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+    
             $stmt->execute();
     
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
         } catch (PDOException $e) {
             $this->logger->error("Error en getPaginatedWithSearch: " , [$e->getMessage()]);
             throw new Exception("Error al obtener los datos.");
         }
     }
+    
     
     public function countRowsWithSearch($table, $search = '')
     {
