@@ -254,31 +254,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalFacturado = parseFloat(document.getElementById('total_facturado').textContent) || 0;
         const selectCuotas = document.getElementById('selectCuotas');
         const cuotasContainer = document.getElementById('cuotasContainer');
-        const montoMinimoCuota = 10000; // Monto mínimo por cuota
+        const montoMinimoCuota = 10000;
+        const umbralMultiplesCuotas = 20000;
     
         console.log("[INFO] Recalculando cuotas. Total Facturado:", totalFacturado);
     
-        // Si el total facturado es menor a 10.000, ocultar el selector de cuotas
-        if (totalFacturado < montoMinimoCuota) {
-            cuotasContainer.classList.add('d-none'); // Ocultar
-            selectCuotas.innerHTML = ''; // Limpiar opciones
+        // Limpiar opciones
+        selectCuotas.innerHTML = '';
+    
+        // Si no hay facturación, ocultar selector
+        if (totalFacturado <= 0) {
+            cuotasContainer.classList.add('d-none');
+            console.log(`Total Facturado (${totalFacturado}) es cero. No se muestra selector.`);
             return;
         }
     
-        // Calcular cantidad de cuotas posibles
-        const cantidadCuotas = Math.ceil(totalFacturado / montoMinimoCuota);
+        // Mostrar el selector
+        cuotasContainer.classList.remove('d-none');
     
-        // Limpiar y generar nuevas opciones
-        selectCuotas.innerHTML = '';
-        for (let i = 1; i <= cantidadCuotas; i++) {
-            const cuotaValue = (totalFacturado / i).toFixed(2);
+        // Si el total es menor a 20.000 → 1 sola cuota
+        if (totalFacturado < umbralMultiplesCuotas) {
             const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `${i} cuota(s) de $${cuotaValue}`;
+            option.value = 1;
+            option.textContent = `1 cuota de $${totalFacturado.toFixed(2)}`;
             selectCuotas.appendChild(option);
+            console.log(`Total Facturado menor a ${umbralMultiplesCuotas}. Solo una cuota.`);
+            return;
         }
     
-        cuotasContainer.classList.remove('d-none'); // Mostrar el selector de cuotas
+        // Calcular el máximo de cuotas permitidas bajo la condición:
+        // cada cuota >= 10.000, excepto tal vez la última
+        const maxCuotas = Math.floor(totalFacturado / montoMinimoCuota);
+    
+        for (let i = 1; i <= maxCuotas; i++) {
+            const valorCuota = totalFacturado / i;
+            const valorPenultima = totalFacturado / (i - 1); // Para ver si todas son >= 10.000
+    
+            // Aceptar solo si todas excepto la última son >= $10.000
+            if (i === 1 || valorCuota >= montoMinimoCuota || Math.floor(totalFacturado / montoMinimoCuota) === i) {
+                const cuotaValue = valorCuota.toFixed(2);
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = `${i} cuota(s) de $${cuotaValue}`;
+                selectCuotas.appendChild(option);
+            } else {
+                console.log(`Omitida ${i} cuota(s) porque no cumple condición de mínimo $10.000 por cuota.`);
+            }
+        }
     }
+    
+    
+    
     
 });
