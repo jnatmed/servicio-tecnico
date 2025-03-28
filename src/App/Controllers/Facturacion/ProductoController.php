@@ -47,6 +47,7 @@ class ProductoController extends Controller
 
             if ($searchItem) {
                 try {
+                    $this->logger->info("bucle if(searchItem){", [$searchItem]);
                     $listaProductos = $this->model->getProductosYPrecios($searchItem);
         
                     // Enviar la respuesta en formato JSON
@@ -63,6 +64,7 @@ class ProductoController extends Controller
 
             }else{
                 try {
+                    $this->logger->info("bucle else {");
                     $listaProductos = $this->model->getProductosYPrecios();
         
                     // Enviar la respuesta en formato JSON

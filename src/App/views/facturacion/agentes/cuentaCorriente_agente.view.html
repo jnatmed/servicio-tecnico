@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+
+{% include "parts/modulos.view.html" %}
+
+<section class="section-ingreso">
+    <h2>Cuenta Corriente del Agente</h2>
+    <hr>
+
+    {% if agente is defined %}
+        <h3 class="tipo-nro">Agente ID #{{ agente.id }}</h3>
+        <p><strong>Credencial:</strong> {{ agente.credencial }}</p>
+        <p><strong>Nombre:</strong> {{ agente.nombre }} {{ agente.apellido }}</p>
+        <p><strong>CUIL:</strong> {{ agente.cuil }}</p>
+        <p><strong>Dependencia:</strong> {{ agente.dependencia }}</p>
+        <p><strong>Estado:</strong> {{ agente.estado_agente }}</p>
+        <p>
+            <strong>Saldo Actual:</strong>
+            <span style="color: {{ saldo < 0 ? 'red' : 'green' }};">
+                ${{ saldo|number_format(2, '.', ',') }}
+            </span>
+        </p>
+        
+    {% endif %}
+
+    <hr>
+    <h3>Movimientos</h3>
+
+    {% if movimientos is not empty %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Descripción</th>
+                    <th>Condición de Venta</th>
+                    <th>Tipo</th>
+                    <th>Monto</th>
+                    <th>Saldo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for mov in movimientos %}
+                    <tr>
+                        <td>{{ mov.fecha|date("d/m/Y") }}</td>
+                        <td>{{ mov.descripcion }}</td>
+                        <td>{{ mov.condicion_venta }}</td>
+                        <td>{{ mov.tipo_movimiento|capitalize }}</td>
+                        <td style="text-align: right;">${{ mov.monto|number_format(2, '.', ',') }}</td>
+                        <td style="text-align: right;">${{ mov.saldo|number_format(2, '.', ',') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No se encontraron movimientos para este agente.</p>
+    {% endif %}
+
+    <br>
+    {% set exportable = movimientos is not empty or saldo != 0 %}
+    <form action="/cuenta-corriente/exportar-pdf?agente_id={{ agente.id }}" method="get">
+        <button type="submit" class="btn btn-success" {{ not exportable ? 'disabled' : '' }}>
+            Exportar PDF
+        </button>
+    </form>
+    <hr class="my-4">
+
+    <a href="/facturacion/agentes/listado" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Volver al listado
+    </a>
+</section>
+
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
+</body>
+</html>

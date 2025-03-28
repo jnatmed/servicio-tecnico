@@ -13,6 +13,10 @@
     <!-- Formulario de Búsqueda -->
     <input type="text" id="search-input" placeholder="Buscar agentes..." value="{{ search is defined ? search : '' }}">
     <button id="search-btn">Buscar</button>
+    <br>
+    <label id="search-error" class="text-danger" style="display: none; font-size: 0.9em;">
+        Por favor, ingrese un valor para buscar.
+    </label>
 
     <table class="agentes-table">
         <thead>
@@ -39,7 +43,7 @@
                     <td class="{{ agente.estado_agente == 'retirado' ? 'estado-retirado' : 'estado-activo' }}">
                         {{ agente.estado_agente | capitalize }}
                     </td>
-                    <td><a href="/agente/ver?id={{ agente.id }}">Ver</a></td>
+                    <td><a href="/facturacion/agente/ver?agente_id={{ agente.id }}">Ver</a></td>
                     <td><a href="/agente/editar?id={{ agente.id }}">Editar</a></td>
                     <td><a href="/agente/eliminar?id={{ agente.id }}" class="eliminar-link">Eliminar</a></td>
                 </tr>
@@ -80,6 +84,16 @@
                 fetchAgentes(currentPage, searchValue, true);
             });
         }
+
+        // Enter en input
+        if (searchInput) {
+            searchInput.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    realizarBusqueda();
+                }
+            });
+        }        
     
         function fetchAgentes(page, search, clearTable) {
             fetch(`/facturacion/agentes/listado?page=${page}&search=${encodeURIComponent(search)}`, {
@@ -113,7 +127,7 @@
                             <td class="${agente.estado_agente === 'retirado' ? 'estado-retirado' : 'estado-activo'}">
                                 ${agente.estado_agente.charAt(0).toUpperCase() + agente.estado_agente.slice(1)}
                             </td>
-                            <td><a href="/agente/ver?id=${agente.id}">Ver</a></td>
+                            <td><a href="/facturacion/agente/ver?agente_id=${agente.id}">Ver</a></td>
                             <td><a href="/agente/editar?id=${agente.id}">Editar</a></td>
                             <td><a href="/agente/eliminar?id=${agente.id}" class="eliminar-link">Eliminar</a></td>
                         `;
@@ -201,7 +215,19 @@
             }
         }
         
+        function realizarBusqueda() {
+            let searchValue = searchInput.value.trim();
+            let errorLabel = document.getElementById("search-error");
         
+            if (searchValue === '') {
+                errorLabel.style.display = 'inline';
+                return;
+            }
+        
+            errorLabel.style.display = 'none'; // Ocultar si está todo bien
+            currentPage = 1;
+            fetchAgentes(currentPage, searchValue, true);
+        }        
     
         // Cargar primera página al iniciar
         fetchAgentes(currentPage, '', true);

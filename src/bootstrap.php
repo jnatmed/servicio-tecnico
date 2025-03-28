@@ -192,11 +192,19 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->get('/facturacion/agentes/listado', 'Facturacion\\AgenteController@getAgentes');
   $router->get('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new');
   $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new');
+  $router->get('/facturacion/agente/ver', 'Facturacion\\CuentaCorrienteController@verCuentaCorrienteAgente');
 //   $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@nuevo');
 
 /**
- *  13) Cuotas
+ *  14) Cuotas
  */
 
  $router->get('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar');
  $router->get('/facturacion/cuotas/exportar-txt', 'Facturacion\\CuotasController@exportarTxt');
+
+ /**
+  * 15) Facturacion
+  */
+
+  $router->get('/cuenta-corriente/exportar-pdf', 'Facturacion\\CuentaCorrienteController@exportarPdf');
+ 

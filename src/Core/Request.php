@@ -49,4 +49,26 @@ class Request
             $this->method()
         ];
     }
+
+    public function sanitize($data)
+    {
+        if (is_array($data)) {
+            $sanitizedData = [];
+            foreach ($data as $key => $value) {
+                $sanitizedData[$key] = $this->sanitize($value);
+            }
+            return $sanitizedData;
+        }
+    
+        if (is_string($data)) {
+            return trim(htmlspecialchars(strip_tags($data), ENT_QUOTES, 'UTF-8'));
+        }
+    
+        if (is_int($data) || is_float($data)) {
+            return filter_var($data, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        }
+    
+        return $data; // Otros tipos como boolean, null, etc.
+    }
+      
 }

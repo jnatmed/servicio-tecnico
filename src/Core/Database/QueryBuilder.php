@@ -35,6 +35,8 @@ class QueryBuilder
                 }
             }
     
+            $this->logger->info("whereClauses : ", [$whereClauses]);
+            
             // Unir las cláusulas WHERE con AND
             $where = implode(' AND ', $whereClauses);
             $query = "SELECT $columns FROM $table";

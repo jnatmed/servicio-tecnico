@@ -156,22 +156,5 @@ class Controller
     }
 
     // 🔥 Método genérico para sanitizar inputs de formularios
-    public function sanitize(array $data): array
-    {
-        $sanitizedData = [];
-    
-        foreach ($data as $key => $value) {
-            if (is_string($value)) {
-                $sanitizedData[$key] = trim(htmlspecialchars(strip_tags($value), ENT_QUOTES, 'UTF-8'));
-            } elseif (is_numeric($value)) {
-                $sanitizedData[$key] = filter_var($value, FILTER_SANITIZE_NUMBER_INT);
-            } elseif (is_array($value)) {
-                $sanitizedData[$key] = $this->sanitize($value); // Sanitización recursiva para arrays
-            } else {
-                $sanitizedData[$key] = $value;
-            }
-        }
-    
-        return $sanitizedData;
-    }
+
 }

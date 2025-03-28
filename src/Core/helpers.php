@@ -20,6 +20,20 @@ function view($name, $data = [])
 
 }
 
+
+function return_view($name, $data = [])
+{
+    global $log, $twig;
+
+    try {
+        $html = $twig->render("{$name}.html", $data);
+        return $html;
+    } catch (\Twig\Error\Error $e) {
+        $log->error('Error al renderizar la plantilla', ['exception' => $e]);
+        return 'Error al renderizar la plantilla: ' . $e->getMessage();
+    }
+}
+
 /**
  * Redirect to a new page.
  *

@@ -15,6 +15,13 @@ class AgentesCollection extends Model
     use Loggable;
     private $table = 'agente';
 
+    public function __construct($qb=null, $logger=null)
+    {
+        if ($qb || $logger) {
+            parent::__construct($qb, $logger);
+        }
+    }
+
     public function add(Agente $agente)
     {
         try {
@@ -25,11 +32,27 @@ class AgentesCollection extends Model
         }
     }
 
-    public function getAgentes($searchAgente = null) 
+
+
+    public function getAgentes($searchAgente = null, $id = null) 
     {
         try {
-            // Si hay un término de búsqueda, usar selectAdHoc
-            if ($searchAgente !== null) {
+            if ($id !== null) {
+                // Buscar agente por ID usando select()
+                $this->logger->info("Buscando agente por ID..");
+                $result = $this->queryBuilder->select('agente', '*', ['id' => $id]);
+            } elseif ($searchAgente !== null) {
+                // Buscar por término
+                $this->logger->info("Buscando agentes por término..");
+
+                // Usar selectAdHoc() para buscar por término
+                // Campos a buscar: credencial, nombre, apellido, cuil, dependencia, estado_agente
+
+                // Ejemplos de busqueda:
+                // - getAgentesPaginated(10, 0, 'Juan');
+                // - getAgentesPaginated(10, 0, '1234567890');
+                // - getAgentesPaginated(10, 0, '%Juan%');
+                // - getAgentesPaginated(10, 0, ['apellido' => 'Garcia', 'estado_agente' => 'activo']);
                 $result = $this->queryBuilder->selectAdHoc(
                     'agente',
                     '*',
@@ -38,6 +61,23 @@ class AgentesCollection extends Model
                     ['credencial', 'nombre', 'apellido', 'cuil', 'estado_agente']
                 );
             } else {
+                // Obtener todos los agentes
+                $this->logger->info("Recuperando todos los agentes..");
+                
+                // Usar select() para obtener todos los agentes
+                // Campos a seleccionar: credencial, nombre, apellido, cuil, dependencia, estado_agente
+                
+                // Ejemplos:
+                // - getAgentesPaginated(10, 0);
+                // - getAgentesPaginated(10, 0, ['apellido' => 'Garcia', 'estado_agente' => 'activo']);
+                
+                // Sin especificar busqueda, se seleccionan todos los agentes
+                
+                // Ejemplos:
+                // - getAgentesPaginated(10, 0);
+                // - getAgentesPaginated(10, 0, ['apellido' => 'Garcia', 'estado_agente' => 'activo']);
+                
+                // Usar select() para obtener todos los agentes
                 $result = $this->queryBuilder->select('agente', '*');
             }
     
@@ -58,6 +98,7 @@ class AgentesCollection extends Model
         }        
     }
     
+        
 
     public function getAgentesPaginated($limit, $offset, $search = '')
     {

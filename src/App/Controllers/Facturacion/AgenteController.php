@@ -60,7 +60,7 @@ class AgenteController extends Controller
                 ];
         
                 // 🔥 Limpiar los datos antes de pasarlos a Agente
-                $data = $this->sanitize($rawData);
+                $data = $this->request->sanitize($rawData);
         
                 // Intentar crear el objeto Agente (validación ocurre en el constructor)
                 $agente = new Agente($data);
@@ -158,10 +158,6 @@ class AgenteController extends Controller
             return view('facturacion/agentes/agente.listado', ['error' => $e->getMessage()]);
         }
     }
-    
-    
-    
-    
 
     public function ver()
     {

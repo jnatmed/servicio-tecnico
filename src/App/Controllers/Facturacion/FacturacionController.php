@@ -11,6 +11,9 @@ use Paw\App\Models\ProductosCollection;
 use Paw\App\Models\CuotasCollection;
 use Paw\App\Models\DetalleFactura;
 
+use Paw\App\Models\CuentaCorrienteCollection;
+use Paw\App\Models\CuentaCorriente;
+
 use Exception;
 
 class FacturacionController extends Controller
@@ -63,7 +66,8 @@ class FacturacionController extends Controller
     
                 $productos = json_decode($this->request->get('productos'), true);
     
-                $this->sanitize($data);
+                $this->request->sanitize($data);
+                
                 $this->logger->debug("Data recibida: ", [$data]);
     
                 // Validación de datos obligatorios
@@ -146,7 +150,24 @@ class FacturacionController extends Controller
                         throw new Exception("Error en producto: " . $e->getMessage());
                     }
                 }
-    
+                
+                $this->logger->debug("// Instanciar movimiento en cuenta corriente");
+
+                // Instanciar movimiento en cuenta corriente
+                $movimiento = new CuentaCorriente([
+                    'agente_id' => $factura->getIdAgente(),
+                    'fecha' => date('Y-m-d'),
+                    'descripcion' => 'Factura N° ' . $factura->getNroFactura(),
+                    'tipo_movimiento' => 'debito',
+                    'monto' => $factura->getTotalFacturado(),
+                    'condicion_venta' => $factura->getCondicionVenta()
+                ], $this->logger);
+
+                $this->logger->info("Capa Controller: movimiento",[$movimiento->toArray()]);
+                // Instanciar colección y registrar movimiento
+                $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
+                $cuentaCorriente->registrarMovimiento($movimiento);
+
                 // Respuesta de éxito
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'factura_id' => $facturaId]);
