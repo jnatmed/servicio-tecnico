@@ -49,15 +49,15 @@
                 </a>
             </div>
 
-            {% if precios %}
+            
 
                 <h3 class="mt-5">Historial de Precios</h3>
-                <h3 class="mt-5 d-flex justify-content-between align-items-center">
-                    Historial de Precios
-                    <a href="/facturacion/productos/agregar-precio?id_producto={{ producto.id }}" class="btn btn-success">
-                        <i class="bi bi-plus-lg fs-5"></i> Nuevo precio
-                    </a>
-                </h3>                
+                <div class="d-flex justify-content-end mb-2">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNuevoPrecio">
+                        <i class="bi bi-tags-fill me-1"></i> Nuevo Precio
+                    </button>
+                </div>
+                             
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -68,22 +68,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for precio in precios %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
-                                <td>${{ precio.precio|number_format(2, '.', ',') }}</td>
-                                <td>{{ precio.fecha_precio|date("d/m/Y") }}</td>
-                                <td>{{ precio.pv_autorizacion_consejo }}</td>
-                            </tr>
+                        {% if precios|length > 0 %}
+                            {% for precio in precios %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>${{ precio.precio|number_format(2, '.', ',') }}</td>
+                                    <td>{{ precio.fecha_precio|date("d/m/Y") }}</td>
+                                    <td>{{ precio.pv_autorizacion_consejo }}</td>
+                                </tr>
+                            {% endfor %}
                         {% else %}
                             <tr>
                                 <td colspan="4" class="text-center">No se registraron precios.</td>
                             </tr>
-                        {% endfor %}
+                        {% endif %}
                     </tbody>
                 </table>
             {% endif %}
-        {% endif %}
+        
 
         <a href="/facturacion/productos/listado" class="btn btn-primary mt-3">
             <i class="bi bi-arrow-left"></i> Volver al listado
@@ -91,5 +93,36 @@
     </section>
 
     {% include "parts/footer.view.html" %}
+
+    <div class="modal fade" id="modalNuevoPrecio" tabindex="-1" aria-labelledby="modalNuevoPrecioLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form class="modal-content" method="POST" action="/facturacion/productos/agregar-precio">
+            <input type="hidden" name="id_producto" value="{{ producto.id }}">
+            <div class="modal-header bg-success text-white">
+              <h5 class="modal-title" id="modalNuevoPrecioLabel">Agregar Nuevo Precio</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="precio" class="form-label">Nuevo Precio</label>
+                <input type="number" class="form-control" name="precio" id="precio" step="0.01" required placeholder="Ej: ${{ precios[0].precio|default('0.00') }}">
+              </div>
+              <div class="mb-3">
+                <label for="fecha_precio" class="form-label">Fecha del Precio</label>
+                <input type="date" class="form-control" name="fecha_precio" id="fecha_precio" required value="{{ "now"|date("Y-m-d") }}">
+              </div>
+              <div class="mb-3">
+                <label for="pv_autorizacion_consejo" class="form-label">PV Autorización Consejo</label>
+                <input type="text" class="form-control" name="pv_autorizacion_consejo" id="pv_autorizacion_consejo" placeholder="Ej: PV-2025-0001234">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-success">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+          
 </body>
 </html>

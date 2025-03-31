@@ -256,7 +256,7 @@ class QueryBuilder
         $affectedRows = $sentencia->rowCount();
     
         // Registrar en la auditoría
-        $this->registrarAuditoria($table, 'DELETE', $_SESSION['usuario'], $datosPrevios, null, $conditions['id'] ?? null);
+        $this->registrarAuditoria($table, 'DELETE', $_SESSION['usuario'] ?? null, $datosPrevios, null, $conditions['id'] ?? null);
     
         return $affectedRows;
     }

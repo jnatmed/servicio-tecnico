@@ -13,7 +13,8 @@ Class Router
 
     public array $routes= [
         "GET" => [],
-        "POST" => []
+        "POST" => [],
+        "DELETE" => [],
     ];
 
     public string $notFound = 'not_found';
@@ -35,6 +36,10 @@ Class Router
 
     public function post($path, $action) {
         $this->loadRoutes($path, $action, "POST");
+    }
+
+    public function delete($path, $action) {
+        $this->loadRoutes($path, $action, "DELETE");
     }
 
     public function exists($path, $method) {

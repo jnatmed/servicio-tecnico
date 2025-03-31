@@ -26,6 +26,27 @@ class FacturasCollection extends Model
         }
     }
 
+    public function eliminarFacturaPorId($facturaId)
+    {
+        try {
+            $factura = $this->getFacturaById($facturaId);
+            if (!$factura) {
+                throw new Exception("La factura con ID $facturaId no existe.");
+            }
+    
+            // Eliminar factura (si tenés ON DELETE CASCADE se encarga del resto)
+            $this->queryBuilder->delete('factura', ['id' => $facturaId]);
+    
+            $this->logger->info("Factura ID $facturaId eliminada correctamente.");
+            return true;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error al eliminar factura ID $facturaId: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+
     public function insertFactura($factura)
     {
         try {

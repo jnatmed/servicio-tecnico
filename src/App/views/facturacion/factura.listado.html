@@ -179,7 +179,7 @@
             btnConfirmarEliminar.addEventListener('click', function () {
                 if (!facturaIdAEliminar) return;
 
-                fetch(`/facturacion/eliminar/${facturaIdAEliminar}`, {
+                fetch(`/facturacion/eliminar?id=${facturaIdAEliminar}`, {
                     method: 'DELETE',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
@@ -190,6 +190,9 @@
                     if (data.success) {
                         console.info(`Factura ${facturaIdAEliminar} eliminada correctamente.`);
                         document.querySelector(`button[data-id="${facturaIdAEliminar}"]`).closest('tr').remove();
+
+                        facturaIdAEliminar = null; // Resetear el ID de la factura a eliminar
+                        window.location.href = '/facturacion/listar'; // Redirigir a la lista de facturas
                     } else {
                         console.warn("Error al eliminar la factura:", data.error);
                     }

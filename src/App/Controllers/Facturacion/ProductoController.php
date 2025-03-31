@@ -129,7 +129,7 @@ class ProductoController extends Controller
             }
 
         } else {
-            $listaProductos = $this->model->getProductosALaVenta();
+            $listaProductos = $this->model->getProductosConUltimoPrecio();
             $this->logger->info("listaProductos: ", [$listaProductos]);
     
             view('facturacion/productos/listado', array_merge(
@@ -157,6 +157,53 @@ class ProductoController extends Controller
         } else {
             $this->logger->error("Error al obtener el id_producto");
             // Podrías redirigir o mostrar un mensaje de error
+        }
+    }
+    
+    public function agregarPrecio()
+    {
+        $id = $this->request->sanitize($this->request->get('id_producto'));
+    
+        if ($this->request->method() == 'POST') {
+            $data = [
+                'id_producto' => $this->request->get('id_producto'),
+                'precio' => $this->request->get('precio'),
+                'fecha_precio' => $this->request->get('fecha_precio'),
+                'pv_autorizacion_consejo' => $this->request->get('pv_autorizacion_consejo')
+            ];
+        
+            try {
+                $this->request->sanitize($data);
+        
+                $this->model->insertarPrecio($data); // método que debés tener en el modelo
+        
+                $this->logger->info("Nuevo precio registrado correctamente", $data);
+                redirect('facturacion/productos/ver?id_producto=' . $data['id_producto']);
+            } catch (Exception $e) {
+                $this->logger->error("Error al registrar nuevo precio", ['error' => $e->getMessage()]);
+                view('facturacion/productos/agregar.precio', array_merge(
+                    ['producto' => $this->model->getDetalleProducto($data['id_producto'])],
+                    ['error' => 'No se pudo guardar el precio.'],
+                    $this->menu
+                ));
+            }
+            
+        } else {
+            $detalleProducto = $this->model->getDetalleProducto($id);
+    
+            if (!$detalleProducto || empty($detalleProducto['id'])) {
+                $this->logger->error("Producto no encontrado con ID: $id");
+                view('facturacion/productos/agregar.precio', array_merge(
+                    ['producto' => null],
+                    ['error' => 'No se encontró el producto'],
+                    $this->menu
+                ));
+            } else {
+                view('facturacion/productos/agregar.precio', array_merge(
+                    ['producto' => $detalleProducto],
+                    $this->menu
+                ));
+            }
         }
     }
     

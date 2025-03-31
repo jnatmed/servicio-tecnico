@@ -2,82 +2,59 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-    <title>Detalle del Producto</title>
+    <title>Agregar Nuevo Precio</title>
 </head>
 <body>
     {% include "parts/modulos.view.html" %}
 
     <section class="container mt-5">
-        <h1 class="mb-4">Detalle del Producto</h1>
+        <h2 class="mb-4">Agregar Nuevo Precio al Producto</h2>
 
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% else %}
-            <div class="card shadow">
-                <div class="row g-0">
-                    <div class="col-md-4">
-                        <img 
-                            src="{{ producto.path_imagen ? '/facturacion/productos/ver_imagen?id_producto=' ~ producto.id : '/assets/imgs/default.png' }}" 
-                            class="img-fluid rounded-start" 
-                            alt="Imagen del producto"
-                        >
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h4 class="card-title">{{ producto.descripcion_proyecto }}</h4>
-                            <p class="card-text"><strong>Estado:</strong> 
-                                {% if producto.estado == 'iniciado' %}
-                                    <i class="bi bi-hourglass-split text-warning"></i> Iniciado
-                                {% elseif producto.estado == 'a_la_venta' %}
-                                    <i class="bi bi-cart-check-fill text-success"></i> A la venta
-                                {% else %}
-                                    {{ producto.estado|capitalize }}
-                                {% endif %}
-                            </p>
-                            <p class="card-text"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
-                            <p class="card-text"><strong>Stock Inicial:</strong> {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}</p>
-                            <p class="card-text"><strong>Creado el:</strong> {{ producto.created_at }}</p>
-                            <p class="card-text"><strong>Última Actualización:</strong> {{ producto.updated_at }}</p>
-                        </div>
-                    </div>
-                </div>
+        {% if producto %}
+            <div class="mb-3">
+                <h4>{{ producto.descripcion_proyecto }}</h4>
+                <p><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
+                <p><strong>Estado:</strong> 
+                    {% if producto.estado == 'iniciado' %}
+                        <i class="bi bi-hourglass-split text-warning"></i> Iniciado
+                    {% elseif producto.estado == 'a_la_venta' %}
+                        <i class="bi bi-cart-check-fill text-success"></i> A la venta
+                    {% endif %}
+                </p>
             </div>
 
-            {% if precios %}
-            
-                <h3 class="mt-5">Historial de Precios</h3>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Precio</th>
-                            <th>Fecha</th>
-                            <th>PV Autorización Consejo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for precio in precios %}
-                            <tr>
-                                <td>{{ loop.index }}</td>
-                                <td>${{ precio.precio|number_format(2, '.', ',') }}</td>
-                                <td>{{ precio.fecha_precio|date("d/m/Y") }}</td>
-                                <td>{{ precio.pv_autorizacion_consejo }}</td>
-                            </tr>
-                        {% else %}
-                            <tr>
-                                <td colspan="4" class="text-center">No se registraron precios.</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            {% endif %}
-        {% endif %}
+            <form method="POST" action="/facturacion/productos/agregar-precio" class="card p-4 shadow-sm">
+                <input type="hidden" name="id_producto" value="{{ producto.id }}">
 
-        <a href="/facturacion/productos/listado" class="btn btn-primary mt-3">
-            <i class="bi bi-arrow-left"></i> Volver al listado
-        </a>
+                <div class="mb-3">
+                    <label for="precio" class="form-label">Nuevo Precio</label>
+                    <input type="number" name="precio" id="precio" class="form-control" step="0.01" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="fecha_precio" class="form-label">Fecha del Precio</label>
+                    <input type="date" name="fecha_precio" id="fecha_precio" class="form-control" required value="{{ "now"|date("Y-m-d") }}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="pv_autorizacion_consejo" class="form-label">PV Autorización Consejo</label>
+                    <input type="text" name="pv_autorizacion_consejo" id="pv_autorizacion_consejo" class="form-control">
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Guardar Precio
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <div class="alert alert-danger">No se encontró el producto.</div>
+        {% endif %}
     </section>
 
-    {% include "parts/footer.view.html" %}
+    {% include 'parts/footer.view.html' %}
 </body>
 </html>

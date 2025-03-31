@@ -139,6 +139,68 @@ class ProductosCollection extends Model
         }
     }
 
+    public function getProductosConUltimoPrecio()
+    {
+        try {
+            $sql = "
+                SELECT 
+                    p.*,
+                    pr.precio,
+                    pr.fecha_precio,
+                    pr.pv_autorizacion_consejo
+                FROM producto p
+                LEFT JOIN (
+                    SELECT pr1.*
+                    FROM precio pr1
+                    INNER JOIN (
+                        SELECT id_producto, MAX(fecha_precio) AS ultima_fecha
+                        FROM precio
+                        GROUP BY id_producto
+                    ) pr2 ON pr1.id_producto = pr2.id_producto AND pr1.fecha_precio = pr2.ultima_fecha
+                ) pr ON p.id = pr.id_producto
+                WHERE p.estado = 'a_la_venta'
+                ORDER BY p.created_at DESC
+            ";
+    
+            $this->logger->info("Consulta productos con último precio:", [$sql]);
+    
+            return $this->queryBuilder->query($sql);
+        } catch (Exception $e) {
+            $this->logger->error("Error al obtener productos con precio más reciente: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    public function insertarPrecio(array $data)
+    {
+        try {
+            $this->logger->info("Insertando nuevo precio con data:", [$data]);
+    
+            // Agregar hora actual si solo vino la fecha
+            if (strlen($data['fecha_precio']) === 10) { // formato 'Y-m-d'
+                $data['fecha_precio'] .= ' ' . date('H:i:s');
+            }
+    
+            list($idInsertado, $success) = $this->queryBuilder->insert('precio', [
+                'precio' => $data['precio'],
+                'pv_autorizacion_consejo' => $data['pv_autorizacion_consejo'] ?? null,
+                'fecha_precio' => $data['fecha_precio'],
+                'id_producto' => $data['id_producto']
+            ]);
+    
+            if (!$success) {
+                throw new Exception("No se pudo insertar el nuevo precio.");
+            }
+    
+            return $idInsertado;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error al insertar precio: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+
     public function getProductosYPrecios($searchItem=null)
     {
         try {

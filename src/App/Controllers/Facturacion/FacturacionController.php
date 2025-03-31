@@ -184,6 +184,43 @@ class FacturacionController extends Controller
             ));
         }
     }
+
+    public function eliminarFactura()
+    {
+        $facturaId = $this->request->sanitize($this->request->get('id'));
+    
+        try {
+            if (!$facturaId) {
+                throw new Exception("ID de factura no proporcionado.");
+            }
+    
+            // Delegar al modelo
+            $this->model->eliminarFacturaPorId($facturaId);
+    
+            $this->logger->info("Factura eliminada con éxito: ID $facturaId");
+    
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true]);
+                exit;
+            }
+    
+            redirect('/facturacion/listar');
+    
+        } catch (\Exception $e) {
+            $this->logger->error("Error en el proceso de eliminación de factura", ['error' => $e->getMessage()]);
+    
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                exit;
+            }
+    
+            redirect('/facturacion/listar?error=' . urlencode($e->getMessage()));
+        }
+    }
+    
+    
     
     public function listar()
     {

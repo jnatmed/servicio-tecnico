@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
             if (data.success) {
                 console.info("Factura guardada correctamente. ID: " + data.factura_id);
-                window.location.href = '/facturacion/listar'; // Redirigir a la lista de facturas
+                window.location.href = '/facturacion/ver?id=' + data.factura_id; // Redirigir a la lista de facturas
             } else {
                 console.error("Error al guardar la factura: " + data.error);
             }
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         tr.innerHTML = `
             <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.id_producto}" data-precio="${product.precio}"></td>
-            <td>${product.descripcion_proyecto}</td>
+            <td><a href="productos/ver?id_producto=${product.id_producto}">${product.descripcion_proyecto}</a></td>
             <td>${product.nro_proyecto_productivo}</td>
             <td class="precio-unitario">${parseFloat(product.precio).toFixed(2)}</td>
             <td class="subtotal">${parseFloat(product.precio).toFixed(2)}</td>

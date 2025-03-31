@@ -171,7 +171,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->post('/facturacion/new', 'Facturacion\\FacturacionController@alta');
   $router->post('/facturacion/listar', 'Facturacion\\FacturacionController@listar');
   $router->get('/facturacion/ver', 'Facturacion\\FacturacionController@ver'); // Ver factura específica
-//   $router->delete('/facturacion/eliminar/{id}', 'Facturacion\\FacturacionController@eliminar'); // Eliminar factura
+  $router->delete('/facturacion/eliminar', 'Facturacion\\FacturacionController@eliminarFactura'); // Eliminar factura
 
 
   $router->get('/facturacion/listar', 'Facturacion\\FacturacionController@listar');
@@ -186,6 +186,9 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->get('/facturacion/productos/listado', 'Facturacion\\ProductoController@listar');
   $router->get('/facturacion/productos/ver', 'Facturacion\\ProductoController@ver');
   $router->get('/facturacion/productos/ver_imagen', 'Facturacion\\ProductoController@verImgProducto');
+  $router->get('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio'); 
+  $router->post('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio'); 
+  $router->get('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto'); 
 /**
  * 13) Agentes
  *  */  
