@@ -57,7 +57,7 @@ class CuotasCollection extends Model
                 ], $this->logger);
 
                 // Insertar en la base de datos
-                list($idGenerado, $success) = $this->queryBuilder->insert('cuota', [
+                list($cuotaId, $success) = $this->queryBuilder->insert('cuota', [
                     'factura_id' => $cuota->getFacturaId(),
                     'nro_cuota' => $cuota->getNroCuota(),
                     'estado' => $cuota->getEstado(),
@@ -65,7 +65,31 @@ class CuotasCollection extends Model
                 ]);
 
                 if ($success) {
-                    $this->logger->info("Cuota ID {$idGenerado} (N° {$cuota->getNroCuota()}) generada exitosamente con vencimiento: {$cuota->getFechaVencimiento()}");
+
+                    $this->logger->info("Cuota ID {$cuotaId} generada.");
+
+                    // 🔍 Buscar datos de la factura para vincular agente
+                    $factura = $this->queryBuilder->select('factura', '*', ['id' => $facturaId])[0] ?? null;
+                    if (!$factura) {
+                        throw new Exception("No se encontró la factura ID {$facturaId}.");
+                    }
+            
+                    // 📥 Registrar movimiento en cuenta corriente
+                    $movimiento = new CuentaCorriente([
+                        'agente_id' => $factura['id_agente'],
+                        'fecha' => $fechaVencimiento,
+                        'descripcion' => "Cuota {$i}/{$cantidadCuotas} - Factura N° {$factura['nro_factura']}",
+                        'condicion_venta' => $factura['condicion_venta'],
+                        'tipo_movimiento' => 'debito',
+                        'monto' => $importeCuota,
+                        'saldo' => null,
+                        'cuota_id' => $cuotaId
+                    ], $this->logger);
+            
+                    $cuentaCorriente = new CuentaCorrienteCollection($this->queryBuilder, $this->logger);
+                    $cuentaCorriente->registrarMovimiento($movimiento);
+
+                    $this->logger->info("Cuota ID {$cuotaId} (N° {$cuota->getNroCuota()}) generada exitosamente con vencimiento: {$cuota->getFechaVencimiento()}");
                 } else {
                     $this->logger->error("Error al insertar la cuota (Factura ID: {$cuota->getFacturaId()}, N° {$cuota->getNroCuota()}) en la base de datos.");
                 }

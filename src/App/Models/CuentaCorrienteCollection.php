@@ -13,18 +13,19 @@ class CuentaCorrienteCollection extends Model
 
     public function obtenerExtractoConSaldo($agente_id)
     {
-        $movimientos = $this->queryBuilder->select('cuenta_corriente', '*', [
-            'agente_id' => $agente_id
-        ]);
-
-        usort($movimientos, function ($a, $b) {
-            $fechaCmp = strcmp($a['fecha'], $b['fecha']);
-            if ($fechaCmp === 0) {
-                return $a['id'] <=> $b['id'];
-            }
-            return $fechaCmp;
-        });
-
+        // Consulta SQL con LEFT JOIN para obtener también el factura_id de cuota si existe
+        $sql = "
+            SELECT 
+                cc.*,
+                c.factura_id
+            FROM cuenta_corriente cc
+            LEFT JOIN cuota c ON cc.cuota_id = c.id
+            WHERE cc.agente_id = :agente_id
+            ORDER BY cc.fecha ASC, cc.id ASC
+        ";
+    
+        $movimientos = $this->queryBuilder->query($sql, [':agente_id' => $agente_id]);
+    
         $saldo = 0;
         foreach ($movimientos as &$mov) {
             $tipo = strtolower($mov['tipo_movimiento']);
@@ -35,9 +36,10 @@ class CuentaCorrienteCollection extends Model
             }
             $mov['saldo_acumulado'] = $saldo;
         }
-
+    
         return $movimientos;
     }
+    
 
     public function registrarMovimiento(CuentaCorriente $movimiento)
     {

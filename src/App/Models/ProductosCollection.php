@@ -58,6 +58,29 @@ class ProductosCollection extends Model
     }
     
 
+    public function getHistorialPrecios($idProducto)
+    {
+        try {
+            $sql = "
+                SELECT 
+                    precio,
+                    fecha_precio,
+                    pv_autorizacion_consejo
+                FROM precio
+                WHERE id_producto = :id
+                ORDER BY fecha_precio DESC
+            ";
+
+            $params = [':id' => $idProducto];
+            $result = $this->queryBuilder->query($sql, $params);
+
+            return $result ?: []; // Si no hay resultados, devolvé un array vacío
+        } catch (PDOException $e) {
+            $this->logger->error("Error al obtener historial de precios: " . $e->getMessage());
+            return [];
+        }
+    }
+
 
     public function getProductosALaVenta()
     {

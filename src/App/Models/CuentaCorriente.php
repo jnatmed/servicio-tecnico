@@ -14,6 +14,7 @@ class CuentaCorriente extends Model
     public $monto;
     public $saldo;
     public $condicion_venta;
+    public $cuota_id;
 
     const TIPOS_MOVIMIENTO = ['debito', 'credito'];
     const CONDICIONES_VENTA = ['contado','cta_cte','codigo_608','codigo_689'];
@@ -79,6 +80,8 @@ class CuentaCorriente extends Model
         }
         $this->condicion_venta = $cond;
     }
+    public function setCuota_id($cuota_id) { $this->cuota_id = (int) $cuota_id; }
+
 
     // === Getters ===
     public function getId() { return $this->id; }
@@ -89,5 +92,5 @@ class CuentaCorriente extends Model
     public function getMonto() { return $this->monto; }
     public function getSaldo() { return $this->saldo; }
     public function getCondicion_venta() { return $this->condicion_venta; }
-
+    public function getCuota_id() { return $this->cuota_id; }
 }

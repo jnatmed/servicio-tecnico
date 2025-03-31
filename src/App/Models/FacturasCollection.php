@@ -31,13 +31,13 @@ class FacturasCollection extends Model
         try {
             // Insertar en la tabla `factura`
             list($idFactura, $resultado) = $this->queryBuilder->insert('factura', [
-                'nro_factura' => $factura['nro_factura'],
-                'fecha_factura' => date('Y-m-d'), // Se usa la fecha actual
-                'unidad_que_factura' => $factura['unidad_que_factura'],
-                'total_facturado' => $factura['total_facturado'],
-                'condicion_venta' => $factura['condicion_venta'],
-                'condicion_impositiva' => $factura['condicion_impositiva'],
-                'id_agente' => $factura['id_agente']
+                'nro_factura' => $factura->getNroFactura(),
+                'fecha_factura' => $factura->getFechaFactura(),
+                'unidad_que_factura' => $factura->getUnidadQueFactura(),
+                'total_facturado' => $factura->getTotalFacturado(),
+                'condicion_venta' => $factura->getCondicionVenta(),
+                'condicion_impositiva' => $factura->getCondicionImpositiva(),
+                'id_agente' => $factura->getIdAgente()
             ]);
     
             // Verificar si la inserción fue exitosa
@@ -58,10 +58,10 @@ class FacturasCollection extends Model
         try {
             // Insertar en la tabla `detalle_factura`
             list($idDetalle, $resultado) = $this->queryBuilder->insert('detalle_factura', [
-                'factura_id' => $detalleFactura['factura_id'],
-                'producto_id' => $detalleFactura['producto_id'],
-                'cantidad_facturada' => $detalleFactura['cantidad_facturada'],
-                'precio_unitario' => $detalleFactura['precio_unitario']
+                'factura_id' => $detalleFactura->getFacturaId(),
+                'producto_id' => $detalleFactura->getProductoId(),
+                'cantidad_facturada' => $detalleFactura->getCantidadFacturada(),
+                'precio_unitario' => $detalleFactura->getPrecioUnitario()
             ]);
 
             // Verificar si la inserción fue exitosa

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+    <title>Detalle del Producto</title>
+</head>
+<body>
+    {% include "parts/modulos.view.html" %}
+
+    <section class="container mt-5">
+
+        <h1 class="mb-4">Detalle del Producto</h1>
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% else %}
+            <div class="card shadow">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        <img 
+                            src="{{ producto.path_imagen ? '/facturacion/productos/ver_imagen?id_producto=' ~ producto.id : '/assets/imgs/default.png' }}" 
+                            class="img-fluid rounded-start" 
+                            alt="Imagen del producto"
+                        >
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h4 class="card-title">{{ producto.descripcion_proyecto }}</h4>
+                            <p class="card-text"><strong>Estado:</strong> 
+                                {% if producto.estado == 'iniciado' %}
+                                    <i class="bi bi-hourglass-split text-warning"></i> Iniciado
+                                {% elseif producto.estado == 'a_la_venta' %}
+                                    <i class="bi bi-cart-check-fill text-success"></i> A la venta
+                                {% else %}
+                                    {{ producto.estado|capitalize }}
+                                {% endif %}
+                            </p>
+                            <p class="card-text"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
+                            <p class="card-text"><strong>Stock Inicial:</strong> {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}</p>
+                            <p class="card-text"><strong>Creado el:</strong> {{ producto.created_at }}</p>
+                            <p class="card-text"><strong>Última Actualización:</strong> {{ producto.updated_at }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-start mt-3">
+                <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-warning">
+                    <i class="bi bi-pencil-square"></i> Editar producto
+                </a>
+            </div>
+
+            {% if precios %}
+
+                <h3 class="mt-5">Historial de Precios</h3>
+                <h3 class="mt-5 d-flex justify-content-between align-items-center">
+                    Historial de Precios
+                    <a href="/facturacion/productos/agregar-precio?id_producto={{ producto.id }}" class="btn btn-success">
+                        <i class="bi bi-plus-lg fs-5"></i> Nuevo precio
+                    </a>
+                </h3>                
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Precio</th>
+                            <th>Fecha</th>
+                            <th>PV Autorización Consejo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for precio in precios %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>${{ precio.precio|number_format(2, '.', ',') }}</td>
+                                <td>{{ precio.fecha_precio|date("d/m/Y") }}</td>
+                                <td>{{ precio.pv_autorizacion_consejo }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No se registraron precios.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% endif %}
+
+        <a href="/facturacion/productos/listado" class="btn btn-primary mt-3">
+            <i class="bi bi-arrow-left"></i> Volver al listado
+        </a>
+    </section>
+
+    {% include "parts/footer.view.html" %}
+</body>
+</html>

@@ -61,7 +61,7 @@
                                     <td>{{ factura.nro_factura }}</td>
                                     <td>{{ factura.fecha_factura }}</td>
                                     <td>{{ factura.unidad_facturadora }}</td>
-                                    <td>{{ factura.nombre_agente }} {{ factura.apellido_agente }}</td>
+                                    <td><a href="/facturacion/agente/ver?agente_id={{ factura.id_agente }}">{{ factura.nombre_agente }} {{ factura.apellido_agente }}</a></td>
                                     <td>${{ factura.total_facturado|number_format(2, ',', '.') }}</td>
                                     <td>{{ factura.cantidad_cuotas }}</td>
                                     <td>{{ factura.condicion_venta|replace({'_': ' '})|capitalize }}</td>
@@ -146,7 +146,7 @@
                                 <td>${factura.nro_factura}</td>
                                 <td>${factura.fecha_factura}</td>
                                 <td>${factura.unidad_facturadora}</td>
-                                <td>${factura.nombre_agente} ${factura.apellido_agente}</td>
+                                <td><a href="/facturacion/agente/ver?agente_id=${factura.id_agente}">${factura.nombre_agente} ${factura.apellido_agente}</a></td>
                                 <td>$${parseFloat(factura.total_facturado).toFixed(2)}</td>
                                 <td>${factura.cantidad_cuotas}</td>  
                                 <td>${factura.condicion_venta.replace('_', ' ')}</td>

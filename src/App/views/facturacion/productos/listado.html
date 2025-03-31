@@ -2,26 +2,207 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
+    <style>
+        .grid-view .card {
+            min-height: 300px;
+        }
+        .grid-img {
+            max-height: 150px;
+            object-fit: cover;
+        }
+    </style>
 </head>
+<body>
+    {% include "parts/modulos.view.html" %}
 
+    <section class="container_facturacion">
+        <div class="container mt-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h1 class="mb-0">Listado de Productos</h1>
+                <button class="btn btn-outline-secondary" id="toggleView">
+                    <i class="bi bi-grid-fill"></i> Cambiar vista
+                </button>
+            </div>
 
-{% include 'parts/modulos.view.html' %}
+            <!-- Barra de búsqueda -->
+            <div class="mb-3">
+                <input type="text" id="searchProducto" class="form-control" placeholder="Buscar por nombre, descripción o código...">
+            </div>
 
-    <section class="home-page__section">
-        {% for producto in listaProductos %}
-        
-            <article class="home-page__card">
-                <h2 class="home-page__card-title {{ producto.media_size_class|default('') }}">{{ producto.descripcion_proyecto }}</h2>
-                <p class="home-page__card-description">Estado: {{ producto.estado }}</p>
-                <p class="home-page__card-description">Expte: {{ producto.nro_proyecto_productivo }}</p>
-                <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="home-page__button"> Ver Detalle </a>
-            </article>
-        {% endfor %}
+            <!-- Vista de tabla -->
+            <div id="tableView">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="bg-primary text-white">
+                            <tr>
+                                <th>#</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Expediente</th>
+                                <th>Precio</th>
+                                <th>Stock</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if listaProductos %}
+                                {% for producto in listaProductos %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ producto.descripcion_proyecto }}</td>
+                                        <td>
+                                            {% if producto.estado == 'iniciado' %}
+                                                <i class="bi bi-hourglass-split text-warning" title="Iniciado"></i> Iniciado
+                                            {% elseif producto.estado == 'a_la_venta' %}
+                                                <i class="bi bi-cart-check-fill text-success" title="A la venta"></i> A la venta
+                                            {% else %}
+                                                {{ producto.estado|capitalize }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ producto.nro_proyecto_productivo }}</td>
+                                        <td>${{ producto.precio|number_format(2, '.', ',') }}</td>   
+                                        <td>
+                                            <i class="bi bi-box-seam text-primary" title="Stock inicial"></i>
+                                            {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                        </td>                                                                             
+                                        <td>
+                                            <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-info">Ver</a>
+                                            <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-sm btn-warning">Editar</a>
+                                            <button class="btn btn-sm btn-danger deleteProducto" data-id="{{ producto.id }}">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No se encontraron productos.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Vista de cuadrícula -->
+            <div id="gridView" class="row row-cols-1 row-cols-md-3 g-4 d-none grid-view">
+                {% for producto in listaProductos %}
+                    <div class="col">
+                        <div class="card h-100 shadow-sm">
+                            {% if producto.path_imagen %}
+                                <img src="/facturacion/productos/ver_imagen?id_producto={{ producto.id }}" class="card-img-top grid-img" alt="Imagen del producto">
+                            {% else %}
+                                <img src="/assets/imgs/default.png" class="card-img-top grid-img" alt="Sin imagen">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ producto.descripcion_proyecto }}</h5>
+                                <p class="card-text mb-1">
+                                    <strong>Estado:</strong>
+                                    {% if producto.estado == 'iniciado' %}
+                                        <i class="bi bi-hourglass-split text-warning" title="Iniciado"></i> Iniciado
+                                    {% elseif producto.estado == 'a_la_venta' %}
+                                        <i class="bi bi-cart-check-fill text-success" title="A la venta"></i> A la venta
+                                    {% else %}
+                                        {{ producto.estado|capitalize }}
+                                    {% endif %}
+                                </p>
+                                
+                                <p class="card-text mb-2"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
+                                <p class="card-text mb-2">
+                                    <strong>Precio:</strong> ${{ producto.precio|number_format(2, '.', ',') }}
+                                    <br>
+                                    <strong><i class="bi bi-box-seam text-primary"></i> Stock:</strong>
+                                    {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                </p>
+                                
+                                <div class="d-flex gap-2">
+                                    <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-sm btn-warning">Editar</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </section>
 
+    {% include 'parts/footer.view.html' %}
 
-{% include "parts/cierre-modulos.view.html" %}
-
-{% include 'parts/footer.view.html' %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggleBtn = document.getElementById('toggleView');
+            const tableView = document.getElementById('tableView');
+            const gridView = document.getElementById('gridView');
+            const searchInput = document.getElementById('searchProducto');
+            const productoList = document.getElementById('productoList');
+        
+            toggleBtn.addEventListener('click', () => {
+                tableView.classList.toggle('d-none');
+                gridView.classList.toggle('d-none');
+            });
+        
+            // 🔍 Buscar productos
+            searchInput.addEventListener('input', function (e) {
+                const value = e.target.value.trim();
+        
+                fetch(`/facturacion/productos/buscar?query=${encodeURIComponent(value)}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    productoList.innerHTML = '';
+                    gridView.innerHTML = '';
+        
+                    if (data.success && data.productos.length) {
+                        data.productos.forEach((producto, index) => {
+                            // 🧱 Fila para tabla
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${index + 1}</td>
+                                <td>${producto.descripcion_proyecto}</td>
+                                <td>
+                                    ${producto.estado === 'iniciado' ? 
+                                        '<i class="bi bi-hourglass-split text-warning"></i> Iniciado' : 
+                                        '<i class="bi bi-cart-check-fill text-success"></i> A la venta'}
+                                </td>
+                                <td>${producto.nro_proyecto_productivo}</td>
+                                <td>
+                                    <a href="/facturacion/productos/ver?id_producto=${producto.id}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/productos/editar?id_producto=${producto.id}" class="btn btn-sm btn-warning">Editar</a>
+                                    <button class="btn btn-sm btn-danger deleteProducto" data-id="${producto.id}">Eliminar</button>
+                                </td>
+                            `;
+                            productoList.appendChild(row);
+        
+                            // 🧱 Tarjeta para vista en cuadrícula
+                            const col = document.createElement('div');
+                            col.classList.add('col');
+                            col.innerHTML = `
+                                <div class="card h-100 shadow-sm">
+                                    <img src="/facturacion/productos/ver_imagen?id_img=${producto.id}" class="card-img-top grid-img" alt="Imagen del producto">
+                                    <div class="card-body">
+                                        <h5 class="card-title">${producto.descripcion_proyecto}</h5>
+                                        <p class="card-text"><strong>Estado:</strong> ${producto.estado.replace('_', ' ')}</p>
+                                        <p class="card-text"><strong>Expediente:</strong> ${producto.nro_proyecto_productivo}</p>
+                                        <div class="d-flex gap-2">
+                                            <a href="/facturacion/productos/ver?id_producto=${producto.id}" class="btn btn-sm btn-info">Ver</a>
+                                            <a href="/facturacion/productos/editar?id_producto=${producto.id}" class="btn btn-sm btn-warning">Editar</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            gridView.appendChild(col);
+                        });
+                    } else {
+                        productoList.innerHTML = `<tr><td colspan="5" class="text-center">No se encontraron productos.</td></tr>`;
+                        gridView.innerHTML = `<div class="col"><p class="text-center">No se encontraron productos.</p></div>`;
+                    }
+                })
+                .catch(err => console.error("Error buscando productos:", err));
+            });
+        });
+        </script>
+            
 </body>
 </html>

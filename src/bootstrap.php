@@ -185,6 +185,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
    */
   $router->get('/facturacion/productos/listado', 'Facturacion\\ProductoController@listar');
   $router->get('/facturacion/productos/ver', 'Facturacion\\ProductoController@ver');
+  $router->get('/facturacion/productos/ver_imagen', 'Facturacion\\ProductoController@verImgProducto');
 /**
  * 13) Agentes
  *  */  

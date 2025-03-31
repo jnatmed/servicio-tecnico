@@ -78,17 +78,9 @@ class FacturacionController extends Controller
                 $this->logger->debug("Comenzando a instanciar Factura.");
                 // Crear instancia de Factura (con validaciones en el constructor)
                 $factura = new Factura($data, $this->logger);
-    
+
                 // Insertar la factura en la base de datos
-                $facturaId = $this->model->insertFactura([
-                    'nro_factura' => $factura->getNroFactura(),
-                    'fecha_factura' => $factura->getFechaFactura(), 
-                    'unidad_que_factura' => $factura->getUnidadQueFactura(),
-                    'total_facturado' => $factura->getTotalFacturado(),
-                    'condicion_venta' => $factura->getCondicionVenta(),
-                    'condicion_impositiva' => $factura->getCondicionImpositiva(),
-                    'id_agente' => $factura->getIdAgente()
-                ]);
+                $facturaId = $this->model->insertFactura($factura);
     
                 $this->logger->debug("Factura insertada con ID: ", [$facturaId]);
 
@@ -104,6 +96,7 @@ class FacturacionController extends Controller
                 
                         // Delegar la lógica al modelo
                         $this->cuotasCollection->generarCuotas($facturaId, $data['total_facturado'], $data['cantidad_cuotas']);
+                        
                     }else{
                         $this->logger->info("No se solicita la generación de cuotas para la condición de venta {$data['condicion_venta']} o la cantidad de cuotas es 0.");
                     }
@@ -130,21 +123,17 @@ class FacturacionController extends Controller
                         }
                         $this->logger->debug("Producto Existente, ", [$productoExistente]);
     
-                        // Crear instancia de DetalleFactura para cada producto
-                        $detalleFactura = new DetalleFactura([
-                            'factura_id' => $facturaId,
-                            'producto_id' => $productoData['id'], 
-                            'cantidad_facturada' => $productoData['cantidad'],
-                            'precio_unitario' => $productoData['precio_unitario']
-                        ], $this->logger);
-    
+                        // Crear instancia de DetalleFactura para cada producto    
                         // Insertar en la tabla detalle_factura
-                        $this->model->insertDetalleFactura([
-                            'factura_id' => $detalleFactura->getFacturaId(),
-                            'producto_id' => $detalleFactura->getProductoId(),
-                            'cantidad_facturada' => $detalleFactura->getCantidadFacturada(),
-                            'precio_unitario' => $detalleFactura->getPrecioUnitario()
-                        ]);
+                        $detalleFacturaId = $this->model->insertDetalleFactura(
+                            new DetalleFactura([
+                                'factura_id' => $facturaId,
+                                'producto_id' => $productoData['id'], 
+                                'cantidad_facturada' => $productoData['cantidad'],
+                                'precio_unitario' => $productoData['precio_unitario']
+                            ], $this->logger));
+
+                        $this->logger->debug("DetalleFactura insertado con ID: ", [$detalleFacturaId]);
     
                     } catch (Exception $e) {
                         throw new Exception("Error en producto: " . $e->getMessage());
