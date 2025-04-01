@@ -10,7 +10,7 @@ use Paw\App\Models\FacturasCollection;
 use Paw\App\Models\ProductosCollection;
 use Paw\App\Models\CuotasCollection;
 use Paw\App\Models\DetalleFactura;
-
+use Paw\App\Models\Imagen;
 use Paw\App\Models\CuentaCorrienteCollection;
 use Paw\App\Models\CuentaCorriente;
 
@@ -301,6 +301,90 @@ class FacturacionController extends Controller
         }
     }
      
+    public function subirComprobante()
+    {
+        $idFactura = $this->request->sanitize($this->request->get('id_factura'));
     
+        if ($this->request->method() === 'POST') {
+            try {
+                $factura = $this->model->getFacturaById($idFactura);
+    
+                if ($factura) {
+                    if (isset($_FILES['comprobante']) && is_uploaded_file($_FILES['comprobante']['tmp_name'])) {
+                        
+                        // Crear instancia de Imagen
+                        $imagen = new Imagen(
+                            $_FILES['comprobante']['name'],
+                            $_FILES['comprobante']['type'],
+                            $_FILES['comprobante']['tmp_name'],
+                            $_FILES['comprobante']['size'],
+                            $_FILES['comprobante']['error'],
+                            $this->logger
+                        );
+    
+                        // Subir archivo (reutilizás la lógica ya definida en Imagen)
+                        $imagen->subirArchivo('comprobantes'); // Podés usar una carpeta específica para comprobantes
+                        $nuevoArchivo = $imagen->getFileName();
+    
+                        // Actualizar la factura con el nuevo path
+                        $this->model->actualizarFactura([
+                            'id' => $idFactura,
+                            'path_comprobante' => $nuevoArchivo
+                        ]);
+    
+                        $this->logger->info("Comprobante subido correctamente", ['factura_id' => $idFactura, 'archivo' => $nuevoArchivo]);
+                    } else {
+                        $this->logger->warning("No se recibió archivo válido para comprobante");
+                    }
+                } else {
+                    $this->logger->warning("Factura no encontrada con ID: $idFactura");
+                }
+    
+            } catch (Exception $e) {
+                $this->logger->error("Error al subir comprobante", ['error' => $e->getMessage()]);
+            }
+    
+            // Redirigir de nuevo a la vista de la factura
+            redirect('facturacion/ver?id=' . $idFactura);
+        }
+    }
+
+    public function verComprobante()
+    {
+        $id = $this->request->get('id_factura');
+    
+        try {
+            $factura = $this->model->getFacturaById($id);
+    
+            if (!$factura || empty($factura['path_comprobante'])) {
+                throw new Exception("No se encontró el comprobante asociado.");
+            }
+    
+            $path = realpath(Imagen::UPLOADDIRECTORY_COMPROBANTES . $factura['path_comprobante']);
+    
+            $this->logger->info("path comprobante: ", [$path]);
+            $this->logger->info("file_exists? : ", [file_exists($path)]);
+
+            
+            if (!file_exists($path)) {
+                throw new Exception("El archivo no existe en el servidor.");
+            }
+    
+            $mime = Imagen::getMimeType($factura['path_comprobante'], 'comprobantes');
+    
+            header('Content-Type: ' . $mime);
+            header('Content-Disposition: attachment; filename="' . basename($path) . '"');
+            readfile($path);
+            exit;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error al descargar comprobante: " . $e->getMessage());
+            http_response_code(404);
+            echo "No se pudo descargar el comprobante.";
+            exit;
+        }
+    }
+        
+
 }
        

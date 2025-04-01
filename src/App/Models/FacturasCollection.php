@@ -129,5 +129,33 @@ class FacturasCollection extends Model
         return $this->queryBuilder->getDetalleFacturaByFacturaId($id);
     }
     
+    public function actualizarFactura(array $datos)
+    {
+        try {
+            if (!isset($datos['id'])) {
+                throw new Exception("No se especificó el ID de la factura para actualizar.");
+            }
+    
+            $id = $datos['id'];
+            unset($datos['id']); // Lo removemos para evitar que se intente actualizar el ID
+    
+            if (empty($datos)) {
+                throw new Exception("No hay datos para actualizar la factura.");
+            }
+    
+            $this->logger->info("Actualizando factura ID: $id", $datos);
+    
+            $resultado = $this->queryBuilder->update('factura', $datos, ['id' => $id]);
+    
+            return $resultado;
+        } catch (PDOException $e) {
+            $this->logger->error("Error SQL al actualizar factura: " . $e->getMessage());
+            return false;
+        } catch (Exception $e) {
+            $this->logger->error("Error general al actualizar factura: " . $e->getMessage());
+            return false;
+        }
+    }
+    
 
 }

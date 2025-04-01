@@ -8,6 +8,7 @@ use Paw\Core\Model;
 class Imagen extends Model
 {
     const UPLOADDIRECTORY = '../public/assets/imgs/productos/';
+    const UPLOADDIRECTORY_COMPROBANTES = __DIR__ . '/../../../comprobantes/';
     const MAX_FILE_SIZE = 1 * 1024 * 1024;
 
     private $fileName;
@@ -18,8 +19,6 @@ class Imagen extends Model
 
     private $path_imagen;
     private $nombre_imagen;
-    private $id_publicacion;
-    private $id_usuario;
 
     public function __construct(
         $fileName,
@@ -44,16 +43,6 @@ class Imagen extends Model
         $log->debug("this->tmpname: " . $this->fileTmpName);
         $log->debug("this->size: " . $this->fileSize);
         $log->debug("this->error: " . $this->error);
-    }
-
-    public function setIdPublicacion($id_publicacion)
-    {
-        $this->id_publicacion = $id_publicacion;
-    }
-
-    public function setIdUsuario($id_usuario)
-    {
-        $this->id_usuario = $id_usuario;
     }
 
     public function getFileName()
@@ -165,13 +154,19 @@ class Imagen extends Model
         }
     }
 
-    public function subirArchivo()
+    public function subirArchivo($rutaElegida = null)
     {
         global $log;
 
         // Generar un nombre de archivo único para evitar colisiones
         $newFileName = uniqid() . "." . pathinfo($this->fileName, PATHINFO_EXTENSION);
-        $uploadPath = self::UPLOADDIRECTORY . $newFileName;
+        
+        if($rutaElegida == 'comprobantes')
+        {
+            $uploadPath = self::UPLOADDIRECTORY_COMPROBANTES . $newFileName;
+        }else{
+            $uploadPath = self::UPLOADDIRECTORY . $newFileName;
+        }
 
         $log->info("fileName: ", [$this->fileName]);
         $log->info("uploadPath: ", [$uploadPath]);
@@ -217,16 +212,22 @@ class Imagen extends Model
     }
 
 
-    public static function getMimeType($filePath)
+    public static function getMimeType($filePath, $rutaElegida = null)
     {
         global $log;
+        if($rutaElegida == 'comprobantes')
+        {
+            $basePath = self::UPLOADDIRECTORY_COMPROBANTES;
+        }else{
+            $basePath = self::UPLOADDIRECTORY;
+        }
         // Verificar si el archivo existe
-        if (!file_exists(self::UPLOADDIRECTORY . $filePath)) {
+        if (!file_exists($basePath . $filePath)) {
             throw new Exception("El archivo no existe: $filePath");
         }
 
         // Obtener el tipo MIME del archivo
-        $mimeType = mime_content_type(self::UPLOADDIRECTORY . $filePath);
+        $mimeType = mime_content_type($basePath . $filePath);
 
         // Verificar si se pudo obtener el tipo MIME
         if ($mimeType === false) {

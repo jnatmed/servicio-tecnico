@@ -35,10 +35,23 @@
                             ${{ (factura.total_facturado / cuotas|length)|number_format(2, '.', ',') }}
                         </p>
                     </div>
+                    {% if factura.path_comprobante %}
+                    <p>
+                        <strong>Comprobante:</strong>
+                        <a href="/facturacion/ver-comprobante?id_factura={{ factura.id }}" class="btn btn-outline-success btn-sm ms-2" target="_blank">
+                            <i class="bi bi-file-earmark-arrow-down-fill"></i> Descargar Comprobante
+                        </a>
+                    </p>
+                    {% else %}
+                        <p><strong>Comprobante:</strong> No se ha subido ningún comprobante.</p>
+                    {% endif %}
                 {% endif %}                    
                 </div>
+                <button class="btn btn-outline-success mt-4" data-bs-toggle="modal" data-bs-target="#modalComprobante">
+                    <i class="bi bi-upload"></i> Subir Comprobante
+                </button>                
             </div>
-
+        
             <h3 class="mt-4">Productos</h3>
             <table class="table table-striped">
                 <thead>
@@ -110,5 +123,30 @@
         <a href="/facturacion/listar" class="btn btn-primary mt-3">Volver</a>
     </section>
     {% include "parts/footer.view.html" %}
+    <div class="modal fade" id="modalComprobante" tabindex="-1" aria-labelledby="modalComprobanteLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" method="POST" action="/facturacion/subir-comprobante" enctype="multipart/form-data">
+                <input type="hidden" name="id_factura" value="{{ factura.id }}">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title" id="modalComprobanteLabel">Subir Comprobante</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="comprobante" class="form-label">Seleccionar archivo</label>
+                        <input type="file" class="form-control" id="comprobante" name="comprobante" accept=".pdf,image/*" required>
+                        <small class="form-text text-muted">Formatos permitidos: PDF, JPG, PNG.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Subir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
 </body>
 </html>

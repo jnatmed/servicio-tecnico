@@ -105,7 +105,7 @@ class ProductoController extends Controller
                         $_FILES['imagen']['size'], 
                         $_FILES['imagen']['error'], 
                         $this->logger);
-                    
+
                     $data['path_imagen'] = $imagen->getFileName();
                 }
 
