@@ -19,7 +19,12 @@
                 <div class="card-body">
                     <p><strong>Fecha:</strong> {{ factura.fecha_factura }}</p>
                     <p><strong>Unidad que factura:</strong> {{ factura.unidad_facturadora }}</p>
-                    <p><strong>Agente:</strong> {{ factura.nombre_agente }} {{ factura.apellido_agente }}</p>
+                    <p><strong>Agente:</strong>
+                        {{ factura.nombre_agente }} {{ factura.apellido_agente }}
+                        <a href="/facturacion/agente/ver?agente_id={{ factura.id_agente }}" class="btn btn-sm btn-outline-primary ms-2">
+                            <i class="bi bi-person-lines-fill"></i> Ver Cuenta Corriente
+                        </a>
+                    </p>
                     <p><strong>Condición de Venta:</strong> {{ factura.condicion_venta|replace({'_': ' '}) }}</p>
                     <p><strong>Condición Impositiva:</strong> {{ factura.condicion_impositiva|replace({'_': ' '}) }}</p>
                     <p><strong>Total Facturado:</strong> ${{ factura.total_facturado|number_format(2, '.', ',') }}</p>
@@ -50,8 +55,14 @@
                     {% for producto in productos %}
                         <tr>
                             <td>{{ loop.index }}</td>
-                            <td>{{ producto.descripcion_proyecto }}</td>
-                            <td>{{ producto.nro_proyecto_productivo }}</td>
+                            <td>{{ producto.descripcion_proyecto }}
+                                <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-outline-info ms-2">
+                                    <i class="bi bi-eye-fill"></i> Ver
+                                </a>                                
+                            </td>
+                            <td>
+                                {{ producto.nro_proyecto_productivo }}
+                            </td>
                             <td>{{ producto.cantidad_facturada }}</td>
                             <td>${{ producto.precio_unitario|number_format(2, '.', ',') }}</td>
                             <td>${{ (producto.cantidad_facturada * producto.precio_unitario)|number_format(2, '.', ',') }}</td>

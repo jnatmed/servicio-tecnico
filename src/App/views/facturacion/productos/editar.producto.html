@@ -12,7 +12,7 @@
         <hr>
 
         {% if producto %}
-            <form action="/facturacion/productos/actualizar" method="POST" enctype="multipart/form-data" class="row g-3 shadow p-4 rounded bg-white">
+            <form action="/facturacion/productos/editar" method="POST" enctype="multipart/form-data" class="row g-3 shadow p-4 rounded bg-white">
                 <input type="hidden" name="id" value="{{ producto.id }}">
 
                 <div class="col-12">

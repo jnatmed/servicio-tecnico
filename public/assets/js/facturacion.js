@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Capturar la cantidad de cuotas (si aplica)
         const selectCuotas = document.getElementById('selectCuotas');
         if (selectCuotas && selectCuotas.value) {
-            formData.append('selectCuotas', selectCuotas.value);
+            formData.append('cantidad_cuotas', selectCuotas.value);
         }
     
         // Capturar los productos de la tabla
@@ -155,9 +155,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
         // Agregar los productos al formData como JSON
         formData.append('productos', JSON.stringify(productos));
-    
+
+        // 🐞 Debug / log para inspeccionar antes de enviar
+        console.log("Datos a enviar:", Object.fromEntries(formData.entries()));
+        console.table(productos);
+        debugger; // ⛔ Detiene la ejecución aquí (abrí DevTools para continuar)
+        
         // Mostrar los datos del formulario en consola para depuración
-        console.debug("Enviando datos del formulario:", Object.fromEntries(formData.entries()));
+        console.log("Enviando datos del formulario:", Object.fromEntries(formData.entries()));
     
         // Enviar la solicitud al backend
         fetch('/facturacion/new', {

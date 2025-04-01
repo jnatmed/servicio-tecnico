@@ -19,6 +19,26 @@ class ProductosCollection extends Model
         }    
     }
 
+    public function actualizarProducto(array $data)
+    {
+        try {
+            $this->logger->info("Actualizando producto ID: ", [$data]);
+        
+            $resultado = $this->queryBuilder->update('producto', $data, ['id' => $data['id']]);
+    
+            if (!$resultado) {
+                throw new Exception("No se pudo actualizar el producto.");
+            }
+    
+            return true;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error al actualizar producto: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
+
     public function getDependencias(){
         try {
             $dependencias = $this->queryBuilder->select('dependencia', '*');

@@ -221,7 +221,7 @@ class QueryBuilder
         $executionResult = $statement->execute();
     
         // Registrar en la auditoría
-        $this->registrarAuditoria($table, 'UPDATE', $_SESSION['usuario'], $datosPrevios, $data, $conditions['id'] ?? null);
+        $this->registrarAuditoria($table, 'UPDATE', $_SESSION['usuario'] ?? null, $datosPrevios, $data, $conditions['id'] ?? null);
     
         return $executionResult;
     }
@@ -561,7 +561,7 @@ class QueryBuilder
     public function getDetalleFacturaByFacturaId($id)
     {
         try {
-            $query = "SELECT df.*, p.descripcion_proyecto, p.nro_proyecto_productivo 
+            $query = "SELECT df.*, p.descripcion_proyecto, p.nro_proyecto_productivo, p.id 
                       FROM detalle_factura df
                       INNER JOIN producto p ON df.producto_id = p.id
                       WHERE df.factura_id = :id";

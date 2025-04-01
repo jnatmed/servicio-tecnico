@@ -6,7 +6,8 @@ use Paw\Core\Controller;
 use Paw\Core\Traits\Loggable;
 use Paw\App\Controllers\UserController;
 use Paw\App\Models\Imagen;
-use Paw\App\Models\ImagenCollection;
+
+use Paw\App\Models\Producto;
 
 use Exception;
 
@@ -37,12 +38,120 @@ class ProductoController extends Controller
 
     public function alta()
     {
-        
+        if ($this->request->method() == 'POST') {
+            try {
+                $data = [
+                    'descripcion_proyecto' => $this->request->get('descripcion_proyecto'),
+                    'estado' => $this->request->get('estado'),
+                    'stock_inicial' => $this->request->get('stock_inicial'),
+                    'unidad_medida' => $this->request->get('unidad_medida'),
+                    'nro_proyecto_productivo' => $this->request->get('nro_proyecto_productivo'),
+                ];
+
+                $this->request->sanitize($data);
+
+                // Procesar imagen si se cargó una
+                if ($_FILES['imagen']['tmp_name']) {
+                    $imagen = new Imagen($_FILES['imagen'], $this->logger);
+                    $imagen->guardar();
+                    $data['path_imagen'] = $imagen->getNombreArchivo();
+                }
+
+                $producto = new Producto($data, $this->logger);
+                list($idInsertado, $success) = $this->model->updateProducto($producto);
+
+                if ($success) {
+                    $this->logger->info("Producto insertado correctamente con ID $idInsertado");
+                    redirect('/facturacion/productos/ver?id_producto=' . $idInsertado);
+                } else {
+                    throw new Exception("Error al insertar el producto.");
+                }
+
+            } catch (Exception $e) {
+                $this->logger->error("Error en alta producto", ['error' => $e->getMessage()]);
+                view('facturacion/productos/alta.producto', array_merge([
+                    'error' => $e->getMessage()
+                ], $this->menu));
+            }
+
+        } else {
+            view('facturacion/productos/alta.producto', $this->menu);
+        }
     }
 
     public function editarProducto()
     {
+        $id = $this->request->get('id_producto');
+        if ($this->request->method() == 'POST') {
+            try {
+                $data = [
+                    'id' => $this->request->get('id'),
+                    'descripcion_proyecto' => $this->request->get('descripcion_proyecto'),
+                    'estado' => $this->request->get('estado'),
+                    'stock_inicial' => $this->request->get('stock_inicial'),
+                    'unidad_medida' => $this->request->get('unidad_medida'),
+                    'nro_proyecto_productivo' => $this->request->get('nro_proyecto_productivo')
+                ];
 
+                $this->request->sanitize($data);
+
+                $this->logger->info("S_FILES :", [$_FILES]);
+                // Si hay nueva imagen, la procesamos
+                if ($_FILES['imagen']['tmp_name']) {
+                    $imagen = new Imagen(
+                        $_FILES['imagen']['name'], 
+                        $_FILES['imagen']['type'], 
+                        $_FILES['imagen']['tmp_name'], 
+                        $_FILES['imagen']['size'], 
+                        $_FILES['imagen']['error'], 
+                        $this->logger);
+                    
+                    $data['path_imagen'] = $imagen->getFileName();
+                }
+
+                $this->logger->info("datos de la imagen :", [$imagen->load()]);
+                $resultSearch = $this->model->getById($data['id']);
+                if($resultSearch)
+                {
+                    $this->logger->info("Producto encontrado: ", [$resultSearch]);
+                    // Si la imagen no ha cambiado, no la reemplazamos
+
+                    $imagen->subirArchivo();
+                    $data['path_imagen'] = $imagen->getFileName();
+                    $success = $this->model->actualizarProducto([
+                        'id' => $data['id'], 
+                        'nro_proyecto_productivo' => $data['nro_proyecto_productivo'],
+                        'descripcion_proyecto' => $data['descripcion_proyecto'],
+                        'estado' => $data['estado'],
+                        'id_taller' => $resultSearch['id_taller'],
+                        'id_unidad_q_fabrica' => $resultSearch['id_unidad_q_fabrica'],
+                        'stock_inicial' => $data['stock_inicial'],
+                        'unidad_medida' => $data['unidad_medida'],
+                        'path_imagen' => $data['path_imagen']
+                    ]);
+                    
+                    if ($success) {
+                        $this->logger->info("Producto actualizado correctamente", [$data]);
+                        redirect('facturacion/productos/ver?id_producto=' . $data['id']);
+                    } else {
+                        throw new Exception("No se pudo actualizar el producto.");
+                    }
+                }
+
+            } catch (Exception $e) {
+                $this->logger->error("Error al actualizar producto", ['error' => $e->getMessage()]);
+                view('facturacion/productos/editar.producto', array_merge([
+                    'producto' => $this->model->getDetalleProducto($id),
+                    'error' => $e->getMessage()
+                ], $this->menu));
+            }
+
+        } else {
+            $producto = $this->model->getDetalleProducto($id);
+            view('facturacion/productos/editar.producto', array_merge([
+                'producto' => $producto
+            ], $this->menu));
+        }
     }
 
     public function verImgProducto()

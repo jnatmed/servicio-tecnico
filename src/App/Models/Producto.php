@@ -12,13 +12,13 @@ class Producto extends Model
     use Loggable;
 
     private $id;
-    private $nro_proyecto_productivo;
-    private $descripcion_proyecto;
-    private $estado;
-    private $id_taller;
-    private $id_unidad_q_fabrica;
-    private $stock_inicial;
-    private $unidad_medida;
+    public $nro_proyecto_productivo;
+    public $descripcion_proyecto;
+    public $estado;
+    public $id_taller;
+    public $id_unidad_q_fabrica;
+    public $stock_inicial;
+    public $unidad_medida;
 
     // ENUM de valores válidos
     private static $ESTADOS_VALIDOS = ['iniciado', 'a_la_venta'];

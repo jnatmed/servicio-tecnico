@@ -58,16 +58,14 @@ class Imagen extends Model
 
     public function getFileName()
     {
-        return $this->fileName;
+        return $this->nombre_imagen;
     }
 
     public function load()
     {
         return [
-            'id_publicacion' => $this->id_publicacion,
             'path_imagen' => $this->path_imagen,
             'nombre_imagen' => $this->nombre_imagen,
-            'id_usuario' => $this->id_usuario,
         ];
     }
 

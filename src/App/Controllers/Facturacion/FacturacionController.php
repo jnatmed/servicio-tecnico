@@ -140,22 +140,22 @@ class FacturacionController extends Controller
                     }
                 }
                 
-                $this->logger->debug("// Instanciar movimiento en cuenta corriente");
+                // $this->logger->debug("// Instanciar movimiento en cuenta corriente");
 
                 // Instanciar movimiento en cuenta corriente
-                $movimiento = new CuentaCorriente([
-                    'agente_id' => $factura->getIdAgente(),
-                    'fecha' => date('Y-m-d'),
-                    'descripcion' => 'Factura N° ' . $factura->getNroFactura(),
-                    'tipo_movimiento' => 'debito',
-                    'monto' => $factura->getTotalFacturado(),
-                    'condicion_venta' => $factura->getCondicionVenta()
-                ], $this->logger);
+                // $movimiento = new CuentaCorriente([
+                //     'agente_id' => $factura->getIdAgente(),
+                //     'fecha' => date('Y-m-d'),
+                //     'descripcion' => 'Factura N° ' . $factura->getNroFactura(),
+                //     'tipo_movimiento' => 'debito',
+                //     'monto' => $factura->getTotalFacturado(),
+                //     'condicion_venta' => $factura->getCondicionVenta()
+                // ], $this->logger);
 
-                $this->logger->info("Capa Controller: movimiento",[$movimiento->toArray()]);
-                // Instanciar colección y registrar movimiento
-                $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
-                $cuentaCorriente->registrarMovimiento($movimiento);
+                // $this->logger->info("Capa Controller: movimiento",[$movimiento->toArray()]);
+                // // Instanciar colección y registrar movimiento
+                // $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
+                // $cuentaCorriente->registrarMovimiento($movimiento);
 
                 // Respuesta de éxito
                 header('Content-Type: application/json');
