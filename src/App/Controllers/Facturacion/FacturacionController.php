@@ -50,25 +50,40 @@ class FacturacionController extends Controller
     
     public function alta() 
     {
+        /**
+         * Verifico si el metodo es POST, sino
+         * muestro la pagina de carga de formulario
+         */
         if ($this->request->method() == 'POST') {
             try {
-                // Capturar los datos del formulario
+                /**
+                 * Recepcion de datos
+                 */
                 $data = [
                     'nro_factura' => $this->request->get('nro_comprobante'),
                     'id_agente' => $this->request->get('agente'),
+                    'fecha_factura' => date('Y-m-d'),
                     'unidad_que_factura' => $this->request->get('dependencia'),
                     'condicion_venta' => $this->request->get('condicion_venta'),
                     'condicion_impositiva' => $this->request->get('condicion_impositiva'),
                     'total_facturado' => $this->request->get('total_facturado'),
-                    'cantidad_cuotas' => $this->request->get('cantidad_cuotas') // Cantidad de cuotas seleccionadas
+                    'cantidad_cuotas' => $this->request->get('cantidad_cuotas'), // Cantidad de cuotas seleccionadas
+                    'path_comprobante' => ''
 
                 ];
     
+                /**
+                 * La lista de productos la guardo en un arreglo, previamente
+                 * decodificado 
+                 */
                 $productos = json_decode($this->request->get('productos'), true);
     
+                /**
+                 * Sanitize de los datos
+                 */
                 $this->request->sanitize($data);
                 
-                $this->logger->debug("Data recibida: ", [$data]);
+                $this->logger->debug("Data recibida: ", [$data]); // DEBUG
     
                 // Validación de datos obligatorios
                 if (empty($data['nro_factura']) || empty($data['id_agente']) || empty($productos)) {
@@ -140,23 +155,6 @@ class FacturacionController extends Controller
                     }
                 }
                 
-                // $this->logger->debug("// Instanciar movimiento en cuenta corriente");
-
-                // Instanciar movimiento en cuenta corriente
-                // $movimiento = new CuentaCorriente([
-                //     'agente_id' => $factura->getIdAgente(),
-                //     'fecha' => date('Y-m-d'),
-                //     'descripcion' => 'Factura N° ' . $factura->getNroFactura(),
-                //     'tipo_movimiento' => 'debito',
-                //     'monto' => $factura->getTotalFacturado(),
-                //     'condicion_venta' => $factura->getCondicionVenta()
-                // ], $this->logger);
-
-                // $this->logger->info("Capa Controller: movimiento",[$movimiento->toArray()]);
-                // // Instanciar colección y registrar movimiento
-                // $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
-                // $cuentaCorriente->registrarMovimiento($movimiento);
-
                 // Respuesta de éxito
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'factura_id' => $facturaId]);
@@ -219,8 +217,6 @@ class FacturacionController extends Controller
             redirect('/facturacion/listar?error=' . urlencode($e->getMessage()));
         }
     }
-    
-    
     
     public function listar()
     {
@@ -290,6 +286,7 @@ class FacturacionController extends Controller
                 throw new Exception("Factura no encontrada.");
             }
     
+            $this->logger->info("Datos Factura: ", [$factura]);
             return view('facturacion/detalle.factura', array_merge([
                 'factura' => $factura,
                 'productos' => $productos,

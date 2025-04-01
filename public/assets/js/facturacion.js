@@ -156,14 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Agregar los productos al formData como JSON
         formData.append('productos', JSON.stringify(productos));
 
-        // 🐞 Debug / log para inspeccionar antes de enviar
-        console.log("Datos a enviar:", Object.fromEntries(formData.entries()));
-        console.table(productos);
-        debugger; // ⛔ Detiene la ejecución aquí (abrí DevTools para continuar)
-        
-        // Mostrar los datos del formulario en consola para depuración
-        console.log("Enviando datos del formulario:", Object.fromEntries(formData.entries()));
-    
+        if (!validarFormularioFactura(formData, productos)) {
+            return; // Detiene el envío si no pasó la validación
+        }
         // Enviar la solicitud al backend
         fetch('/facturacion/new', {
             method: 'POST',
@@ -175,12 +170,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.info("Factura guardada correctamente. ID: " + data.factura_id);
                 window.location.href = '/facturacion/ver?id=' + data.factura_id; // Redirigir a la lista de facturas
             } else {
-                console.error("Error al guardar la factura: " + data.error);
+                mostrarMensajeModal(`Error al guardar la factura: ${data.error}`, 'Error del servidor');
             }
         })
         .catch(error => {
             console.error("Error en la petición:", error);
-            console.error("Hubo un problema al enviar la factura.");
+            mostrarMensajeModal("Error de red o del servidor. Intente nuevamente.", "Error de red");
         });
     });
     
@@ -189,7 +184,67 @@ document.addEventListener('DOMContentLoaded', () => {
     /***
      * FUNCIONES
      */
+    function validarFormularioFactura(formData, productos) {
+        const nroComprobante = formData.get('nro_comprobante');
+        const dependencia = formData.get('dependencia');
+        const condicionVenta = formData.get('condicion_venta');
+        const condicionImpositiva = formData.get('condicion_impositiva');
+        const agente = formData.get('agente');
+        const productosEnTabla = productos.length;
+    
+        if (!nroComprobante) {
+            mostrarMensajeModal("Debe completar el número de comprobante.");
+            return false;
+        }
+    
+        if (!dependencia) {
+            mostrarMensajeModal("Debe seleccionar una dependencia.");
+            return false;
+        }
+    
+        if (!condicionVenta) {
+            mostrarMensajeModal("Debe seleccionar una condición de venta.");
+            return false;
+        }
+    
+        if (!condicionImpositiva) {
+            mostrarMensajeModal("Debe seleccionar una condición impositiva.");
+            return false;
+        }
+    
+        if (!agente) {
+            mostrarMensajeModal("Debe seleccionar un agente.");
+            return false;
+        }
+    
+        if (productosEnTabla === 0) {
+            mostrarMensajeModal("Debe agregar al menos un producto.");
+            return false;
+        }
+    
+        return true;
+    }
+    
+    
 
+    function mostrarMensajeModal(mensaje, titulo = 'Atención') {
+        const modal = document.getElementById('mensajeModal');
+        const label = document.getElementById('mensajeModalLabel');
+    
+        // Estilos condicionales
+        if (titulo.toLowerCase().includes('error')) {
+            label.classList.add('text-danger');
+        } else {
+            label.classList.remove('text-danger');
+        }
+    
+        label.textContent = titulo;
+        document.getElementById('mensajeModalContenido').textContent = mensaje;
+    
+        const mensajeModal = new bootstrap.Modal(modal);
+        mensajeModal.show();
+    }
+    
     function mostrarMensajeModal(mensaje, titulo = 'Atención') {
         console.log("[Modal]:", mensaje);
     

@@ -35,6 +35,7 @@
                             ${{ (factura.total_facturado / cuotas|length)|number_format(2, '.', ',') }}
                         </p>
                     </div>
+                    {% endif %}                    
                     {% if factura.path_comprobante %}
                     <p>
                         <strong>Comprobante:</strong>
@@ -44,8 +45,7 @@
                     </p>
                     {% else %}
                         <p><strong>Comprobante:</strong> No se ha subido ningún comprobante.</p>
-                    {% endif %}
-                {% endif %}                    
+                    {% endif %}                    
                 </div>
                 <button class="btn btn-outline-success mt-4" data-bs-toggle="modal" data-bs-target="#modalComprobante">
                     <i class="bi bi-upload"></i> Subir Comprobante
