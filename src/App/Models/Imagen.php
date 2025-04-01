@@ -237,6 +237,6 @@ class Imagen extends Model
         // Extraer la extensión del tipo MIME
         $extension = substr(strrchr($mimeType, '/'), 1);
 
-        return $extension;
+        return $mimeType;
     }
 }

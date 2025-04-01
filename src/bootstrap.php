@@ -181,6 +181,8 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->post('/facturacion/subir-comprobante', 'Facturacion\\FacturacionController@subirComprobante'); 
   $router->get('/facturacion/ver-comprobante', 'Facturacion\\FacturacionController@verComprobante'); 
 
+//   http://localhost:8080/facturacion/ver-comprobante?id_factura=43
+
   /**
    * 12) Productos
    */

@@ -361,29 +361,36 @@ class FacturacionController extends Controller
             }
     
             $path = realpath(Imagen::UPLOADDIRECTORY_COMPROBANTES . $factura['path_comprobante']);
-    
             $this->logger->info("path comprobante: ", [$path]);
-            $this->logger->info("file_exists? : ", [file_exists($path)]);
-
-            
-            if (!file_exists($path)) {
+    
+            if (!$path || !file_exists($path)) {
                 throw new Exception("El archivo no existe en el servidor.");
+            }
+    
+            // Limpieza del buffer para evitar salida corrupta
+            if (ob_get_length()) {
+                ob_end_clean();
             }
     
             $mime = Imagen::getMimeType($factura['path_comprobante'], 'comprobantes');
     
             header('Content-Type: ' . $mime);
-            header('Content-Disposition: attachment; filename="' . basename($path) . '"');
+            header('Content-Disposition: inline; filename="' . basename($path) . '"');
+            header('Content-Length: ' . filesize($path));
+            header('Cache-Control: private');
+            header('Pragma: public');
+    
             readfile($path);
             exit;
     
         } catch (Exception $e) {
-            $this->logger->error("Error al descargar comprobante: " . $e->getMessage());
+            $this->logger->error("Error al visualizar comprobante: " . $e->getMessage());
             http_response_code(404);
-            echo "No se pudo descargar el comprobante.";
+            echo "No se pudo visualizar el comprobante.";
             exit;
         }
     }
+    
         
 
 }

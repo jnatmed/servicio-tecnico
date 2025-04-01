@@ -38,9 +38,9 @@
                     {% if factura.path_comprobante %}
                     <p>
                         <strong>Comprobante:</strong>
-                        <a href="/facturacion/ver-comprobante?id_factura={{ factura.id }}" class="btn btn-outline-success btn-sm ms-2" target="_blank">
-                            <i class="bi bi-file-earmark-arrow-down-fill"></i> Descargar Comprobante
-                        </a>
+                        <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalVerComprobanteInline">
+                            <i class="bi bi-file-earmark-pdf-fill"></i> Ver Comprobante
+                        </button>
                     </p>
                     {% else %}
                         <p><strong>Comprobante:</strong> No se ha subido ningún comprobante.</p>
@@ -147,6 +147,24 @@
             </form>
         </div>
     </div>
-    
+    <!-- Modal de vista previa comprobante-->
+
+    <div class="modal fade" id="modalVerComprobanteInline" tabindex="-1" aria-labelledby="modalComprobanteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl"> <!-- modal-xl para mostrar más grande -->
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="modalComprobanteLabel">Comprobante</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" style="height: 80vh">
+            <iframe 
+                src="/facturacion/ver-comprobante?id_factura={{ factura.id }}" 
+                style="width:100%; height:100%; border:none;" 
+                allowfullscreen>
+            </iframe>
+            </div>
+        </div>
+        </div>
+    </div>    
 </body>
 </html>
