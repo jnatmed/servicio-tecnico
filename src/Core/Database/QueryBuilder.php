@@ -346,7 +346,9 @@ class QueryBuilder
                         p.id AS id_producto,
                         p.nro_proyecto_productivo,
                         p.descripcion_proyecto,
-                        pr.precio
+                        pr.precio,
+                        p.stock_inicial,
+                        p.estado
                     FROM producto p
                     INNER JOIN precio pr ON p.id = pr.id_producto
                     WHERE pr.fecha_precio = (

@@ -7,24 +7,7 @@
 <body>
     {% include "parts/modulos.view.html" %}
 
-    <!-- Modal de Confirmación -->
-    <div class="modal fade" id="modalEliminarFactura" tabindex="-1" aria-labelledby="modalEliminarFacturaLabel" aria-hidden="true">
-        <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="modalEliminarFacturaLabel">Confirmar Eliminación</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-            </div>
-            <div class="modal-body">
-            ¿Estás seguro de que deseas eliminar esta factura?
-            </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
-            </div>
-        </div>
-        </div>
-    </div>
+
   
 
     <section class="container_facturacion">
@@ -111,12 +94,8 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('searchFactura');
-            const facturaList = document.getElementById('facturaList');
-
-            // Referencias al modal y botón de confirmar
-            const modalEliminar = new bootstrap.Modal(document.getElementById('modalEliminarFactura'));
-            const btnConfirmarEliminar = document.getElementById('btnConfirmarEliminar');
-            let facturaIdAEliminar = null;        
+            const facturaList = document.getElementById('facturaList');  
+            const loader = document.getElementById('loader');
 
             // Buscar facturas dinámicamente
             searchInput.addEventListener('input', function (e) {
@@ -126,7 +105,7 @@
                 fetch(`/facturacion/listar?search=${searchValue}`, {
                     method: 'GET',
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest' // 🔥 Importante para detectar AJAX en PHP
+                        'X-Requested-With': 'XMLHttpRequest' // Importante para detectar AJAX en PHP
                     }
                 })
                 .then(res => {
@@ -165,47 +144,69 @@
                 })
                 .catch(error => console.error("Error en fetch:", error));
             });
-        
+    
             // Eliminar facturas
-            // Preparar el modal de eliminación
             document.addEventListener('click', function (e) {
                 if (e.target.classList.contains('deleteFactura')) {
-                    facturaIdAEliminar = e.target.dataset.id;
-                    modalEliminar.show();
+                    const facturaId = e.target.getAttribute('data-id');
+
+                    Swal.fire({
+                        title: '¿Eliminar factura?',
+                        text: 'Esta acción no se puede deshacer.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            loader.classList.remove('d-none'); // ⏳ Mostrar loader
+
+                            fetch(`/facturacion/eliminar?id=${facturaId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                loader.classList.add('d-none'); // ✅ Ocultar loader
+
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: '¡Eliminada!',
+                                        text: 'La factura fue eliminada correctamente.',
+                                        icon: 'success'
+                                    }).then(() => {
+                                        const row = document.querySelector(`button[data-id="${facturaId}"]`).closest('tr');
+                                        row.remove();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error',
+                                        html: `No se pudo eliminar la factura.<br><small>${data.error || 'Error desconocido.'}</small>`,
+                                        icon: 'error'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                loader.classList.add('d-none'); // 🔴 Ocultar si hay error
+                                Swal.fire('Error', `Ocurrió un error al eliminar la factura.<br><small>${error.message}</small>`, 'error');
+                                console.error("Error en eliminación:", error);
+                            });
+                        }
+                    });
                 }
-            });
-
-            // Confirmar eliminación
-            btnConfirmarEliminar.addEventListener('click', function () {
-                if (!facturaIdAEliminar) return;
-
-                fetch(`/facturacion/eliminar?id=${facturaIdAEliminar}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        console.info(`Factura ${facturaIdAEliminar} eliminada correctamente.`);
-                        document.querySelector(`button[data-id="${facturaIdAEliminar}"]`).closest('tr').remove();
-
-                        facturaIdAEliminar = null; // Resetear el ID de la factura a eliminar
-                        window.location.href = '/facturacion/listar'; // Redirigir a la lista de facturas
-                    } else {
-                        console.warn("Error al eliminar la factura:", data.error);
-                    }
-                    modalEliminar.hide();
-                })
-                .catch(error => {
-                    console.error("Error en la eliminación:", error);
-                    modalEliminar.hide();
-                });
             });
 
         });
     </script>
 
+    <div id="loader" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-white bg-opacity-75" style="z-index: 1050;">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>    
 </body>
 </html>

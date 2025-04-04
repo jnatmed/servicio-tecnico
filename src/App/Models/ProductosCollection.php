@@ -238,5 +238,22 @@ class ProductosCollection extends Model
         }
     }
 
+    public function eliminarProducto($id)
+    {
+        try {
+            if (!is_numeric($id)) {
+                throw new Exception("El ID proporcionado no es válido.");
+            }
+    
+            $this->logger->info("Eliminando producto con ID: ", [$id]);
+    
+            return $this->queryBuilder->delete($this->table, ['id' => $id]);
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error al eliminar producto: " . $e->getMessage());
+            throw $e;
+        }
+    }
+    
 
 }

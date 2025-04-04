@@ -191,6 +191,11 @@ class FacturacionController extends Controller
             if (!$facturaId) {
                 throw new Exception("ID de factura no proporcionado.");
             }
+
+            $factura = $this->model->getFacturaById($facturaId);
+            if (!$factura) {
+                throw new Exception("La factura no existe.");
+            }            
     
             // Delegar al modelo
             $this->model->eliminarFacturaPorId($facturaId);

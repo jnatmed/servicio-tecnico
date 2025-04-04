@@ -193,6 +193,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->post('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio'); 
   $router->get('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto'); 
   $router->post('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto'); 
+  $router->get('/facturacion/productos/eliminar', 'Facturacion\\ProductoController@eliminarProducto'); 
   
 /**
  * 13) Agentes

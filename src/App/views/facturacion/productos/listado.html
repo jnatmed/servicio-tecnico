@@ -44,7 +44,7 @@
                                 <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="productoList">
                             {% if listaProductos %}
                                 {% for producto in listaProductos %}
                                     <tr>
@@ -72,15 +72,12 @@
                                         </td>
                                     </tr>
                                 {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="5" class="text-center">No se encontraron productos.</td>
-                                </tr>
                             {% endif %}
                         </tbody>
                     </table>
                 </div>
             </div>
+
 
             <!-- Vista de cuadrícula -->
             <div id="gridView" class="row row-cols-1 row-cols-md-3 g-4 d-none grid-view">
@@ -88,7 +85,7 @@
                     <div class="col">
                         <div class="card h-100 shadow-sm">
                             {% if producto.path_imagen %}
-                                <img src="/facturacion/productos/ver_imagen?id_producto={{ producto.id }}" class="card-img-top grid-img" alt="Imagen del producto">
+                                <img src="/facturacion/productos/ver_imagen?id_producto={{ producto.id_producto }}" class="card-img-top grid-img" alt="Imagen del producto">
                             {% else %}
                                 <img src="/assets/imgs/default.png" class="card-img-top grid-img" alt="Sin imagen">
                             {% endif %}
@@ -114,8 +111,8 @@
                                 </p>
                                 
                                 <div class="d-flex gap-2">
-                                    <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-info">Ver</a>
-                                    <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="/facturacion/productos/ver?id_producto={{ producto.id_producto }}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/productos/editar?id_producto={{ producto.id_producto }}" class="btn btn-sm btn-warning">Editar</a>
                                 </div>
                             </div>
                         </div>
@@ -144,7 +141,7 @@
             searchInput.addEventListener('input', function (e) {
                 const value = e.target.value.trim();
         
-                fetch(`/facturacion/productos/buscar?query=${encodeURIComponent(value)}`, {
+                fetch(`/facturacion/productos/listado?jsonList=1&search=${encodeURIComponent(value)}`, {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
@@ -156,8 +153,9 @@
         
                     if (data.success && data.productos.length) {
                         data.productos.forEach((producto, index) => {
-                            // 🧱 Fila para tabla
+                            // Fila para tabla
                             const row = document.createElement('tr');
+                            console.log(producto)
                             row.innerHTML = `
                                 <td>${index + 1}</td>
                                 <td>${producto.descripcion_proyecto}</td>
@@ -167,27 +165,29 @@
                                         '<i class="bi bi-cart-check-fill text-success"></i> A la venta'}
                                 </td>
                                 <td>${producto.nro_proyecto_productivo}</td>
+                                <td>${producto.precio}</td>
+                                <td>${producto.stock_inicial}</td>
                                 <td>
-                                    <a href="/facturacion/productos/ver?id_producto=${producto.id}" class="btn btn-sm btn-info">Ver</a>
-                                    <a href="/facturacion/productos/editar?id_producto=${producto.id}" class="btn btn-sm btn-warning">Editar</a>
-                                    <button class="btn btn-sm btn-danger deleteProducto" data-id="${producto.id}">Eliminar</button>
+                                    <a href="/facturacion/productos/ver?id_producto=${producto.id_producto}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/productos/editar?id_producto=${producto.id_producto}" class="btn btn-sm btn-warning">Editar</a>
+                                    <button class="btn btn-sm btn-danger deleteProducto" data-id="${producto.id_producto}">Eliminar</button>
                                 </td>
                             `;
                             productoList.appendChild(row);
         
-                            // 🧱 Tarjeta para vista en cuadrícula
+                            // Tarjeta para vista en cuadrícula
                             const col = document.createElement('div');
                             col.classList.add('col');
                             col.innerHTML = `
                                 <div class="card h-100 shadow-sm">
-                                    <img src="/facturacion/productos/ver_imagen?id_img=${producto.id}" class="card-img-top grid-img" alt="Imagen del producto">
+                                    <img src="/facturacion/productos/ver_imagen?id_img=${producto.id_producto}" class="card-img-top grid-img" alt="Imagen del producto">
                                     <div class="card-body">
                                         <h5 class="card-title">${producto.descripcion_proyecto}</h5>
                                         <p class="card-text"><strong>Estado:</strong> ${producto.estado.replace('_', ' ')}</p>
                                         <p class="card-text"><strong>Expediente:</strong> ${producto.nro_proyecto_productivo}</p>
                                         <div class="d-flex gap-2">
-                                            <a href="/facturacion/productos/ver?id_producto=${producto.id}" class="btn btn-sm btn-info">Ver</a>
-                                            <a href="/facturacion/productos/editar?id_producto=${producto.id}" class="btn btn-sm btn-warning">Editar</a>
+                                            <a href="/facturacion/productos/ver?id_producto=${producto.id_producto}" class="btn btn-sm btn-info">Ver</a>
+                                            <a href="/facturacion/productos/editar?id_producto=${producto.id_producto}" class="btn btn-sm btn-warning">Editar</a>
                                         </div>
                                     </div>
                                 </div>
@@ -195,14 +195,81 @@
                             gridView.appendChild(col);
                         });
                     } else {
-                        productoList.innerHTML = `<tr><td colspan="5" class="text-center">No se encontraron productos.</td></tr>`;
+                        productoList.innerHTML = `
+                                <tr><td colspan="7" class="text-center">No se encontraron productos.</td></tr>`;
                         gridView.innerHTML = `<div class="col"><p class="text-center">No se encontraron productos.</p></div>`;
                     }
                 })
                 .catch(err => console.error("Error buscando productos:", err));
             });
+
+            // X proceso de eliminacion de un producto
+            document.body.addEventListener('click', function (e) {
+                if (e.target.classList.contains('deleteProducto')) {
+                    const id = e.target.getAttribute('data-id');
+            
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: "¡Esta acción no se puede deshacer!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`/facturacion/productos/eliminar?id_producto=${id}`, {
+                                method: 'GET',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                }
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: '¡Eliminado!',
+                                        text: 'El producto fue eliminado exitosamente.',
+                                        icon: 'success'
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
+                                }
+                            })
+                            .catch(err => {
+                                console.error("Error eliminando producto:", err);
+                                Swal.fire('Error', `Ocurrió un error al eliminar el producto.<br><small>${err.message || 'Error desconocido.'}</small>`, 'error');
+                            });
+                        }
+                    });
+                }
+            });
+            
+            
         });
         </script>
+
+    <!-- Modal de confirmación -->
+    <div class="modal fade" id="mensajeEliminacionModal" tabindex="-1" aria-labelledby="mensajeEliminacionLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+            <h5 class="modal-title" id="mensajeEliminacionLabel">Producto eliminado</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+            El producto ha sido eliminado correctamente.
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
             
 </body>
 </html>

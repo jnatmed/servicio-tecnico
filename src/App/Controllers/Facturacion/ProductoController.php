@@ -69,7 +69,7 @@ class ProductoController extends Controller
 
             } catch (Exception $e) {
                 $this->logger->error("Error en alta producto", ['error' => $e->getMessage()]);
-                view('facturacion/productos/alta.producto', array_merge([
+                view('/facturacion/productos/alta.producto', array_merge([
                     'error' => $e->getMessage()
                 ], $this->menu));
             }
@@ -132,7 +132,7 @@ class ProductoController extends Controller
                     
                     if ($success) {
                         $this->logger->info("Producto actualizado correctamente", [$data]);
-                        redirect('facturacion/productos/ver?id_producto=' . $data['id']);
+                        redirect('/facturacion/productos/ver?id_producto=' . $data['id']);
                     } else {
                         throw new Exception("No se pudo actualizar el producto.");
                     }
@@ -151,6 +151,50 @@ class ProductoController extends Controller
             view('facturacion/productos/editar.producto', array_merge([
                 'producto' => $producto
             ], $this->menu));
+        }
+    }
+
+    public function eliminarProducto()
+    {
+        $id = $this->request->sanitize($this->request->get('id_producto'));
+        $this->logger->info("id_producto a eliminar: ", [$id]);
+    
+        try {
+            // Obtener producto
+            $producto = $this->model->getById($id);
+    
+            if (!$producto) {
+                throw new Exception("Producto no encontrado.");
+            }
+    
+            // Eliminar producto
+            $filasAfectadas = $this->model->eliminarProducto($id);
+    
+            if ($this->request->isAjax()) {
+                if ($filasAfectadas > 0) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'No se eliminó ningún producto.']);
+                }
+                return;
+            }
+    
+            // Redirección tradicional si no es AJAX
+            if ($filasAfectadas > 0) {
+                redirect('facturacion/productos/listado?msg=Producto eliminado con éxito');
+            } else {
+                redirect('facturacion/productos/listado?error=No se pudo eliminar el producto');
+            }
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error al eliminar producto", ['error' => $e->getMessage()]);
+    
+            if ($this->request->isAjax()) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+                return;
+            }
+    
+            redirect('facturacion/productos/listado?error=Ocurrió un error al eliminar el producto');
         }
     }
 
@@ -201,52 +245,63 @@ class ProductoController extends Controller
         $jsonList = $this->request->get('jsonList');
         $searchItem = $this->request->get('search');
     
+        $this->logger->info("📡 Entrando al método listar()", [
+            'jsonList' => $jsonList,
+            'search' => $searchItem
+        ]);
+
         if ($jsonList) {
-
-            if ($searchItem) {
+            if ($searchItem != '') {
                 try {
-                    $this->logger->info("bucle if(searchItem){", [$searchItem]);
+                    $this->logger->info("📥 Solicitud AJAX con búsqueda", ['searchItem' => $searchItem]);
+                    
                     $listaProductos = $this->model->getProductosYPrecios($searchItem);
-        
-                    // Enviar la respuesta en formato JSON
+    
                     header('Content-Type: application/json');
-                    echo json_encode(['success' => true, $listaProductos]);
-                    exit; // Detener la ejecución después de enviar la respuesta
-
+                    echo json_encode(['success' => true, 'productos' => $listaProductos]);
+                    exit;
+    
                 } catch (Exception $e) {
-                    // Manejo de errores en JSON
+                    $this->logger->error("❌ Error al buscar productos (AJAX)", ['error' => $e->getMessage()]);
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                     exit;
                 }
-
-            }else{
+            } else {
                 try {
-                    $this->logger->info("bucle else {");
+                    $this->logger->info("📥 Solicitud AJAX sin búsqueda (cargar todos los productos)");
+    
                     $listaProductos = $this->model->getProductosYPrecios();
-        
-                    // Enviar la respuesta en formato JSON
+    
                     header('Content-Type: application/json');
-                    echo json_encode(['success' => true, 'data' => $listaProductos]);
-                    exit; // Detener la ejecución después de enviar la respuesta
+                    echo json_encode(['success' => true, 'productos' => $listaProductos]);
+                    exit;
+    
                 } catch (Exception $e) {
-                    // Manejo de errores en JSON
+                    $this->logger->error("❌ Error al cargar todos los productos (AJAX)", ['error' => $e->getMessage()]);
                     header('Content-Type: application/json');
                     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                     exit;
-                }    
+                }
             }
-
         } else {
-            $listaProductos = $this->model->getProductosConUltimoPrecio();
-            $this->logger->info("listaProductos: ", [$listaProductos]);
+            try {
+                $this->logger->info("🖥️ Solicitud de vista completa (no JSON)");
     
-            view('facturacion/productos/listado', array_merge(
-                ['listaProductos' => $listaProductos],
-                $this->menu
-            ));
+                $listaProductos = $this->model->getProductosConUltimoPrecio();
+                $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos)]);
+    
+                view('facturacion/productos/listado', array_merge(
+                    ['listaProductos' => $listaProductos],
+                    $this->menu
+                ));
+            } catch (Exception $e) {
+                $this->logger->error("❌ Error al cargar vista de productos", ['error' => $e->getMessage()]);
+                // Podrías redirigir o mostrar error 500 personalizado
+            }
         }
     }
+    
     
 
     public function ver()
