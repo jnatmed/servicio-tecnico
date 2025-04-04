@@ -85,7 +85,7 @@
                     <div class="col">
                         <div class="card h-100 shadow-sm">
                             {% if producto.path_imagen %}
-                                <img src="/facturacion/productos/ver_imagen?id_producto={{ producto.id_producto }}" class="card-img-top grid-img" alt="Imagen del producto">
+                                <img src="/facturacion/productos/ver_imagen?id_producto={{ producto.id }}" class="card-img-top grid-img" alt="Imagen del producto">
                             {% else %}
                                 <img src="/assets/imgs/default.png" class="card-img-top grid-img" alt="Sin imagen">
                             {% endif %}
@@ -111,8 +111,8 @@
                                 </p>
                                 
                                 <div class="d-flex gap-2">
-                                    <a href="/facturacion/productos/ver?id_producto={{ producto.id_producto }}" class="btn btn-sm btn-info">Ver</a>
-                                    <a href="/facturacion/productos/editar?id_producto={{ producto.id_producto }}" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-info">Ver</a>
+                                    <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-sm btn-warning">Editar</a>
                                 </div>
                             </div>
                         </div>
@@ -180,7 +180,7 @@
                             col.classList.add('col');
                             col.innerHTML = `
                                 <div class="card h-100 shadow-sm">
-                                    <img src="/facturacion/productos/ver_imagen?id_img=${producto.id_producto}" class="card-img-top grid-img" alt="Imagen del producto">
+                                    <img src="/facturacion/productos/ver_imagen?id_producto=${producto.id_producto}" class="card-img-top grid-img" alt="Imagen del producto">
                                     <div class="card-body">
                                         <h5 class="card-title">${producto.descripcion_proyecto}</h5>
                                         <p class="card-text"><strong>Estado:</strong> ${producto.estado.replace('_', ' ')}</p>
