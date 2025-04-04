@@ -49,6 +49,7 @@
                             <th>#</th>
                             <th>Nro. Factura</th>
                             <th>Nro. Cuota</th>
+                            <th>Monto Cuota</th>
                             <th>Fecha Vencimiento</th>
                             <th>Estado</th>
                         </tr>
@@ -58,8 +59,9 @@
                             {% for cuota in cuotas %}
                                 <tr class="{% if cuota.estado == 'pagada' %}cuota-pagada d-none{% endif %}">
                                     <td>{{ loop.index + (limit * (currentPage - 1)) }}</td>
-                                    <td>{{ cuota.nro_factura }}</td>
+                                    <td><a href="/facturacion/ver?id={{ cuota.factura_id }}">{{ cuota.nro_factura }}</a></td>
                                     <td>{{ cuota.nro_cuota }}</td>
+                                    <td>$ {{ cuota.monto|number_format(2, ',', '.') }}</td>
                                     <td>{{ cuota.fecha_vencimiento }}</td>
                                     <td>
                                         {% if cuota.estado == 'pagada' %}
@@ -135,8 +137,9 @@
                             row.className = cuota.estado === 'pagada' ? 'cuota-pagada d-none' : '';
                             row.innerHTML = `
                                 <td>${index + 1 + ((data.currentPage - 1) * data.limit)}</td>
-                                <td>${cuota.nro_factura}</td>
+                                <td><a href="/facturacion/ver?id=${cuota.factura_id}">${cuota.nro_factura}</a></td>
                                 <td>${cuota.nro_cuota}</td>
+                                <td>${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(cuota.monto)}</td>
                                 <td>${cuota.fecha_vencimiento}</td>
                                 <td>
                                     ${cuota.estado === 'pagada'
@@ -147,7 +150,7 @@
                             tbody.appendChild(row);
                         });
                     } else {
-                        tbody.innerHTML = '<tr><td colspan="5" class="text-center">No se encontraron cuotas para el período indicado.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No se encontraron cuotas para el período indicado.</td></tr>';
                     }
         
                     // Mostrar u ocultar alerta de cuotas pagadas
