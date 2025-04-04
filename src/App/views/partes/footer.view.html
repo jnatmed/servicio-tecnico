@@ -1,0 +1,69 @@
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+  
+      const sidebar = $('#sidebar');
+      const content = $('#mainContent');
+    
+      // Toggle sidebar
+      $('#toggleSidebar').click(function () {
+        if (window.innerWidth <= 768) {
+          $('#sidebar').toggleClass('show');
+        } else {
+          $('#sidebar').toggleClass('collapsed');
+          $('#mainContent').toggleClass('full');
+        }
+    
+        // Cambia ícono hamburguesa <-> cruz
+        const icono = $('#iconoToggle');
+        icono.text(icono.text() === '✖' ? '☰' : '✖');
+      });
+    
+      // Ocultar en móvil al hacer clic en un link
+      $('.nav-link-sm').click(function () {
+        if (window.innerWidth <= 768) {
+          sidebar.removeClass('show');
+        }
+      });
+    
+      // Submenús: toggle al hacer clic
+      $('.sidebar li > a').click(function (e) {
+        const parent = $(this).parent();
+        if (parent.find('ul').length > 0) {
+          e.preventDefault(); // evita navegación si tiene submenú
+          parent.toggleClass('open');
+          parent.children('ul').slideToggle(200);
+        }
+      });
+    
+      // Chart
+      const ctx = document.getElementById('miGrafico').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Enero', 'Febrero'],
+          datasets: [{
+            label: 'Ventas',
+            data: [100, 160],
+            backgroundColor: ['#0d6efd', '#198754']
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    
+  });
+  
+</script>
+
+</body>
+</html>

@@ -1,11 +1,14 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    {% include 'parts/head.view.html' %}
-</head>
+{% include 'partes/head.view.html' %}
 
+</head>
 <body>
-    {% include "parts/modulos.view.html" %}
+
+{% include 'partes/nav.view.html' %}
+
+
+
+    <!-- Contenido -->
+    <div class="content" id="mainContent">
 
     <!-- Modal de Confirmación -->
     <div class="modal fade" id="modalEliminarFactura" tabindex="-1" aria-labelledby="modalEliminarFacturaLabel" aria-hidden="true">
@@ -207,5 +210,6 @@
         });
     </script>
 
-</body>
-</html>
+</div>
+
+{% include 'partes/footer.view.html' %}

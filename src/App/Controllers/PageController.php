@@ -65,7 +65,7 @@ class PageController extends Controller
         ];
         
         // Pasar los datos a la vista
-        view('home.view', [
+        view('home_new.view', [
             "datos" => ["action" => "nuevo"],
             "cards" => $cards, // Enviar las tarjetas a la vista
             ...$this->menu

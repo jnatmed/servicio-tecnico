@@ -1,0 +1,45 @@
+
+
+<!-- Botón hamburguesa -->
+<button class="btn btn-outline-light toggle-btn bg-dark" id="toggleSidebar">
+    <span id="iconoToggle">✖</span>
+  </button>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="text-center mb-4">
+      <img src="/assets/imgs/icono_dat.png" alt="Logo" class="img-fluid" style="max-width: 240px;" />
+    </div>
+    
+    <ul>
+      {% for item in menu %}
+        <li>
+          <a href="{{ item.submenu ? '#' : item.href }}" class="nav-link-sm">
+            {{ item.name }}
+          </a>
+    
+          {% if item.submenu is defined and item.submenu|length > 0 %}
+            <ul>
+              {% for subitem in item.submenu %}
+                <li>
+                  <a href="{{ subitem.submenu ? '#' : subitem.href }}" class="nav-link-sm">
+                    {{ subitem.name }}
+                  </a>
+    
+                  {% if subitem.submenu is defined and subitem.submenu|length > 0 %}
+                    <ul>
+                      {% for subsubitem in subitem.submenu %}
+                        <li>
+                          <a href="{{ subsubitem.href }}" class="nav-link-sm">{{ subsubitem.name }}</a>
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+    
+  </div>
