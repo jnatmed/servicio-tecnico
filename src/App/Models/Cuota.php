@@ -10,10 +10,11 @@ class Cuota extends Model
 {
     use Loggable;
 
-    private $factura_id;
-    private $nro_cuota;
-    private $estado;
-    private $fecha_vencimiento;
+    public $factura_id;
+    public $nro_cuota;
+    public $monto;
+    public $estado;
+    public $fecha_vencimiento;
 
     private static $ESTADOS_VALIDOS = ['pagada', 'pendiente'];
 
@@ -34,6 +35,7 @@ class Cuota extends Model
                 $this->setNroCuota($data['nro_cuota'] ?? null);
                 $this->setEstado($data['estado'] ?? null);
                 $this->setFechaVencimiento($data['fecha_vencimiento'] ?? null);
+                $this->setMonto($data['monto'] ?? null);
             }
             $this->logger->info("Cuota seteada correctamente", [$this->toArray()]);
             
@@ -52,6 +54,11 @@ class Cuota extends Model
     public function getNroCuota()
     {
         return $this->nro_cuota;
+    }
+
+    public function getMonto()
+    {
+        return $this->monto;
     }
 
     public function getEstado()
@@ -83,6 +90,16 @@ class Cuota extends Model
         }
         $this->logger->debug("NroCuota seteada: ", [$nro_cuota]);
         $this->nro_cuota = (int) $nro_cuota;
+    }
+
+    public function setMonto($monto)
+    {
+        if ($monto === null ||!is_numeric($monto) || $monto <= 0) {
+            $this->logger->error("Monto de cuota inválido", [$monto]);
+            throw new Exception("Monto de cuota debe ser un número mayor a 0.");
+        }
+        $this->logger->debug("Monto seteado: ", [$monto]);
+        $this->monto = (float) $monto;
     }
 
     public function setEstado($estado)

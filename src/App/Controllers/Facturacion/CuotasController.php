@@ -44,18 +44,29 @@ class CuotasController extends Controller
     public function listar()
     {
         $page = (int) ($this->request->get('page') ?? 1);
-        $desde = $this->request->get('desde') ?? date('Y-m-01');
-        $hasta = $this->request->get('hasta') ?? date('Y-m-t');
+        $esPost = $this->request->method() === 'POST';
+        $desde = null;
+        $hasta = null;
         $limit = 10;
         $offset = ($page - 1) * $limit;
     
         try {
-            // Obtener cuotas paginadas y total
-            $cuotas = $this->model->getCuotasByFecha($desde, $hasta, $limit, $offset);
-            $totalCuotas = $this->model->countCuotasByFecha($desde, $hasta);
-            $hayPagadas = $this->model->hayCuotasPagadas($desde, $hasta);
+            $cuotas = [];
+            $totalCuotas = 0;
+            $hayPagadas = false;
     
-            // Si es una solicitud AJAX
+            if ($esPost) {
+                $data = json_decode(file_get_contents('php://input'), true);
+                $desde = $data['desde'] ?? null;
+                $hasta = $data['hasta'] ?? null;
+                $page = (int) ($data['page'] ?? $page);
+                $offset = ($page - 1) * $limit;
+    
+                $cuotas = $this->model->getCuotasByFecha($desde, $hasta, $limit, $offset);
+                $totalCuotas = $this->model->countCuotasByFecha($desde, $hasta);
+                $hayPagadas = $this->model->hayCuotasPagadas($desde, $hasta);
+            }
+    
             if ($this->request->isAjax()) {
                 header('Content-Type: application/json');
                 echo json_encode([
@@ -71,7 +82,6 @@ class CuotasController extends Controller
                 exit;
             }
     
-            // Si es una solicitud normal
             return view('facturacion/cuotas/cuotas.listado-filtrado', array_merge([
                 'cuotas' => $cuotas,
                 'total' => $totalCuotas,
@@ -81,7 +91,7 @@ class CuotasController extends Controller
                 'hasta' => $hasta,
                 'hayPagadas' => $hayPagadas
             ], $this->menu));
-        
+    
         } catch (Exception $e) {
             $this->logger->error("Error al listar cuotas: " . $e->getMessage());
     
@@ -99,6 +109,8 @@ class CuotasController extends Controller
             }
         }
     }
+    
+    
     public function exportarTxt()
     {
         try {

@@ -8,8 +8,24 @@
 
     <section class="container_cuotas">
         <div class="container mt-5">
-            <h1 class="mb-4">Listado de Cuotas</h1>
-
+            <h1 class="mb-4">Descuento de Haberes</h1>
+            <div class="accordion mb-3" id="aclaracionFuncionamiento">
+                <div class="accordion-item border border-info shadow-sm">
+                  <h2 class="accordion-header" id="headingFuncionamiento">
+                    <button class="accordion-button bg-info-subtle text-dark fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFuncionamiento" aria-expanded="true" aria-controls="collapseFuncionamiento">
+                      ℹ️ ¿Cómo funciona?
+                    </button>
+                  </h2>
+                  <div id="collapseFuncionamiento" class="accordion-collapse collapse show" aria-labelledby="headingFuncionamiento">
+                    <div class="accordion-body">
+                      Aquí se gestionan los <strong>descuentos de haberes</strong> de los agentes.
+                      Primero seleccioná un <em>rango de fechas</em> y hacé clic en <strong>Filtrar</strong>.
+                      Luego podrás <strong>emitir el archivo TXT</strong> correspondiente con las cuotas seleccionadas.
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
             <!-- Filtro por rango de fechas -->
             <form method="get" class="row g-3 mb-4">
                 <div class="col-md-4">
@@ -23,11 +39,24 @@
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="button" id="btnFiltrar" class="btn btn-primary w-100">Filtrar</button>
                 </div>
-                <div class="col-md-12 mb-3">
-                    <button id="btnExportarTxt" class="btn btn-outline-primary" disabled>
+                <span 
+                    class="d-inline-block" 
+                    tabindex="0" 
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top" 
+                    title="Se habilitará el botón de exportar una vez se seleccione el período a filtrar">
+                    
+                    <button 
+                        id="btnExportarTxt" 
+                        class="btn btn-outline-primary w-100" 
+                        type="button"
+                        disabled 
+                        style="pointer-events: none;">
                         📄 Exportar TXT
                     </button>
-                </div>
+                </span>
+                
+            
             </form>
 
             <!-- Aviso de cuotas pagadas -->
@@ -40,7 +69,26 @@
                     </div>
                 </div>
             {% endif %}
+            <div class="accordion mb-3" id="aclaracionReprogramadas">
+                <div class="accordion-item border border-warning shadow-sm">
+                  <h2 class="accordion-header" id="headingReprogramadas">
+                    <button class="accordion-button bg-warning-subtle fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReprogramadas" aria-expanded="true" aria-controls="collapseReprogramadas">
+                      ⚠️ Importante sobre cuotas reprogramadas
+                    </button>
+                  </h2>
+                  <div id="collapseReprogramadas" class="accordion-collapse collapse show" aria-labelledby="headingReprogramadas">
+                    <div class="accordion-body">
+                      Si el total de cuotas a descontar para un agente supera los <strong>$100.000</strong>,
+                      las cuotas que excedan ese monto serán <strong>reprogramadas</strong> automáticamente para el siguiente mes o período.<br>
+                      Te darás cuenta porque aparecerán en la tabla con el estado <strong>"Reprogramada"</strong>.
+                    </div>
+                  </div>
+                </div>
+              </div>
 
+            <div id="mensajeInicial" class="alert alert-info d-none">
+                Debe seleccionar un período y presionar en <strong>Filtrar</strong> para ver los resultados.
+            </div>
             <!-- Tabla de cuotas -->
             <div class="table-responsive">
                 <table class="table table-striped" id="tablaCuotas">
@@ -72,9 +120,11 @@
                                     </td>
                                 </tr>
                             {% endfor %}
-                        {% else %}
-                            <tr><td colspan="5" class="text-center">No se encontraron cuotas para el período indicado.</td></tr>
-                        {% endif %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center mensaje-vacio">No hay cuotas para mostrar.</td>
+                        </tr>
+                    {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -114,21 +164,39 @@
             const contenedorAlert = document.querySelector('.alert-success');
             const btnExportarTxt = document.getElementById('btnExportarTxt');
 
+            // Solo mostrar si se llegó por GET sin filtros
+            const esGetSinFiltro = !inputDesde.value && !inputHasta.value;
+            const tieneMensajeVacio = document.querySelector('.mensaje-vacio');
+
+            if (esGetSinFiltro && tieneMensajeVacio) {
+                mensajeInicial.classList.remove('d-none');
+            }
+
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+
             // 🔄 Función para cargar cuotas desde el backend
             function cargarCuotas(page = 1) {
                 const desde = inputDesde.value;
                 const hasta = inputHasta.value;
         
-                fetch(`/facturacion/cuotas/listado?desde=${desde}&hasta=${hasta}&page=${page}`, {
-                    method: 'GET',
+                fetch('/facturacion/cuotas/listado', {
+                    method: 'POST',
                     headers: {
+                        'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
-                    }
+                    },
+                    body: JSON.stringify({ desde, hasta, page })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) throw new Error('Error al cargar cuotas');
-        
+
+                    // Siempre ocultar el mensaje inicial cuando se filtra
+                    document.getElementById('mensajeInicial')?.classList.add('d-none');        
+
                     // Limpiar y renderizar tabla
                     tbody.innerHTML = '';
                     if (data.cuotas.length > 0) {
@@ -191,15 +259,19 @@
         
             // Habilitar exportar TXT solo si la búsqueda fue exitosa
             function habilitarExportar(desde, hasta) {
-                btnExportarTxt.disabled = false;
+                btnExportarTxt.classList.remove('disabled');
                 btnExportarTxt.dataset.desde = desde;
                 btnExportarTxt.dataset.hasta = hasta;
             }
-            
-            
+
 
             // Click en Exportar TXT
             btnExportarTxt.addEventListener('click', function () {
+                if (this.classList.contains('disabled')) {
+                    e.preventDefault();
+                    return;
+                }
+            
                 const desde = this.dataset.desde;
                 const hasta = this.dataset.hasta;
             

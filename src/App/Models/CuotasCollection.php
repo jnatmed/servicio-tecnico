@@ -45,6 +45,7 @@ class CuotasCollection extends Model
                 $this->logger->debug("datos cuota:", [
                     'factura_id' => $facturaId,
                     'nro_cuota' => $i,
+                    'monto' =>$importeCuota,
                     'estado' => 'pendiente',
                     'fecha_vencimiento' => $fechaVencimiento
                 ]);
@@ -52,6 +53,7 @@ class CuotasCollection extends Model
                 $cuota = new Cuota([
                     'factura_id' => $facturaId,
                     'nro_cuota' => $i,
+                    'monto' =>$importeCuota,                    
                     'estado' => 'pendiente',
                     'fecha_vencimiento' => $fechaVencimiento
                 ], $this->logger);
@@ -60,6 +62,7 @@ class CuotasCollection extends Model
                 list($cuotaId, $success) = $this->queryBuilder->insert('cuota', [
                     'factura_id' => $cuota->getFacturaId(),
                     'nro_cuota' => $cuota->getNroCuota(),
+                    'monto' => $cuota->getMonto(),
                     'estado' => $cuota->getEstado(),
                     'fecha_vencimiento' => $cuota->getFechaVencimiento()
                 ]);

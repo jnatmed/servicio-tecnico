@@ -210,6 +210,7 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
  */
 
  $router->get('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar');
+ $router->post('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar');
  $router->get('/facturacion/cuotas/exportar-txt', 'Facturacion\\CuotasController@exportarTxt');
 
  /**

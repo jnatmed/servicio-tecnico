@@ -8,6 +8,7 @@ use Paw\App\Controllers\UserController;
 
 use Paw\App\Models\CuentaCorrienteCollection;
 use Paw\App\Models\AgentesCollection;
+use Exception;
 
 class CuentaCorrienteController extends Controller
 {
@@ -62,6 +63,28 @@ class CuentaCorrienteController extends Controller
 
         
     }
+
+    public function generarReporteHaberes()
+    {
+        $periodo = $this->request->get('periodo') ?? date('Y-m-01'); // Por defecto el mes actual
+        $this->logger->info("🧾 Generando reporte de descuentos de haberes para el periodo", [$periodo]);
+    
+        try {
+            $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
+            $reporte = $cuentaCorriente->procesarReporteDescuentosHaberes($periodo);
+    
+            // Mostrarlo en vista o exportarlo a TXT
+            view('facturacion/cuentaCorriente/reporte_haberes.view', array_merge(
+                ['reporte' => $reporte, 'periodo' => $periodo],
+                $this->menu
+            ));
+    
+        } catch (Exception $e) {
+            $this->logger->error("❌ Error al generar el reporte de haberes", ['error' => $e->getMessage()]);
+            echo "Error al generar el reporte: " . $e->getMessage();
+        }
+    }
+    
 
     public function exportarPdf()
     {

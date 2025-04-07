@@ -60,7 +60,7 @@
                         <th>Descripción</th>
                         <th>Proyecto Productivo</th>
                         <th>Cantidad</th>
-                        <th>Precio Unitario</th>
+                        <th>P.Unitario</th>
                         <th>Total</th>
                     </tr>
                 </thead>
@@ -93,14 +93,17 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Estado</th>
+                        <th>Monto de Cuota</th>
                         <th>Fecha de Vencimiento</th>
+                        <th>Estado</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for cuota in cuotas %}
                         <tr>
                             <td>{{ cuota.nro_cuota }}</td>
+                            <td>${{ cuota.monto|number_format(2, '.', ',') }}</td>
+                            <td>{{ cuota.fecha_vencimiento }}</td>
                             <td>
                                 {% if cuota.estado == 'pagada' %}
                                     <span class="badge bg-success">Pagada</span>
@@ -108,7 +111,6 @@
                                     <span class="badge bg-warning text-dark">Pendiente</span>
                                 {% endif %}
                             </td>
-                            <td>{{ cuota.fecha_vencimiento }}</td>
                         </tr>
                     {% else %}
                         <tr>
@@ -166,5 +168,6 @@
         </div>
         </div>
     </div>    
+ 
 </body>
 </html>

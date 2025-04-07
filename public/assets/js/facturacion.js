@@ -108,8 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const productList = document.getElementById('productList');
                 productList.innerHTML = '';
 
-                if (data[0]) {
-                    data[0].forEach(product => {
+                console.log("Productos: " + JSON.stringify(data));
+                if (data.productos) {
+                    data.productos.forEach(product => {
                         const li = document.createElement('li');
                         li.classList.add('list-group-item', 'list-group-item-action');
                         li.textContent = `${product.descripcion_proyecto} (${product.precio})`;
@@ -149,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
             productos.push({
                 id: idProducto,
                 cantidad: cantidad,
-                precio_unitario: precioUnitario
+                precio_unitario: precioUnitario,
             });
         });
     
