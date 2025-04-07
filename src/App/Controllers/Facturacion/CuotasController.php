@@ -142,6 +142,28 @@ class CuotasController extends Controller
         }
     }
     
+    public function aplicarDescuento()
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $desde = $data['desde'] ?? null;
+            $hasta = $data['hasta'] ?? null;
+    
+            if (!$desde || !$hasta) {
+                throw new Exception('Parámetros inválidos');
+            }
+    
+            // lógica para aplicar el descuento: actualizar estados, guardar registros, etc.
+            $this->model->aplicarDescuentoDeHaberes($desde, $hasta, $data['idsPagadas'], $data['idsReprogramadas']);
+    
+            echo json_encode(['success' => true]);
+        } catch (Exception $e) {
+            $this->logger->error("Error al aplicar descuento: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+        
     
     public function exportarTxt()
     {

@@ -29,6 +29,17 @@
                 Debe seleccionar un período y presionar en <strong>Filtrar</strong> para ver los resultados.
             </div>
 
+            <!-- Botón para aplicar descuento -->
+            <div id="accionesDescuento" class="d-none mb-4">
+                <button class="btn btn-success me-2" id="btnAplicarDescuento">✅ Realizar Descuento de Haberes</button>
+            </div>
+
+            <!-- Cartel de éxito -->
+            <div id="mensajeExito" class="alert alert-success d-none">
+                ✅ Descuento de haberes aplicado correctamente.
+                <button class="btn btn-outline-primary btn-sm ms-3 d-none" id="btnExportarTxt">📄 Exportar Reporte TXT</button>
+            </div>
+
             <!-- Resultados agrupados -->
             <div id="tablaCuotasAgrupadas" class="mt-4"></div>
         </div>
@@ -42,6 +53,13 @@
         const inputDesde = document.getElementById('fechaDesde');
         const inputHasta = document.getElementById('fechaHasta');
         const contenedor = document.getElementById('tablaCuotasAgrupadas');
+        const acciones = document.getElementById('accionesDescuento');
+        const mensajeExito = document.getElementById('mensajeExito');
+        const btnExportar = document.getElementById('btnExportarTxt');
+        const btnAplicar = document.getElementById('btnAplicarDescuento');
+
+        let periodoDesde = '';
+        let periodoHasta = '';
 
         btnFiltrar.addEventListener('click', function () {
             const desde = inputDesde.value;
@@ -51,6 +69,9 @@
                 alert('Seleccioná un período válido.');
                 return;
             }
+
+            periodoDesde = desde;
+            periodoHasta = hasta;
 
             fetch('/facturacion/cuotas/listado', {
                 method: 'POST',
@@ -63,7 +84,11 @@
             .then(res => res.json())
             .then(data => {
                 if (!data.success) throw new Error('Error al agrupar cuotas');
+
                 document.getElementById('mensajeInicial').classList.add('d-none');
+                mensajeExito.classList.add('d-none');
+                acciones.classList.remove('d-none');
+                btnExportar.classList.add('d-none');
 
                 contenedor.innerHTML = '';
 
@@ -77,8 +102,44 @@
                     agenteTitulo.textContent = `Agente: ${grupo.agente}`;
                     contenedor.appendChild(agenteTitulo);
 
+                    const cuotasFiltradas = grupo.cuotas.filter(c => c.estado !== 'pagada');
+                    if (cuotasFiltradas.length === 0) return;
+
+                    let totalAcumulado = 0;
+                    let excedeLimite = false;
+
                     const tabla = document.createElement('table');
                     tabla.classList.add('table', 'table-bordered', 'mb-4');
+                    let filas = '';
+
+                    cuotasFiltradas.forEach(cuota => {
+                        if (!excedeLimite && totalAcumulado + parseFloat(cuota.monto) <= 100000) {
+                            totalAcumulado += parseFloat(cuota.monto);
+                        } else {
+                            cuota.estado = 'a-reprogramar';
+                            excedeLimite = true;
+                        }
+
+                        filas += `
+                            <tr data-cuota-id="${cuota.id}" data-estado="${cuota.estado}">
+                                <td>${cuota.nro_factura}</td>
+                                <td>${cuota.nro_cuota}</td>
+                                <td>$${parseFloat(cuota.monto).toFixed(2)}</td>
+                                <td>${cuota.fecha_vencimiento}</td>
+                                <td><span class="badge ${cuota.estado === 'a-reprogramar' ? 'bg-danger' : 'bg-warning text-dark'}">${cuota.estado}</span></td>
+                            </tr>`;
+                    });
+
+                    if (excedeLimite) {
+                        const advertencia = document.createElement('div');
+                        advertencia.className = 'alert alert-info d-flex align-items-center mb-2';
+                        advertencia.innerHTML = `
+                            <i class="bi bi-exclamation-triangle-fill me-2 text-danger fs-5"></i>
+                            El total a descontar supera los $100.000. Las cuotas excedentes serán marcadas como <strong>"a-reprogramar"</strong>.
+                        `;
+                        contenedor.appendChild(advertencia);
+                    }
+
                     tabla.innerHTML = `
                         <thead>
                             <tr>
@@ -89,21 +150,11 @@
                                 <th>Estado</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${grupo.cuotas.map(c => `
-                                <tr>
-                                    <td>${c.nro_factura}</td>
-                                    <td>${c.nro_cuota}</td>
-                                    <td>$${parseFloat(c.monto).toFixed(2)}</td>
-                                    <td>${c.fecha_vencimiento}</td>
-                                    <td><span class="badge ${c.estado === 'pagada' ? 'bg-success' : 'bg-warning text-dark'}">${c.estado}</span></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
+                        <tbody>${filas}</tbody>
                         <tfoot>
                             <tr>
                                 <td colspan="4"><strong>Total a descontar:</strong></td>
-                                <td><strong>$${parseFloat(grupo.total).toFixed(2)}</strong></td>
+                                <td><strong>$${totalAcumulado.toFixed(2)}</strong></td>
                             </tr>
                         </tfoot>
                     `;
@@ -113,6 +164,70 @@
             .catch(error => {
                 console.error(error);
                 contenedor.innerHTML = '<div class="alert alert-danger">Ocurrió un error al cargar el reporte.</div>';
+            });
+        });
+
+        btnAplicar.addEventListener('click', function () {
+            const idsPagadas = [];
+            const idsReprogramadas = [];
+
+            document.querySelectorAll('[data-cuota-id]').forEach(row => {
+                const id = row.dataset.cuotaId;
+                const estado = row.dataset.estado;
+
+                if (estado === 'pendiente') {
+                    idsPagadas.push(id);
+                } else if (estado === 'a-reprogramar') {
+                    idsReprogramadas.push(id);
+                }
+            });
+
+            fetch('/facturacion/cuotas/aplicar-descuento', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    desde: periodoDesde,
+                    hasta: periodoHasta,
+                    idsPagadas,
+                    idsReprogramadas
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) throw new Error('Error al aplicar descuento');
+                mensajeExito.classList.remove('d-none');
+                acciones.classList.add('d-none');
+                btnExportar.classList.remove('d-none');
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Ocurrió un error al aplicar el descuento.');
+            });
+        });
+
+        btnExportar.addEventListener('click', function () {
+            fetch(`/facturacion/cuotas/exportar-txt?desde=${periodoDesde}&hasta=${periodoHasta}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(texto => {
+                const blob = new Blob([texto], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `cuotas_${periodoDesde}_a_${periodoHasta}.txt`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            })
+            .catch(error => {
+                console.error('Error al exportar:', error);
+                alert('Ocurrió un error al generar el archivo.');
             });
         });
     });

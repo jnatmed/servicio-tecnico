@@ -232,29 +232,35 @@ class CuotasCollection extends Model
     public function getCuotasAgrupadasPorAgente($desde, $hasta)
     {
         try {
-            $this->logger->info("Obteniendo cuotas agrupadas por agente entre $desde y $hasta.");
-    
+            $this->logger->info("Obteniendo cuotas agrupadas por agente entre $desde y $hasta (excluyendo pagadas).");
+
             $resultados = $this->queryBuilder->query("
                 SELECT 
+                    c.id,
                     a.id AS agente_id,
                     CONCAT(a.nombre, ' ', a.apellido) AS nombre_agente,
                     f.nro_factura,
                     c.nro_cuota,
                     c.monto,
                     c.fecha_vencimiento,
-                    c.estado
+                    CASE 
+                        WHEN c.estado = 'pendiente' THEN 'pendiente'
+                        WHEN c.estado = 'reprogramada' THEN 'a-reprogramar'
+                        ELSE c.estado
+                    END AS estado
                 FROM cuota c
                 INNER JOIN factura f ON f.id = c.factura_id
                 INNER JOIN agente a ON a.id = f.id_agente
                 WHERE c.fecha_vencimiento BETWEEN :desde AND :hasta
+                AND c.estado != 'pagada'
                 ORDER BY a.id, c.fecha_vencimiento
             ", [
                 ':desde' => $desde,
                 ':hasta' => $hasta
             ]);
-    
+
             $agrupadas = [];
-    
+
             foreach ($resultados as $fila) {
                 $idAgente = $fila['agente_id'];
                 if (!isset($agrupadas[$idAgente])) {
@@ -264,27 +270,60 @@ class CuotasCollection extends Model
                         'total' => 0
                     ];
                 }
+
+                // Sumar solo si la cuota está pendiente (las a-reprogramar no se descuentan)
+                if ($fila['estado'] === 'pendiente') {
+                    $agrupadas[$idAgente]['total'] += $fila['monto'];
+                }
+
                 $agrupadas[$idAgente]['cuotas'][] = [
+                    'id' => $fila['id'],
                     'nro_factura' => $fila['nro_factura'],
                     'nro_cuota' => $fila['nro_cuota'],
                     'monto' => $fila['monto'],
                     'fecha_vencimiento' => $fila['fecha_vencimiento'],
                     'estado' => $fila['estado']
                 ];
-                $agrupadas[$idAgente]['total'] += $fila['monto'];
             }
-    
-            $this->logger->debug("Cuotas agrupadas por agente: ", [$agrupadas]);
-    
+
+            $this->logger->debug("Cuotas agrupadas excluyendo pagadas:", [$agrupadas]);
+
             return array_values($agrupadas);
         } catch (Exception $e) {
             $this->logger->error("Error en getCuotasAgrupadasPorAgente: " . $e->getMessage());
             return [];
         }
     }
+
     
     
         
 
+    public function aplicarDescuentoDeHaberes($desde, $hasta, $idsPagadas = [], $idsReprogramadas = [])
+    {
+        try {
+            $this->logger->info("Aplicando descuento de haberes entre $desde y $hasta.");
+
+            foreach ($idsPagadas as $id) {
+                $this->queryBuilder->query(
+                    "UPDATE cuota SET estado = 'pagada' WHERE id = :id",
+                    [ ':id' => $id ]
+                );
+            }
+
+            foreach ($idsReprogramadas as $id) {
+                $this->queryBuilder->query(
+                    "UPDATE cuota SET estado = 'reprogramada', periodo = DATE_ADD(fecha_vencimiento, INTERVAL 1 MONTH) WHERE id = :id",
+                    [ ':id' => $id ]
+                );
+            }
+
+            $this->logger->info("Descuento aplicado exitosamente sobre cuotas seleccionadas.");
+            return true;
+        } catch (Exception $e) {
+            $this->logger->error("Error en aplicarDescuentoDeHaberes: " . $e->getMessage());
+            return false;
+        }
+    }
     
 }
