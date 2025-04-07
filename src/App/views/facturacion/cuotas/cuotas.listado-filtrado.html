@@ -9,23 +9,7 @@
     <section class="container_cuotas">
         <div class="container mt-5">
             <h1 class="mb-4">Descuento de Haberes</h1>
-            <div class="accordion mb-3" id="aclaracionFuncionamiento">
-                <div class="accordion-item border border-info shadow-sm">
-                  <h2 class="accordion-header" id="headingFuncionamiento">
-                    <button class="accordion-button bg-info-subtle text-dark fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFuncionamiento" aria-expanded="true" aria-controls="collapseFuncionamiento">
-                      ℹ️ ¿Cómo funciona?
-                    </button>
-                  </h2>
-                  <div id="collapseFuncionamiento" class="accordion-collapse collapse show" aria-labelledby="headingFuncionamiento">
-                    <div class="accordion-body">
-                      Aquí se gestionan los <strong>descuentos de haberes</strong> de los agentes.
-                      Primero seleccioná un <em>rango de fechas</em> y hacé clic en <strong>Filtrar</strong>.
-                      Luego podrás <strong>emitir el archivo TXT</strong> correspondiente con las cuotas seleccionadas.
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
+
             <!-- Filtro por rango de fechas -->
             <form method="get" class="row g-3 mb-4">
                 <div class="col-md-4">
@@ -37,290 +21,101 @@
                     <input type="date" id="fechaHasta" name="hasta" class="form-control" value="{{ hasta }}">
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
-                    <button type="button" id="btnFiltrar" class="btn btn-primary w-100">Filtrar</button>
+                    <button type="button" id="btnFiltrarAgrupado" class="btn btn-primary w-100">Filtrar</button>
                 </div>
-                <span 
-                    class="d-inline-block" 
-                    tabindex="0" 
-                    data-bs-toggle="tooltip" 
-                    data-bs-placement="top" 
-                    title="Se habilitará el botón de exportar una vez se seleccione el período a filtrar">
-                    
-                    <button 
-                        id="btnExportarTxt" 
-                        class="btn btn-outline-primary w-100" 
-                        type="button"
-                        disabled 
-                        style="pointer-events: none;">
-                        📄 Exportar TXT
-                    </button>
-                </span>
-                
-            
             </form>
 
-            <!-- Aviso de cuotas pagadas -->
-            {% if hayPagadas %}
-                <div class="alert alert-success d-flex align-items-center justify-content-between" role="alert">
-                    Hay cuotas dentro del período que ya fueron pagadas.
-                    <div class="form-check form-switch ms-3">
-                        <input class="form-check-input" type="checkbox" id="mostrarPagadas">
-                        <label class="form-check-label" for="mostrarPagadas">Mostrar cuotas pagadas</label>
-                    </div>
-                </div>
-            {% endif %}
-            <div class="accordion mb-3" id="aclaracionReprogramadas">
-                <div class="accordion-item border border-warning shadow-sm">
-                  <h2 class="accordion-header" id="headingReprogramadas">
-                    <button class="accordion-button bg-warning-subtle fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReprogramadas" aria-expanded="true" aria-controls="collapseReprogramadas">
-                      ⚠️ Importante sobre cuotas reprogramadas
-                    </button>
-                  </h2>
-                  <div id="collapseReprogramadas" class="accordion-collapse collapse show" aria-labelledby="headingReprogramadas">
-                    <div class="accordion-body">
-                      Si el total de cuotas a descontar para un agente supera los <strong>$100.000</strong>,
-                      las cuotas que excedan ese monto serán <strong>reprogramadas</strong> automáticamente para el siguiente mes o período.<br>
-                      Te darás cuenta porque aparecerán en la tabla con el estado <strong>"Reprogramada"</strong>.
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            <div id="mensajeInicial" class="alert alert-info d-none">
+            <div id="mensajeInicial" class="alert alert-info">
                 Debe seleccionar un período y presionar en <strong>Filtrar</strong> para ver los resultados.
             </div>
-            <!-- Tabla de cuotas -->
-            <div class="table-responsive">
-                <table class="table table-striped" id="tablaCuotas">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nro. Factura</th>
-                            <th>Nro. Cuota</th>
-                            <th>Monto Cuota</th>
-                            <th>Fecha Vencimiento</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if cuotas %}
-                            {% for cuota in cuotas %}
-                                <tr class="{% if cuota.estado == 'pagada' %}cuota-pagada d-none{% endif %}">
-                                    <td>{{ loop.index + (limit * (currentPage - 1)) }}</td>
-                                    <td><a href="/facturacion/ver?id={{ cuota.factura_id }}">{{ cuota.nro_factura }}</a></td>
-                                    <td>{{ cuota.nro_cuota }}</td>
-                                    <td>$ {{ cuota.monto|number_format(2, ',', '.') }}</td>
-                                    <td>{{ cuota.fecha_vencimiento }}</td>
-                                    <td>
-                                        {% if cuota.estado == 'pagada' %}
-                                            <span class="badge bg-success">Pagada</span>
-                                        {% else %}
-                                            <span class="badge bg-warning text-dark">Pendiente</span>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center mensaje-vacio">No hay cuotas para mostrar.</td>
-                        </tr>
-                    {% endif %}
-                    </tbody>
-                </table>
-            </div>
 
-            <!-- Paginación -->
-            <nav>
-                <ul class="pagination">
-                    {% set totalPages = total > 0 and limit > 0 ? (total / limit)|round(0, 'ceil') : 1 %}
-                    {% if currentPage > 1 %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ currentPage - 1 }}&desde={{ desde }}&hasta={{ hasta }}">Anterior</a>
-                        </li>
-                    {% endif %}
-                    {% for i in range(1, totalPages) %}
-                        <li class="page-item {% if i == currentPage %}active{% endif %}">
-                            <a class="page-link" href="?page={{ i }}&desde={{ desde }}&hasta={{ hasta }}">{{ i }}</a>
-                        </li>
-                    {% endfor %}
-                    {% if currentPage < totalPages %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ currentPage + 1 }}&desde={{ desde }}&hasta={{ hasta }}">Siguiente</a>
-                        </li>
-                    {% endif %}
-                </ul>
-            </nav>
+            <!-- Resultados agrupados -->
+            <div id="tablaCuotasAgrupadas" class="mt-4"></div>
         </div>
     </section>
 
     {% include 'parts/footer.view.html' %}
+
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const btnFiltrar = document.getElementById('btnFiltrar');
-            const inputDesde = document.getElementById('fechaDesde');
-            const inputHasta = document.getElementById('fechaHasta');
-            const tbody = document.querySelector('#tablaCuotas tbody');
-            const paginacion = document.querySelector('.pagination');
-            const contenedorAlert = document.querySelector('.alert-success');
-            const btnExportarTxt = document.getElementById('btnExportarTxt');
+    document.addEventListener('DOMContentLoaded', function () {
+        const btnFiltrar = document.getElementById('btnFiltrarAgrupado');
+        const inputDesde = document.getElementById('fechaDesde');
+        const inputHasta = document.getElementById('fechaHasta');
+        const contenedor = document.getElementById('tablaCuotasAgrupadas');
 
-            // Solo mostrar si se llegó por GET sin filtros
-            const esGetSinFiltro = !inputDesde.value && !inputHasta.value;
-            const tieneMensajeVacio = document.querySelector('.mensaje-vacio');
+        btnFiltrar.addEventListener('click', function () {
+            const desde = inputDesde.value;
+            const hasta = inputHasta.value;
 
-            if (esGetSinFiltro && tieneMensajeVacio) {
-                mensajeInicial.classList.remove('d-none');
+            if (!desde || !hasta) {
+                alert('Seleccioná un período válido.');
+                return;
             }
 
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
+            fetch('/facturacion/cuotas/listado', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ desde, hasta })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) throw new Error('Error al agrupar cuotas');
+                document.getElementById('mensajeInicial').classList.add('d-none');
 
-            // 🔄 Función para cargar cuotas desde el backend
-            function cargarCuotas(page = 1) {
-                const desde = inputDesde.value;
-                const hasta = inputHasta.value;
-        
-                fetch('/facturacion/cuotas/listado', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: JSON.stringify({ desde, hasta, page })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (!data.success) throw new Error('Error al cargar cuotas');
+                contenedor.innerHTML = '';
 
-                    // Siempre ocultar el mensaje inicial cuando se filtra
-                    document.getElementById('mensajeInicial')?.classList.add('d-none');        
-
-                    // Limpiar y renderizar tabla
-                    tbody.innerHTML = '';
-                    if (data.cuotas.length > 0) {
-                        data.cuotas.forEach((cuota, index) => {
-                            const row = document.createElement('tr');
-                            row.className = cuota.estado === 'pagada' ? 'cuota-pagada d-none' : '';
-                            row.innerHTML = `
-                                <td>${index + 1 + ((data.currentPage - 1) * data.limit)}</td>
-                                <td><a href="/facturacion/ver?id=${cuota.factura_id}">${cuota.nro_factura}</a></td>
-                                <td>${cuota.nro_cuota}</td>
-                                <td>${new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(cuota.monto)}</td>
-                                <td>${cuota.fecha_vencimiento}</td>
-                                <td>
-                                    ${cuota.estado === 'pagada'
-                                        ? '<span class="badge bg-success">Pagada</span>'
-                                        : '<span class="badge bg-warning text-dark">Pendiente</span>'}
-                                </td>
-                            `;
-                            tbody.appendChild(row);
-                        });
-                    } else {
-                        tbody.innerHTML = '<tr><td colspan="6" class="text-center">No se encontraron cuotas para el período indicado.</td></tr>';
-                    }
-        
-                    // Mostrar u ocultar alerta de cuotas pagadas
-                    if (data.hayPagadas) {
-                        contenedorAlert?.classList.remove('d-none');
-                    } else {
-                        contenedorAlert?.classList.add('d-none');
-                    }
-        
-                    // Generar paginación dinámica
-                    let totalPages = Math.ceil(data.total / data.limit);
-                    let paginacionHTML = '';
-        
-                    if (data.currentPage > 1) {
-                        paginacionHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${data.currentPage - 1}">Anterior</a></li>`;
-                    }
-        
-                    for (let i = 1; i <= totalPages; i++) {
-                        paginacionHTML += `
-                            <li class="page-item ${i === data.currentPage ? 'active' : ''}">
-                                <a class="page-link" href="#" data-page="${i}">${i}</a>
-                            </li>`;
-                    }
-        
-                    if (data.currentPage < totalPages) {
-                        paginacionHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${data.currentPage + 1}">Siguiente</a></li>`;
-                    }
-        
-                    paginacion.innerHTML = paginacionHTML;
-                    habilitarExportar(desde, hasta);
-        
-                })
-                .catch(error => {
-                    console.error('Error al traer cuotas:', error);
-                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Ocurrió un error al cargar las cuotas.</td></tr>';
-                });
-            }
-        
-            // Habilitar exportar TXT solo si la búsqueda fue exitosa
-            function habilitarExportar(desde, hasta) {
-                btnExportarTxt.classList.remove('disabled');
-                btnExportarTxt.dataset.desde = desde;
-                btnExportarTxt.dataset.hasta = hasta;
-            }
-
-
-            // Click en Exportar TXT
-            btnExportarTxt.addEventListener('click', function () {
-                if (this.classList.contains('disabled')) {
-                    e.preventDefault();
+                if (data.grupos.length === 0) {
+                    contenedor.innerHTML = '<div class="alert alert-warning">No se encontraron cuotas para el período indicado.</div>';
                     return;
                 }
-            
-                const desde = this.dataset.desde;
-                const hasta = this.dataset.hasta;
-            
-                fetch(`/facturacion/cuotas/exportar-txt?desde=${desde}&hasta=${hasta}`, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.text())
-                .then(texto => {
-                    // Crear blob y descargar como archivo
-                    const blob = new Blob([texto], { type: 'text/plain' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `cuotas_${desde}_a_${hasta}.txt`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                })
-                .catch(error => {
-                    console.error('Error al exportar:', error);
-                    alert('Ocurrió un error al generar el archivo.');
+
+                data.grupos.forEach(grupo => {
+                    const agenteTitulo = document.createElement('h5');
+                    agenteTitulo.textContent = `Agente: ${grupo.agente}`;
+                    contenedor.appendChild(agenteTitulo);
+
+                    const tabla = document.createElement('table');
+                    tabla.classList.add('table', 'table-bordered', 'mb-4');
+                    tabla.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>Nro. Factura</th>
+                                <th>Nro. Cuota</th>
+                                <th>Monto</th>
+                                <th>Vencimiento</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${grupo.cuotas.map(c => `
+                                <tr>
+                                    <td>${c.nro_factura}</td>
+                                    <td>${c.nro_cuota}</td>
+                                    <td>$${parseFloat(c.monto).toFixed(2)}</td>
+                                    <td>${c.fecha_vencimiento}</td>
+                                    <td><span class="badge ${c.estado === 'pagada' ? 'bg-success' : 'bg-warning text-dark'}">${c.estado}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4"><strong>Total a descontar:</strong></td>
+                                <td><strong>$${parseFloat(grupo.total).toFixed(2)}</strong></td>
+                            </tr>
+                        </tfoot>
+                    `;
+                    contenedor.appendChild(tabla);
                 });
-            });
-            
-            
-            // Click en el botón Filtrar
-            btnFiltrar.addEventListener('click', function () {
-                cargarCuotas(1);
-            });
-        
-            // Click en la paginación (delegado)
-            paginacion.addEventListener('click', function (e) {
-                if (e.target.tagName === 'A') {
-                    e.preventDefault();
-                    const page = parseInt(e.target.dataset.page);
-                    cargarCuotas(page);
-                }
-            });
-        
-            // Mostrar/Ocultar cuotas pagadas
-            document.getElementById('mostrarPagadas')?.addEventListener('change', function () {
-                document.querySelectorAll('.cuota-pagada').forEach(row => {
-                    row.classList.toggle('d-none', !this.checked);
-                });
+            })
+            .catch(error => {
+                console.error(error);
+                contenedor.innerHTML = '<div class="alert alert-danger">Ocurrió un error al cargar el reporte.</div>';
             });
         });
-        </script>
-        
+    });
+    </script>
 </body>
 </html>

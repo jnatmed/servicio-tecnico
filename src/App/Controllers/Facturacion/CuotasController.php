@@ -109,6 +109,38 @@ class CuotasController extends Controller
             }
         }
     }
+
+    
+    public function reporteAgrupado()
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $desde = $data['desde'] ?? null;
+            $hasta = $data['hasta'] ?? null;
+    
+            if (!$desde || !$hasta) {
+                throw new Exception('Parámetros inválidos');
+            }
+    
+            $grupos = $this->model->getCuotasAgrupadasPorAgente($desde, $hasta);
+    
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'grupos' => $grupos
+            ]);
+            exit;
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error en reporteAgrupado: " . $e->getMessage());
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
     
     
     public function exportarTxt()

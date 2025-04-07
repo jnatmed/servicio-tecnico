@@ -16,9 +16,7 @@ class CuotasCollection extends Model
 
     public function __construct($qb = null, $logger = null)
     {
-        if ($qb || $logger) {
-            parent::__construct($qb, $logger);
-        }
+        parent::__construct($qb, $logger);
     }
 
     /**
@@ -231,7 +229,62 @@ class CuotasCollection extends Model
         }
     }
         
+    public function getCuotasAgrupadasPorAgente($desde, $hasta)
+    {
+        try {
+            $this->logger->info("Obteniendo cuotas agrupadas por agente entre $desde y $hasta.");
     
+            $resultados = $this->queryBuilder->query("
+                SELECT 
+                    a.id AS agente_id,
+                    CONCAT(a.nombre, ' ', a.apellido) AS nombre_agente,
+                    f.nro_factura,
+                    c.nro_cuota,
+                    c.monto,
+                    c.fecha_vencimiento,
+                    c.estado
+                FROM cuota c
+                INNER JOIN factura f ON f.id = c.factura_id
+                INNER JOIN agente a ON a.id = f.id_agente
+                WHERE c.fecha_vencimiento BETWEEN :desde AND :hasta
+                ORDER BY a.id, c.fecha_vencimiento
+            ", [
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ]);
+    
+            $agrupadas = [];
+    
+            foreach ($resultados as $fila) {
+                $idAgente = $fila['agente_id'];
+                if (!isset($agrupadas[$idAgente])) {
+                    $agrupadas[$idAgente] = [
+                        'agente' => $fila['nombre_agente'],
+                        'cuotas' => [],
+                        'total' => 0
+                    ];
+                }
+                $agrupadas[$idAgente]['cuotas'][] = [
+                    'nro_factura' => $fila['nro_factura'],
+                    'nro_cuota' => $fila['nro_cuota'],
+                    'monto' => $fila['monto'],
+                    'fecha_vencimiento' => $fila['fecha_vencimiento'],
+                    'estado' => $fila['estado']
+                ];
+                $agrupadas[$idAgente]['total'] += $fila['monto'];
+            }
+    
+            $this->logger->debug("Cuotas agrupadas por agente: ", [$agrupadas]);
+    
+            return array_values($agrupadas);
+        } catch (Exception $e) {
+            $this->logger->error("Error en getCuotasAgrupadasPorAgente: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    
+        
 
     
 }
