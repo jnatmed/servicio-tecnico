@@ -148,24 +148,26 @@ class CuotasController extends Controller
             $data = json_decode(file_get_contents('php://input'), true);
             $desde = $data['desde'] ?? null;
             $hasta = $data['hasta'] ?? null;
+            $agenteId = $data['agente_id'] ?? null;
     
-            if (!$desde || !$hasta) {
+            if (!$desde || !$hasta || !$agenteId) {
                 throw new Exception('Parámetros inválidos');
             }
     
-            // lógica para aplicar el descuento: actualizar estados, guardar registros, etc.
-            $this->model->aplicarDescuentoDeHaberes($desde, $hasta, $data['idsPagadas'], $data['idsReprogramadas']);
+            $cuotasActualizadas = $this->model->aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta);
     
-            echo json_encode(['success' => true]);
+            echo json_encode(['success' => true, 'cuotas' => $cuotasActualizadas]);
+    
         } catch (Exception $e) {
             $this->logger->error("Error al aplicar descuento: " . $e->getMessage());
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit;
     }
+    
         
     
-    public function exportarTxt()
+    public function exportarTxt()   
     {
         try {
             $desde = $this->request->get('desde') ?? date('Y-m-01');

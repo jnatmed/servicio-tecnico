@@ -300,31 +300,99 @@ class CuotasCollection extends Model
     
         
 
-    public function aplicarDescuentoDeHaberes($desde, $hasta, $idsPagadas = [], $idsReprogramadas = [])
+    public function aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta)
     {
         try {
-            $this->logger->info("Aplicando descuento de haberes entre $desde y $hasta.");
-
-            foreach ($idsPagadas as $id) {
-                $this->queryBuilder->query(
-                    "UPDATE cuota SET estado = 'pagada' WHERE id = :id",
-                    [ ':id' => $id ]
-                );
+            $this->logger->info("Aplicando descuento con lógica inteligente para el agente $agenteId.");
+    
+            $tope = 100000.00;
+            $acumulado = 0.00;
+    
+            // Obtener cuotas pendientes o reprogramadas del agente en el período
+            $cuotas = $this->queryBuilder->query("
+                SELECT c.id, c.monto
+                FROM cuota c
+                INNER JOIN factura f ON f.id = c.factura_id
+                WHERE f.id_agente = :agenteId
+                  AND c.estado IN ('pendiente', 'reprogramada')
+                  AND c.periodo BETWEEN :desde AND :hasta
+                ORDER BY c.fecha_vencimiento ASC, c.id ASC
+            ", [
+                ':agenteId' => $agenteId,
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ]);
+    
+            foreach ($cuotas as $cuota) {
+                $id = $cuota['id'];
+                $monto = (float)$cuota['monto'];
+    
+                if ($acumulado + $monto <= $tope) {
+                    // Pago completo
+                    $this->queryBuilder->query(
+                        "UPDATE cuota 
+                         SET estado = 'pagada', 
+                             monto_pagado = :monto, 
+                             monto_reprogramado = 0 
+                         WHERE id = :id",
+                        [':monto' => $monto, ':id' => $id]
+                    );
+                    $acumulado += $monto;
+    
+                } elseif ($acumulado < $tope) {
+                    // Pago parcial
+                    $pagado = $tope - $acumulado;
+                    $reprogramado = $monto - $pagado;
+    
+                    $this->queryBuilder->query(
+                        "UPDATE cuota 
+                         SET estado = 'pendiente', 
+                             monto_pagado = :pagado, 
+                             monto_reprogramado = :reprogramado 
+                         WHERE id = :id",
+                        [
+                            ':pagado' => $pagado,
+                            ':reprogramado' => $reprogramado,
+                            ':id' => $id
+                        ]
+                    );
+    
+                    $acumulado = $tope;
+    
+                } else {
+                    // Reprogramación total
+                    $this->queryBuilder->query(
+                        "UPDATE cuota 
+                         SET estado = 'reprogramada', 
+                             monto_pagado = 0, 
+                             monto_reprogramado = :monto, 
+                             periodo = DATE_ADD(fecha_vencimiento, INTERVAL 1 MONTH) 
+                         WHERE id = :id",
+                        [':monto' => $monto, ':id' => $id]
+                    );
+                }
             }
-
-            foreach ($idsReprogramadas as $id) {
-                $this->queryBuilder->query(
-                    "UPDATE cuota SET estado = 'reprogramada', periodo = DATE_ADD(fecha_vencimiento, INTERVAL 1 MONTH) WHERE id = :id",
-                    [ ':id' => $id ]
-                );
-            }
-
-            $this->logger->info("Descuento aplicado exitosamente sobre cuotas seleccionadas.");
-            return true;
+    
+            // ▶ Retornar cuotas actualizadas para mostrar en frontend
+            return $this->queryBuilder->query("
+                SELECT c.id, f.nro_factura, c.nro_cuota, c.monto, c.monto_pagado, c.monto_reprogramado, c.fecha_vencimiento, c.estado
+                FROM cuota c
+                INNER JOIN factura f ON f.id = c.factura_id
+                WHERE f.id_agente = :agenteId
+                  AND c.periodo BETWEEN :desde AND :hasta
+                ORDER BY c.fecha_vencimiento ASC
+            ", [
+                ':agenteId' => $agenteId,
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ]);
+    
         } catch (Exception $e) {
-            $this->logger->error("Error en aplicarDescuentoDeHaberes: " . $e->getMessage());
+            $this->logger->error("Error en aplicarDescuentoDeHaberesInteligente: " . $e->getMessage());
             return false;
         }
     }
+    
+    
     
 }

@@ -26,21 +26,18 @@
             </form>
 
             <div id="mensajeInicial" class="alert alert-info">
-                Debe seleccionar un período y presionar en <strong>Filtrar</strong> para ver los resultados.
+                Debe seleccionar un periodo y presionar en <strong>Filtrar</strong> para ver los resultados.
             </div>
 
-            <!-- Botón para aplicar descuento -->
             <div id="accionesDescuento" class="d-none mb-4">
                 <button class="btn btn-success me-2" id="btnAplicarDescuento">✅ Realizar Descuento de Haberes</button>
             </div>
 
-            <!-- Cartel de éxito -->
             <div id="mensajeExito" class="alert alert-success d-none">
                 ✅ Descuento de haberes aplicado correctamente.
                 <button class="btn btn-outline-primary btn-sm ms-3 d-none" id="btnExportarTxt">📄 Exportar Reporte TXT</button>
             </div>
 
-            <!-- Resultados agrupados -->
             <div id="tablaCuotasAgrupadas" class="mt-4"></div>
         </div>
     </section>
@@ -66,7 +63,7 @@
             const hasta = inputHasta.value;
 
             if (!desde || !hasta) {
-                alert('Seleccioná un período válido.');
+                alert('Seleccioná un periodo válido.');
                 return;
             }
 
@@ -93,12 +90,11 @@
                 contenedor.innerHTML = '';
 
                 if (data.grupos.length === 0) {
-                    contenedor.innerHTML = '<div class="alert alert-warning">No se encontraron cuotas para el período indicado.</div>';
+                    contenedor.innerHTML = '<div class="alert alert-warning">No se encontraron cuotas para el periodo indicado.</div>';
                     return;
                 }
 
                 data.grupos.forEach(grupo => {
-                    console.log(grupo);
                     const agenteTitulo = document.createElement('h5');
                     agenteTitulo.innerHTML = `Agente: <a href="/facturacion/agente/ver?agente_id=${grupo.agente_id}" target="_blank" class="text-decoration-none">${grupo.agente}</a>`;
                     contenedor.appendChild(agenteTitulo);
@@ -106,59 +102,72 @@
                     const cuotasFiltradas = grupo.cuotas.filter(c => c.estado !== 'pagada');
                     if (cuotasFiltradas.length === 0) return;
 
-                    let totalAcumulado = 0;
-                    let excedeLimite = false;
-
                     const tabla = document.createElement('table');
                     tabla.classList.add('table', 'table-bordered', 'mb-4');
                     let filas = '';
+                    let totalPagado = 0;
+                    let totalAcumulado = 0;
+                    let excedeLimite = false;
 
-                    cuotasFiltradas.forEach(cuota => {
-                        if (!excedeLimite && totalAcumulado + parseFloat(cuota.monto) <= 100000) {
-                            totalAcumulado += parseFloat(cuota.monto);
-                        } else {
-                            cuota.estado = 'a-reprogramar';
-                            excedeLimite = true;
-                        }
-
-                        filas += `
-                            <tr data-cuota-id="${cuota.id}" data-estado="${cuota.estado}">
-                                <td>${cuota.nro_factura}</td>
-                                <td>${cuota.nro_cuota}</td>
-                                <td>$${parseFloat(cuota.monto).toFixed(2)}</td>
-                                <td>${cuota.fecha_vencimiento}</td>
-                                <td><span class="badge ${cuota.estado === 'a-reprogramar' ? 'bg-danger' : 'bg-warning text-dark'}">${cuota.estado}</span></td>
-                            </tr>`;
-                    });
-
-                    if (excedeLimite) {
-                        const advertencia = document.createElement('div');
-                        advertencia.className = 'alert alert-info d-flex align-items-center mb-2';
-                        advertencia.innerHTML = `
-                            <i class="bi bi-exclamation-triangle-fill me-2 text-danger fs-5"></i>
-                            El total a descontar supera los $100.000. Las cuotas excedentes serán marcadas como <strong>"a-reprogramar"</strong>.
-                        `;
-                        contenedor.appendChild(advertencia);
-                    }
-
-                    tabla.innerHTML = `
+                    filas += `
                         <thead>
                             <tr>
                                 <th>Nro. Factura</th>
                                 <th>Nro. Cuota</th>
                                 <th>Monto</th>
                                 <th>Vencimiento</th>
+                                <th>Pagado</th>
+                                <th>Reprogramado</th>
                                 <th>Estado</th>
                             </tr>
                         </thead>
-                        <tbody>${filas}</tbody>
+                        <tbody>
+                    `;
+
+                    cuotasFiltradas.forEach(cuota => {
+                        const monto = parseFloat(cuota.monto);
+                        let pagado = 0;
+                        let reprogramado = 0;
+
+                        if (!excedeLimite && totalAcumulado + monto <= 100000) {
+                            pagado = monto;
+                            totalAcumulado += monto;
+                        } else if (!excedeLimite && totalAcumulado < 100000) {
+                            pagado = 100000 - totalAcumulado;
+                            reprogramado = monto - pagado;
+                            totalAcumulado = 100000;
+                            cuota.estado = 'a-reprogramar';
+                            excedeLimite = true;
+                        } else {
+                            reprogramado = monto;
+                            cuota.estado = 'a-reprogramar';
+                        }
+
+                        totalPagado += pagado;
+
+                        filas += `
+                            <tr data-cuota-id="${cuota.id}" data-estado="${cuota.estado}">
+                                <td>${cuota.nro_factura}</td>
+                                <td>${cuota.nro_cuota}</td>
+                                <td>$${monto.toFixed(2)}</td>
+                                <td>${cuota.fecha_vencimiento}</td>
+                                <td>$${pagado.toFixed(2)}</td>
+                                <td>$${reprogramado.toFixed(2)}</td>
+                                <td><span class="badge ${cuota.estado === 'a-reprogramar' ? 'bg-danger' : 'bg-warning text-dark'}">${cuota.estado}</span></td>
+                            </tr>`;
+                    });
+
+                    filas += `
+                        </tbody>
                         <tfoot>
                             <tr>
-                                <td colspan="4"><strong>Total a descontar:</strong></td>
-                                <td><strong>$${totalAcumulado.toFixed(2)}</strong></td>
+                                <td colspan="6"><strong>Total a descontar:</strong></td>
+                                <td><strong>$${totalPagado.toFixed(2)}</strong></td>
                             </tr>
                         </tfoot>
                     `;
+
+                    tabla.innerHTML = filas;
                     contenedor.appendChild(tabla);
                 });
             })
@@ -169,19 +178,13 @@
         });
 
         btnAplicar.addEventListener('click', function () {
-            const idsPagadas = [];
-            const idsReprogramadas = [];
+            const agenteLink = document.querySelector('a[href*="agente_id="]');
+            const agenteId = agenteLink ? new URLSearchParams(agenteLink.href.split('?')[1]).get('agente_id') : null;
 
-            document.querySelectorAll('[data-cuota-id]').forEach(row => {
-                const id = row.dataset.cuotaId;
-                const estado = row.dataset.estado;
-
-                if (estado === 'pendiente') {
-                    idsPagadas.push(id);
-                } else if (estado === 'a-reprogramar') {
-                    idsReprogramadas.push(id);
-                }
-            });
+            if (!agenteId) {
+                alert('No se encontró el agente seleccionado.');
+                return;
+            }
 
             fetch('/facturacion/cuotas/aplicar-descuento', {
                 method: 'POST',
@@ -192,16 +195,75 @@
                 body: JSON.stringify({
                     desde: periodoDesde,
                     hasta: periodoHasta,
-                    idsPagadas,
-                    idsReprogramadas
+                    agente_id: agenteId
                 })
             })
             .then(res => res.json())
             .then(data => {
                 if (!data.success) throw new Error('Error al aplicar descuento');
+
                 mensajeExito.classList.remove('d-none');
                 acciones.classList.add('d-none');
                 btnExportar.classList.remove('d-none');
+
+                contenedor.innerHTML = '';
+
+                const tabla = document.createElement('table');
+                tabla.classList.add('table', 'table-bordered', 'mt-4');
+
+                let totalPagado = 0;
+
+                let filas = `
+                    <thead>
+                        <tr>
+                            <th>Nro. Factura</th>
+                            <th>Nro. Cuota</th>
+                            <th>Monto</th>
+                            <th>Vencimiento</th>
+                            <th>Pagado</th>
+                            <th>Reprogramado</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+
+                data.cuotas.forEach(c => {
+                    const pagado = parseFloat(c.monto_pagado);
+                    const reprogramado = parseFloat(c.monto_reprogramado);
+                    const total = parseFloat(c.monto);
+
+                    totalPagado += pagado;
+
+                    filas += `
+                        <tr>
+                            <td>${c.nro_factura}</td>
+                            <td>${c.nro_cuota}</td>
+                            <td>$${total.toFixed(2)}</td>
+                            <td>$${pagado.toFixed(2)}</td>
+                            <td>$${reprogramado.toFixed(2)}</td>
+                            <td>${c.fecha_vencimiento}</td>
+                            <td>
+                                <span class="badge ${c.estado === 'pagada' ? 'bg-success' : c.estado === 'reprogramada' ? 'bg-danger' : 'bg-warning text-dark'}">
+                                    ${c.estado}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                filas += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="6"><strong>Total a descontar:</strong></td>
+                            <td><strong>$${totalPagado.toFixed(2)}</strong></td>
+                        </tr>
+                    </tfoot>
+                `;
+
+                tabla.innerHTML = filas;
+                contenedor.appendChild(tabla);
             })
             .catch(err => {
                 console.error(err);
