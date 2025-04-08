@@ -265,6 +265,7 @@ class CuotasCollection extends Model
                 $idAgente = $fila['agente_id'];
                 if (!isset($agrupadas[$idAgente])) {
                     $agrupadas[$idAgente] = [
+                        'agente_id' => $idAgente,
                         'agente' => $fila['nombre_agente'],
                         'cuotas' => [],
                         'total' => 0

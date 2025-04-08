@@ -98,8 +98,9 @@
                 }
 
                 data.grupos.forEach(grupo => {
+                    console.log(grupo);
                     const agenteTitulo = document.createElement('h5');
-                    agenteTitulo.textContent = `Agente: ${grupo.agente}`;
+                    agenteTitulo.innerHTML = `Agente: <a href="/facturacion/agente/ver?agente_id=${grupo.agente_id}" target="_blank" class="text-decoration-none">${grupo.agente}</a>`;
                     contenedor.appendChild(agenteTitulo);
 
                     const cuotasFiltradas = grupo.cuotas.filter(c => c.estado !== 'pagada');

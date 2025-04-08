@@ -235,18 +235,31 @@ class QueryBuilder
         $bindings = [];
     
         foreach ($conditions as $key => $value) {
-            $whereClauses[] = "$key = :$key";
-            $bindings[":$key"] = $value;
+            if (is_array($value)) {
+                $placeholders = [];
+                foreach ($value as $index => $item) {
+                    $placeholder = ":{$key}_{$index}";
+                    $placeholders[] = $placeholder;
+                    $bindings[$placeholder] = $item;
+                }
+                $whereClauses[] = "$key IN (" . implode(', ', $placeholders) . ")";
+            } else {
+                $whereClauses[] = "$key = :$key";
+                $bindings[":$key"] = $value;
+            }
         }
+    
         $where = implode(' AND ', $whereClauses);
     
-        $query = "SELECT * FROM $table WHERE $where";
-        $statement = $this->pdo->prepare($query);
+        // Obtener datos previos para auditoría
+        $querySelect = "SELECT * FROM $table WHERE $where";
+        $statement = $this->pdo->prepare($querySelect);
         $statement->execute($bindings);
-        $datosPrevios = $statement->fetch(PDO::FETCH_ASSOC);
+        $datosPrevios = $statement->fetchAll(PDO::FETCH_ASSOC);
     
-        $query = "DELETE FROM $table WHERE $where";
-        $sentencia = $this->pdo->prepare($query);
+        // Ejecutar eliminación
+        $queryDelete = "DELETE FROM $table WHERE $where";
+        $sentencia = $this->pdo->prepare($queryDelete);
     
         foreach ($bindings as $key => $value) {
             $sentencia->bindValue($key, $value);
@@ -255,11 +268,14 @@ class QueryBuilder
         $sentencia->execute();
         $affectedRows = $sentencia->rowCount();
     
-        // Registrar en la auditoría
-        $this->registrarAuditoria($table, 'DELETE', $_SESSION['usuario'] ?? null, $datosPrevios, null, $conditions['id'] ?? null);
+        // Registrar auditoría por cada fila eliminada
+        foreach ($datosPrevios as $row) {
+            $this->registrarAuditoria($table, 'DELETE', $_SESSION['usuario'] ?? null, $row, null, $row['id'] ?? null);
+        }
     
         return $affectedRows;
     }
+    
     
     private function registrarAuditoria($tabla, $operacion, $usuario, $datosPrevios = null, $datosNuevos = null, $idRegistro = null)
     {

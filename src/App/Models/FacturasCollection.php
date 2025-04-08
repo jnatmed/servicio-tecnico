@@ -33,7 +33,19 @@ class FacturasCollection extends Model
             if (!$factura) {
                 throw new Exception("La factura con ID $facturaId no existe.");
             }
-    
+
+            // Obtener IDs de cuotas asociadas
+            $cuotas = $this->queryBuilder->select('cuota', '*',['factura_id' => $facturaId]);
+
+            $this->logger->info("cuotas encontradas: ", [$cuotas]);
+
+            $cuotaIds = array_column($cuotas, 'id');
+
+            if (!empty($cuotaIds)) {
+                // Eliminar de cuenta_corriente donde cuota_id esté en esos IDs
+                $this->queryBuilder->delete('cuenta_corriente', ['cuota_id' => $cuotaIds]);
+            }
+            
             // Eliminar factura (si tenés ON DELETE CASCADE se encarga del resto)
             $this->queryBuilder->delete('factura', ['id' => $facturaId]);
     
