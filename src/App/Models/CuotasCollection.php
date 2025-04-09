@@ -235,25 +235,28 @@ class CuotasCollection extends Model
             $this->logger->info("Obteniendo cuotas agrupadas por agente entre $desde y $hasta (excluyendo pagadas).");
 
             $resultados = $this->queryBuilder->query("
-                SELECT 
-                    c.id,
-                    a.id AS agente_id,
-                    CONCAT(a.nombre, ' ', a.apellido) AS nombre_agente,
-                    f.nro_factura,
-                    c.nro_cuota,
-                    c.monto,
-                    c.fecha_vencimiento,
-                    CASE 
-                        WHEN c.estado = 'pendiente' THEN 'pendiente'
-                        WHEN c.estado = 'reprogramada' THEN 'a-reprogramar'
-                        ELSE c.estado
-                    END AS estado
-                FROM cuota c
-                INNER JOIN factura f ON f.id = c.factura_id
-                INNER JOIN agente a ON a.id = f.id_agente
-                WHERE c.fecha_vencimiento BETWEEN :desde AND :hasta
-                AND c.estado != 'pagada'
-                ORDER BY a.id, c.fecha_vencimiento
+                    SELECT 
+                        c.id,
+                        a.id AS agente_id,
+                        CONCAT(a.nombre, ' ', a.apellido) AS nombre_agente,
+                        f.nro_factura,
+                        c.nro_cuota,
+                        c.monto,
+                        c.monto_pagado,
+                        c.monto_reprogramado,
+                        c.fecha_vencimiento,
+                        c.periodo,
+                        CASE 
+                            WHEN c.estado = 'pendiente' THEN 'pendiente'
+                            WHEN c.estado = 'reprogramada' THEN 'a-reprogramar'
+                            ELSE c.estado
+                        END AS estado
+                    FROM cuota c
+                    INNER JOIN factura f ON f.id = c.factura_id
+                    INNER JOIN agente a ON a.id = f.id_agente
+                    WHERE IFNULL(c.periodo, c.fecha_vencimiento) BETWEEN :desde AND :hasta
+                    AND c.estado != 'pagada'
+                    ORDER BY a.id, IFNULL(c.periodo, c.fecha_vencimiento)
             ", [
                 ':desde' => $desde,
                 ':hasta' => $hasta
@@ -282,8 +285,11 @@ class CuotasCollection extends Model
                     'nro_factura' => $fila['nro_factura'],
                     'nro_cuota' => $fila['nro_cuota'],
                     'monto' => $fila['monto'],
+                    'monto_pagado' => $fila['monto_pagado'],
+                    'monto_reprogramado' => $fila['monto_reprogramado'],
                     'fecha_vencimiento' => $fila['fecha_vencimiento'],
-                    'estado' => $fila['estado']
+                    'estado' => $fila['estado'],
+                    'periodo' => $fila['periodo']
                 ];
             }
 
@@ -303,52 +309,69 @@ class CuotasCollection extends Model
     public function aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta)
     {
         try {
-            $this->logger->info("Aplicando descuento con lógica inteligente para el agente $agenteId.");
+            $this->logger->info("Aplicando descuento con lógica inteligente para el agente $agenteId.", [$desde, $hasta]);
     
             $tope = 100000.00;
             $acumulado = 0.00;
     
-            // Obtener cuotas pendientes o reprogramadas del agente en el período
+            // Obtener cuotas pendientes o reprogramadas que deben descontarse en este periodo
             $cuotas = $this->queryBuilder->query("
-                SELECT c.id, c.monto
+                SELECT c.id, c.monto, c.monto_reprogramado, c.estado
                 FROM cuota c
                 INNER JOIN factura f ON f.id = c.factura_id
                 WHERE f.id_agente = :agenteId
                   AND c.estado IN ('pendiente', 'reprogramada')
-                  AND c.periodo BETWEEN :desde AND :hasta
-                ORDER BY c.fecha_vencimiento ASC, c.id ASC
+                  AND IFNULL(c.periodo, c.fecha_vencimiento) BETWEEN :desde AND :hasta
+                ORDER BY IFNULL(c.periodo, c.fecha_vencimiento) ASC, c.id ASC
             ", [
                 ':agenteId' => $agenteId,
                 ':desde' => $desde,
                 ':hasta' => $hasta
             ]);
     
+            $this->logger->info("Resultado cuotas: ", [$cuotas]);
+    
             foreach ($cuotas as $cuota) {
                 $id = $cuota['id'];
-                $monto = (float)$cuota['monto'];
-    
+
+                // Si tiene monto reprogramado > 0, se usa eso como monto real a procesar
+                $this->logger->info("Procesando cuota ID $id - monto: $cuota[monto], reprogramado: $cuota[monto_reprogramado]");
+
+                $monto = ($cuota['estado'] === 'reprogramada' && $cuota['monto_reprogramado'] > 0)
+                ? (float)$cuota['monto_reprogramado']
+                : (float)$cuota['monto'];
+                
+                $this->logger->info("Monto considerado para descuento: $monto. Acumulado actual: $acumulado");
+                
+                $this->logger->info("Cuota $id con estado {$cuota['estado']} - monto usado: $monto - acumulado: $acumulado");
+
                 if ($acumulado + $monto <= $tope) {
-                    // Pago completo
+                    $this->logger->info("Pago completo");
+    
                     $this->queryBuilder->query(
                         "UPDATE cuota 
                          SET estado = 'pagada', 
-                             monto_pagado = :monto, 
+                             monto_pagado = monto_pagado + :monto, 
                              monto_reprogramado = 0 
                          WHERE id = :id",
                         [':monto' => $monto, ':id' => $id]
                     );
+    
                     $acumulado += $monto;
+                    $this->logger->info("Cuota $id pagada totalmente con $monto");
     
                 } elseif ($acumulado < $tope) {
-                    // Pago parcial
+                    $this->logger->info("Pago parcial");
+    
                     $pagado = $tope - $acumulado;
                     $reprogramado = $monto - $pagado;
     
                     $this->queryBuilder->query(
                         "UPDATE cuota 
-                         SET estado = 'pendiente', 
-                             monto_pagado = :pagado, 
-                             monto_reprogramado = :reprogramado 
+                         SET estado = 'reprogramada', 
+                             monto_pagado = monto_pagado + :pagado,  
+                             monto_reprogramado = :reprogramado,
+                             periodo = DATE_ADD(IFNULL(periodo, fecha_vencimiento), INTERVAL 1 MONTH)
                          WHERE id = :id",
                         [
                             ':pagado' => $pagado,
@@ -358,29 +381,33 @@ class CuotasCollection extends Model
                     );
     
                     $acumulado = $tope;
+                    $this->logger->info("Cuota $id pagada parcialmente: $pagado pagado, $reprogramado reprogramado");
     
                 } else {
-                    // Reprogramación total
+                    $this->logger->info("Reprogramación total");
+    
                     $this->queryBuilder->query(
                         "UPDATE cuota 
                          SET estado = 'reprogramada', 
-                             monto_pagado = 0, 
-                             monto_reprogramado = :monto, 
-                             periodo = DATE_ADD(fecha_vencimiento, INTERVAL 1 MONTH) 
+                             monto_pagado = monto_pagado, 
+                             monto_reprogramado = :monto,
+                             periodo = DATE_ADD(IFNULL(periodo, fecha_vencimiento), INTERVAL 1 MONTH)
                          WHERE id = :id",
                         [':monto' => $monto, ':id' => $id]
                     );
+    
+                    $this->logger->info("Cuota $id reprogramada totalmente con $monto");
                 }
             }
     
             // ▶ Retornar cuotas actualizadas para mostrar en frontend
             return $this->queryBuilder->query("
-                SELECT c.id, f.nro_factura, c.nro_cuota, c.monto, c.monto_pagado, c.monto_reprogramado, c.fecha_vencimiento, c.estado
+                SELECT c.id, f.nro_factura, c.nro_cuota, c.monto, c.monto_pagado, c.monto_reprogramado, c.fecha_vencimiento, c.periodo, c.estado
                 FROM cuota c
                 INNER JOIN factura f ON f.id = c.factura_id
                 WHERE f.id_agente = :agenteId
-                  AND c.periodo BETWEEN :desde AND :hasta
-                ORDER BY c.fecha_vencimiento ASC
+                  AND IFNULL(c.periodo, c.fecha_vencimiento) BETWEEN :desde AND :hasta
+                ORDER BY IFNULL(c.periodo, c.fecha_vencimiento) ASC
             ", [
                 ':agenteId' => $agenteId,
                 ':desde' => $desde,
@@ -392,6 +419,7 @@ class CuotasCollection extends Model
             return false;
         }
     }
+        
     
     
     
