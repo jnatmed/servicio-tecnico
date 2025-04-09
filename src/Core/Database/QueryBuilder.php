@@ -599,12 +599,54 @@ class QueryBuilder
     
             $stmt = $this->pdo->prepare($sql);
     
-            // Enlazar parámetros dinámicamente
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
             }
     
+            // AUDITORÍA - antes del execute
+            $tipo = strtoupper(strtok(trim($sql), " "));
+            $datosPrevios = null;
+            $tabla = null;
+            $idRegistro = null;
+    
+            if ($tipo === 'UPDATE') {
+                // Detectar tabla
+                preg_match('/UPDATE\s+([^\s]+)/i', $sql, $matches);
+                $tabla = $matches[1] ?? null;
+    
+                // Intentar extraer el ID si se está usando :id
+                if (isset($params[':id']) && $tabla) {
+                    $idRegistro = $params[':id'];
+    
+                    // Obtener estado actual del registro
+                    $selectPrevio = "SELECT * FROM {$tabla} WHERE id = :id";
+                    $stmtPrevio = $this->pdo->prepare($selectPrevio);
+                    $stmtPrevio->bindValue(':id', $idRegistro, PDO::PARAM_INT);
+                    $stmtPrevio->execute();
+                    $datosPrevios = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
+                }
+            }
+    
+            // Ejecutar consulta original
             $stmt->execute();
+    
+            // AUDITORÍA post-ejecución
+            if (in_array($tipo, ['INSERT', 'UPDATE', 'DELETE'])) {
+                if (!$tabla) {
+                    // Detectar tabla para INSERT o DELETE
+                    preg_match('/(INTO|FROM)\s+([^\s]+)/i', $sql, $matches);
+                    $tabla = $matches[2] ?? 'desconocida';
+                }
+    
+                $this->registrarAuditoria(
+                    $tabla,
+                    $tipo,
+                    $_SESSION['usuario'] ?? null,
+                    $datosPrevios,
+                    $params,
+                    $idRegistro
+                );
+            }
     
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -612,5 +654,6 @@ class QueryBuilder
             throw new Exception("Error al ejecutar la consulta en la base de datos.");
         }
     }
+    
          
 }

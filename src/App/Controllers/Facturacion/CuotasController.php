@@ -148,22 +148,36 @@ class CuotasController extends Controller
             $data = json_decode(file_get_contents('php://input'), true);
             $desde = $data['desde'] ?? null;
             $hasta = $data['hasta'] ?? null;
-            $agenteId = $data['agente_id'] ?? null;
+            $agentes = $data['agentes'] ?? [];
     
-            if (!$desde || !$hasta || !$agenteId) {
+            if (!$desde || !$hasta || empty($agentes)) {
                 throw new Exception('Parámetros inválidos');
             }
     
-            $cuotasActualizadas = $this->model->aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta);
+            $resultados = [];
     
-            echo json_encode(['success' => true, 'cuotas' => $cuotasActualizadas]);
+            foreach ($agentes as $agente) {
+                $agenteId = $agente['id'];
+                $agenteNombre = $agente['nombre'];
+    
+                $cuotasActualizadas = $this->model->aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta);
+    
+                $resultados[] = [
+                    'agente_id' => $agenteId,
+                    'agente_nombre' => $agenteNombre,
+                    'cuotas' => $cuotasActualizadas
+                ];
+            }
+    
+            echo json_encode(['success' => true, 'resultados' => $resultados]);
     
         } catch (Exception $e) {
-            $this->logger->error("Error al aplicar descuento: " . $e->getMessage());
+            $this->logger->error("Error en aplicarDescuento (masivo): " . $e->getMessage());
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit;
     }
+    
     
         
     

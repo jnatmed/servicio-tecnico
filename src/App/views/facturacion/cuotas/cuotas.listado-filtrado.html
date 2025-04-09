@@ -98,16 +98,15 @@
                 console.log("Datos Agente: ");
                 console.table(data.grupos);
 
-                console.log("Detalle cuotas: "); 
-                console.table(data.grupos[0].cuotas);
-
-
                 data.grupos.forEach(grupo => {
                     let detalleCuotas = [];
                     const agenteTitulo = document.createElement('h5');
                     agenteTitulo.innerHTML = `Agente: <a href="/facturacion/agente/ver?agente_id=${grupo.agente_id}" target="_blank" class="text-decoration-none">${grupo.agente}</a>`;
                     contenedor.appendChild(agenteTitulo);
-                    
+
+                    console.log("Detalle cuotas: "); 
+                    console.table(grupo.cuotas);                    
+
                     const cuotasFiltradas = grupo.cuotas.filter(c => c.estado !== 'pagada');
                     if (cuotasFiltradas.length === 0) return;
 
@@ -212,15 +211,26 @@
 
 
         btnAplicar.addEventListener('click', function () {
-            const agenteLink = document.querySelector('a[href*="agente_id="]');
-            const agenteId = agenteLink ? new URLSearchParams(agenteLink.href.split('?')[1]).get('agente_id') : null;
-        
-            if (!agenteId) {
-                alert('No se encontró el agente seleccionado.');
+            const agenteLinks = document.querySelectorAll('a[href*="agente_id="]');
+            if (agenteLinks.length === 0) {
+                mostrarAlertaModal('No se encontraron agentes listados.');
                 return;
             }
         
-            fetch('/facturacion/cuotas/aplicar-descuento', {
+            // Armamos el array de agentes con id y nombre
+            const agentes = Array.from(agenteLinks).map(link => {
+                return {
+                    id: new URLSearchParams(link.href.split('?')[1]).get('agente_id'),
+                    nombre: link.textContent.trim()
+                };
+            });
+        
+            contenedor.innerHTML = '';
+            mensajeExito.classList.remove('d-none');
+            acciones.classList.add('d-none');
+            btnExportar.classList.remove('d-none');
+        
+            fetch('/facturacion/cuotas/aplicar-descuento-masivo', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -229,86 +239,124 @@
                 body: JSON.stringify({
                     desde: periodoDesde,
                     hasta: periodoHasta,
-                    agente_id: agenteId
+                    agentes: agentes
                 })
             })
             .then(res => res.json())
             .then(data => {
-                if (!data.success) throw new Error('Error al aplicar descuento');
+                if (!data.success) throw new Error('Error al aplicar descuento masivo');
         
-                mensajeExito.classList.remove('d-none');
-                acciones.classList.add('d-none');
-                btnExportar.classList.remove('d-none');
-        
-                contenedor.innerHTML = '';
-        
-                let totalPagado = 0;
-                const tabla = document.createElement('table');
-                tabla.classList.add('table', 'table-bordered', 'mt-4');
-        
-                let filas = `
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nro. Factura</th>
-                            <th>Nro. Cuota</th>
-                            <th>Monto</th>
-                            <th>Vencimiento</th>
-                            <th>Periodo</th>
-                            <th>Pagado</th>
-                            <th>Reprogramado</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                `;
-        
-                data.cuotas.forEach(c => {
-                    const pagado = parseFloat(c.monto_pagado);
-                    const reprogramado = parseFloat(c.monto_reprogramado);
-                    const total = parseFloat(c.monto);
-                    totalPagado += pagado;
-        
-                    filas += `
-                        <tr>
-                            <td>${c.id}</td>
-                            <td>${c.nro_factura}</td>
-                            <td>${c.nro_cuota}</td>
-                            <td>$${total.toFixed(2)}</td>
-                            <td>${c.fecha_vencimiento}</td>
-                            <td>${c.periodo ?? 'Fecha inicial'}</td>
-                            <td>$${pagado.toFixed(2)}</td>
-                            <td>$${reprogramado.toFixed(2)}</td>
-                            <td>
-                                <span class="badge ${c.estado === 'pagada' ? 'bg-success' : c.estado === 'reprogramada' ? 'bg-danger' : 'bg-warning text-dark'}">
-                                    ${c.estado}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
+                data.resultados.forEach(grupo => {
+                    renderizarTablaCuotas(grupo.agente_id, grupo.agente_nombre, grupo.cuotas);
                 });
-        
-                filas += `
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td colspan="8"><strong>Total pagado:</strong></td>
-                            <td><strong>$${totalPagado.toFixed(2)}</strong></td>
-                        </tr>
-                    </tfoot>
-                `;
-        
-                tabla.innerHTML = filas;
-                contenedor.appendChild(tabla);
             })
             .catch(err => {
                 console.error(err);
-                alert('Ocurrió un error al aplicar el descuento.');
+                mostrarAlertaModal('Ocurrió un error al aplicar el descuento masivo.');
             });
         });
+
+
+        function renderizarTablaCuotas(agenteId, agenteNombre, cuotas) {
+            if (!cuotas || cuotas.length === 0) return;
+        
+            // Crear y agregar título del agente antes de la tabla
+            const titulo = document.createElement('h5');
+            titulo.classList.add('mt-4');
+            titulo.innerHTML = `Agente: <a href="/facturacion/agente/ver?agente_id=${agenteId}" target="_blank" class="text-decoration-none">${agenteNombre}</a>`;
+            contenedor.appendChild(titulo);
+        
+            const tabla = document.createElement('table');
+            tabla.classList.add('table', 'table-bordered', 'mt-2');
+        
+            let totalPagado = 0;
+        
+            let filas = `
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nro. Factura</th>
+                        <th>Nro. Cuota</th>
+                        <th>Monto</th>
+                        <th>Vencimiento</th>
+                        <th>Periodo</th>
+                        <th>Pagado</th>
+                        <th>Reprogramado</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+        
+            cuotas.forEach(c => {
+                const pagado = parseFloat(c.monto_pagado);
+                const reprogramado = parseFloat(c.monto_reprogramado);
+                const total = parseFloat(c.monto);
+                totalPagado += pagado;
+        
+                filas += `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.nro_factura}</td>
+                        <td>${c.nro_cuota}</td>
+                        <td>$${total.toFixed(2)}</td>
+                        <td>${c.fecha_vencimiento}</td>
+                        <td>${c.periodo ?? 'Fecha inicial'}</td>
+                        <td>$${pagado.toFixed(2)}</td>
+                        <td>$${reprogramado.toFixed(2)}</td>
+                        <td>
+                            <span class="badge ${c.estado === 'pagada' ? 'bg-success' : c.estado === 'reprogramada' ? 'bg-danger' : 'bg-warning text-dark'}">
+                                ${c.estado}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        
+            filas += `
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="8"><strong>Total pagado:</strong></td>
+                        <td><strong>$${totalPagado.toFixed(2)}</strong></td>
+                    </tr>
+                </tfoot>
+            `;
+        
+            tabla.innerHTML = filas;
+            contenedor.appendChild(tabla);
+        }
+        
+
+        function mostrarAlertaModal(mensaje) {
+            const modalBody = document.getElementById('modalAlertaMensaje');
+            modalBody.textContent = mensaje;
+        
+            const modal = new bootstrap.Modal(document.getElementById('modalAlerta'));
+            modal.show();
+        }
         
     });
     </script>
+
+    <!-- Modal de alerta -->
+    <div class="modal fade" id="modalAlerta" tabindex="-1" aria-labelledby="modalAlertaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+            <h5 class="modal-title" id="modalAlertaLabel">⚠ Atención</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="modalAlertaMensaje">
+            <!-- Mensaje dinámico -->
+            </div>
+            <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+            </div>
+        </div>
+        </div>
+    </div>
+  
 </body>
 </html>
 
