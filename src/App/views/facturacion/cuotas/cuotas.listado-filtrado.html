@@ -46,12 +46,14 @@
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const btnFiltrar = document.getElementById('btnFiltrarAgrupado');
+        const btnAplicar = document.getElementById('btnAplicarDescuento');
+        const btnExportar = document.getElementById('btnExportarTxt');
+
         const inputDesde = document.getElementById('fechaDesde');
         const inputHasta = document.getElementById('fechaHasta');
         const contenedor = document.getElementById('tablaCuotasAgrupadas');
         const acciones = document.getElementById('accionesDescuento');
         const mensajeExito = document.getElementById('mensajeExito');
-        const btnExportar = document.getElementById('btnExportarTxt');
 
         let periodoDesde = '';
         let periodoHasta = '';
@@ -207,6 +209,104 @@
                 contenedor.innerHTML = '<div class="alert alert-danger">Ocurrió un error al cargar el reporte.</div>';
             });
         });
+
+
+        btnAplicar.addEventListener('click', function () {
+            const agenteLink = document.querySelector('a[href*="agente_id="]');
+            const agenteId = agenteLink ? new URLSearchParams(agenteLink.href.split('?')[1]).get('agente_id') : null;
+        
+            if (!agenteId) {
+                alert('No se encontró el agente seleccionado.');
+                return;
+            }
+        
+            fetch('/facturacion/cuotas/aplicar-descuento', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    desde: periodoDesde,
+                    hasta: periodoHasta,
+                    agente_id: agenteId
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) throw new Error('Error al aplicar descuento');
+        
+                mensajeExito.classList.remove('d-none');
+                acciones.classList.add('d-none');
+                btnExportar.classList.remove('d-none');
+        
+                contenedor.innerHTML = '';
+        
+                let totalPagado = 0;
+                const tabla = document.createElement('table');
+                tabla.classList.add('table', 'table-bordered', 'mt-4');
+        
+                let filas = `
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nro. Factura</th>
+                            <th>Nro. Cuota</th>
+                            <th>Monto</th>
+                            <th>Vencimiento</th>
+                            <th>Periodo</th>
+                            <th>Pagado</th>
+                            <th>Reprogramado</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                `;
+        
+                data.cuotas.forEach(c => {
+                    const pagado = parseFloat(c.monto_pagado);
+                    const reprogramado = parseFloat(c.monto_reprogramado);
+                    const total = parseFloat(c.monto);
+                    totalPagado += pagado;
+        
+                    filas += `
+                        <tr>
+                            <td>${c.id}</td>
+                            <td>${c.nro_factura}</td>
+                            <td>${c.nro_cuota}</td>
+                            <td>$${total.toFixed(2)}</td>
+                            <td>${c.fecha_vencimiento}</td>
+                            <td>${c.periodo ?? 'Fecha inicial'}</td>
+                            <td>$${pagado.toFixed(2)}</td>
+                            <td>$${reprogramado.toFixed(2)}</td>
+                            <td>
+                                <span class="badge ${c.estado === 'pagada' ? 'bg-success' : c.estado === 'reprogramada' ? 'bg-danger' : 'bg-warning text-dark'}">
+                                    ${c.estado}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+        
+                filas += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8"><strong>Total pagado:</strong></td>
+                            <td><strong>$${totalPagado.toFixed(2)}</strong></td>
+                        </tr>
+                    </tfoot>
+                `;
+        
+                tabla.innerHTML = filas;
+                contenedor.appendChild(tabla);
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Ocurrió un error al aplicar el descuento.');
+            });
+        });
+        
     });
     </script>
 </body>
