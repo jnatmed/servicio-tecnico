@@ -63,7 +63,7 @@
             const hasta = inputHasta.value; // recibo parametro hasta
 
             if (!desde || !hasta) { // controlo que no sean vacios sino cargo un alert, tengo que corregir esta parte con un modal
-                alert('Seleccioná un periodo válido.');
+                mostrarAlertaModal('Seleccioná un periodo válido.');
                 return;
             }
 
@@ -174,7 +174,7 @@
                                 <td>$${montoTotal.toFixed(2)}</td>
                                 <td>${cuota.fecha_vencimiento}</td>
                                 <td>${cuota.periodo ?? 'Sin reprogramar'}</td>
-                                <td>$${(pagadoAnterior + pagado).toFixed(2)}</td>
+                                <td>$${(pagadoAnterior).toFixed(2)}</td>
                                 <td>$${reprogramado.toFixed(2)}</td>
                                 <td>$${pagado.toFixed(2)}</td>
                                 <td><span class="badge ${cuota.estado === 'a-reprogramar' ? 'bg-danger' : cuota.estado === 'pendiente' ? 'bg-warning text-dark' : 'bg-success'}">${cuota.estado}</span></td>
@@ -182,7 +182,7 @@
                     });
 
                     const detalleTexto = detalleCuotas.length > 0 
-                        ? `<em>(Ej: ${detalleCuotas.join(' + ')})</em>` 
+                        ? `<em>(Detalle: ${detalleCuotas.join(' + ')})</em>` 
                         : '';
                     console.log("Detalle cuotas:", detalleTexto);
 
@@ -217,13 +217,10 @@
                 return;
             }
         
-            // Armamos el array de agentes con id y nombre
-            const agentes = Array.from(agenteLinks).map(link => {
-                return {
-                    id: new URLSearchParams(link.href.split('?')[1]).get('agente_id'),
-                    nombre: link.textContent.trim()
-                };
-            });
+            const agentes = Array.from(agenteLinks).map(link => ({
+                id: new URLSearchParams(link.href.split('?')[1]).get('agente_id'),
+                nombre: link.textContent.trim()
+            }));
         
             contenedor.innerHTML = '';
             mensajeExito.classList.remove('d-none');
@@ -246,21 +243,45 @@
             .then(data => {
                 if (!data.success) throw new Error('Error al aplicar descuento masivo');
         
-                data.resultados.forEach(grupo => {
-                    renderizarTablaCuotas(grupo.agente_id, grupo.agente_nombre, grupo.cuotas);
-                });
+                let huboDescuentos = false;
+        
+                try {
+                    data.resultados.forEach(grupo => {
+                        const total = parseFloat(grupo.total_descontado);
+                        console.log("Evaluando grupo:", grupo);
+        
+                        if (total > 0) {
+                                renderizarTablaCuotas(
+                                    grupo.agente_id,
+                                    grupo.agente_nombre,
+                                    grupo.cuotas ?? [],
+                                    total,
+                                    grupo.detalle_descontado ?? []
+                                );
+                                huboDescuentos = true;
+                        } else {
+                            console.log("Sin descuento para agente:", grupo.agente_nombre);
+                        }
+                    });
+        
+                    if (!huboDescuentos) {
+                        contenedor.innerHTML = '<div class="alert alert-warning">No se aplicaron descuentos a ningún agente en el periodo seleccionado.</div>';
+                    }
+                } catch (error) {
+                    console.error("Error procesando resultados de descuento masivo:", error);
+                    mostrarAlertaModal("Ocurrió un error inesperado al procesar el resultado.");
+                }
             })
             .catch(err => {
                 console.error(err);
                 mostrarAlertaModal('Ocurrió un error al aplicar el descuento masivo.');
             });
         });
-
-
-        function renderizarTablaCuotas(agenteId, agenteNombre, cuotas) {
-            if (!cuotas || cuotas.length === 0) return;
         
-            // Crear y agregar título del agente antes de la tabla
+
+
+        function renderizarTablaCuotas(agenteId, agenteNombre, cuotas = [], totalDescontado = 0, detalleDescuento = []) {
+
             const titulo = document.createElement('h5');
             titulo.classList.add('mt-4');
             titulo.innerHTML = `Agente: <a href="/facturacion/agente/ver?agente_id=${agenteId}" target="_blank" class="text-decoration-none">${agenteNombre}</a>`;
@@ -268,8 +289,6 @@
         
             const tabla = document.createElement('table');
             tabla.classList.add('table', 'table-bordered', 'mt-2');
-        
-            let totalPagado = 0;
         
             let filas = `
                 <thead>
@@ -288,11 +307,13 @@
                 <tbody>
             `;
         
+            let totalMostrado = 0;
+        
             cuotas.forEach(c => {
                 const pagado = parseFloat(c.monto_pagado);
                 const reprogramado = parseFloat(c.monto_reprogramado);
                 const total = parseFloat(c.monto);
-                totalPagado += pagado;
+                totalMostrado += pagado;
         
                 filas += `
                     <tr>
@@ -317,8 +338,13 @@
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="8"><strong>Total pagado:</strong></td>
-                        <td><strong>$${totalPagado.toFixed(2)}</strong></td>
+                        <td colspan="8"><strong>Total descontado:</strong></td>
+                        <td><strong>$${totalDescontado.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="9" class="text-muted small">
+                            ${detalleDescuento.length > 0 ? `(Ej: ${detalleDescuento.join(' + ')})` : ''}
+                        </td>
                     </tr>
                 </tfoot>
             `;
@@ -326,7 +352,7 @@
             tabla.innerHTML = filas;
             contenedor.appendChild(tabla);
         }
-        
+                                
 
         function mostrarAlertaModal(mensaje) {
             const modalBody = document.getElementById('modalAlertaMensaje');

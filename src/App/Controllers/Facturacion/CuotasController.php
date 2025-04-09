@@ -142,7 +142,7 @@ class CuotasController extends Controller
         }
     }
     
-    public function aplicarDescuento()
+    public function aplicarDescuentoMasivo()
     {
         try {
             $data = json_decode(file_get_contents('php://input'), true);
@@ -157,26 +157,34 @@ class CuotasController extends Controller
             $resultados = [];
     
             foreach ($agentes as $agente) {
-                $agenteId = $agente['id'];
-                $agenteNombre = $agente['nombre'];
+                $agenteId = $agente['id'] ?? null;
+                $agenteNombre = $agente['nombre'] ?? 'Sin nombre';
     
-                $cuotasActualizadas = $this->model->aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta);
+                if (!$agenteId) continue;
+    
+                $resultado = $this->model->aplicarDescuentoDeHaberesInteligente($agenteId, $desde, $hasta);
+    
+                if (!$resultado) continue;
     
                 $resultados[] = [
                     'agente_id' => $agenteId,
                     'agente_nombre' => $agenteNombre,
-                    'cuotas' => $cuotasActualizadas
+                    'cuotas' => $resultado['cuotas'],
+                    'total_descontado' => $resultado['total_descontado'],
+                    'detalle_descontado' => $resultado['detalle_descontado'] ?? [] // Nueva línea
                 ];
             }
     
             echo json_encode(['success' => true, 'resultados' => $resultados]);
     
         } catch (Exception $e) {
-            $this->logger->error("Error en aplicarDescuento (masivo): " . $e->getMessage());
+            $this->logger->error("Error al aplicar descuento masivo: " . $e->getMessage());
             echo json_encode(['success' => false, 'error' => $e->getMessage()]);
         }
         exit;
     }
+    
+    
     
     
         

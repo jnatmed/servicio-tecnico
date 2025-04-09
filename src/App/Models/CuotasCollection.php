@@ -313,8 +313,10 @@ class CuotasCollection extends Model
     
             $tope = 100000.00;
             $acumulado = 0.00;
+            $totalDescontado = 0.00;
+            $detalleDescuento = [];
     
-            // Obtener cuotas activas para el periodo
+            $this->logger->info("Buscando cuotas activas para el agente $agenteId...");
             $cuotas = $this->queryBuilder->query("
                 SELECT c.id, c.monto, c.monto_pagado, c.monto_reprogramado
                 FROM cuota c
@@ -328,6 +330,7 @@ class CuotasCollection extends Model
                 ':desde' => $desde,
                 ':hasta' => $hasta
             ]);
+            $this->logger->info("Cuotas activas encontradas: " . count($cuotas));
     
             foreach ($cuotas as $cuota) {
                 $id = $cuota['id'];
@@ -335,7 +338,6 @@ class CuotasCollection extends Model
                 $pagado = (float)$cuota['monto_pagado'];
                 $reprogramado = (float)$cuota['monto_reprogramado'];
     
-                // Lo que realmente queda por pagar en este ciclo
                 $pendiente = $reprogramado > 0 ? $reprogramado : $montoTotal - $pagado;
     
                 if ($pendiente <= 0) {
@@ -344,7 +346,6 @@ class CuotasCollection extends Model
                 }
     
                 if ($acumulado + $pendiente <= $tope) {
-                    // Pago completo
                     $this->queryBuilder->query(
                         "UPDATE cuota 
                          SET estado = 'pagada', 
@@ -354,10 +355,12 @@ class CuotasCollection extends Model
                         [':monto' => $pendiente, ':id' => $id]
                     );
                     $acumulado += $pendiente;
+                    $totalDescontado += $pendiente;
+                    $detalleDescuento[] = "$" . number_format($pendiente, 2, '.', '') . " de cuota #$id";
+    
                     $this->logger->info("Cuota $id pagada completamente con $pendiente");
     
                 } elseif ($acumulado < $tope) {
-                    // Pago parcial
                     $pagoDisponible = $tope - $acumulado;
                     $nuevoReprogramado = $pendiente - $pagoDisponible;
     
@@ -375,10 +378,12 @@ class CuotasCollection extends Model
                         ]
                     );
                     $acumulado = $tope;
+                    $totalDescontado += $pagoDisponible;
+                    $detalleDescuento[] = "parcial: $" . number_format($pagoDisponible, 2, '.', '') . " de cuota #$id";
+    
                     $this->logger->info("Cuota $id paga parcialmente: $pagoDisponible, repro: $nuevoReprogramado");
     
                 } else {
-                    // Reprogramación total
                     $this->queryBuilder->query(
                         "UPDATE cuota 
                          SET estado = 'reprogramada',
@@ -394,25 +399,36 @@ class CuotasCollection extends Model
                 }
             }
     
-            // Devolver cuotas actualizadas
-            return $this->queryBuilder->query("
+            $this->logger->info("Consultando cuotas actualizadas...");
+            $cuotasActualizadas = $this->queryBuilder->query("
                 SELECT c.id, f.nro_factura, c.nro_cuota, c.monto, c.monto_pagado, c.monto_reprogramado, 
                        c.fecha_vencimiento, c.periodo, c.estado
                 FROM cuota c
                 INNER JOIN factura f ON f.id = c.factura_id
                 WHERE f.id_agente = :agenteId
                   AND IFNULL(c.periodo, c.fecha_vencimiento) BETWEEN :desde AND :hasta
+                  AND c.estado IN ('pagada', 'reprogramada')
                 ORDER BY IFNULL(c.periodo, c.fecha_vencimiento) ASC
             ", [
                 ':agenteId' => $agenteId,
                 ':desde' => $desde,
                 ':hasta' => $hasta
             ]);
+    
+            $this->logger->info("Cuotas actualizadas obtenidas: " . count($cuotasActualizadas));
+    
+            return [
+                'cuotas' => $cuotasActualizadas,
+                'total_descontado' => $totalDescontado,
+                'detalle_descontado' => $detalleDescuento
+            ];
+    
         } catch (Exception $e) {
             $this->logger->error("Error en aplicarDescuentoDeHaberesInteligente: " . $e->getMessage());
             return false;
         }
-    }        
+    }
+    
     
     
     
