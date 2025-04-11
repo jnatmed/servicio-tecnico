@@ -78,7 +78,7 @@ class CuotasCollection extends Model
                     // 📥 Registrar movimiento en cuenta corriente
                     $movimiento = new CuentaCorriente([
                         'agente_id' => $factura['id_agente'],
-                        'fecha' => $fechaVencimiento,
+                        'fecha' => date('Y-m-d'), // fecha actual, fecha real del movimiento
                         'descripcion' => "Cuota {$i}/{$cantidadCuotas} - Factura N° {$factura['nro_factura']}",
                         'condicion_venta' => $factura['condicion_venta'],
                         'tipo_movimiento' => 'debito',
@@ -315,10 +315,10 @@ class CuotasCollection extends Model
             $acumulado = 0.00;
             $totalDescontado = 0.00;
             $detalleDescuento = [];
+            $movimientosCuentaCorriente = [];
     
-            $this->logger->info("Buscando cuotas activas para el agente $agenteId...");
             $cuotas = $this->queryBuilder->query("
-                SELECT c.id, c.monto, c.monto_pagado, c.monto_reprogramado
+                SELECT c.id, c.factura_id, c.monto, c.monto_pagado, c.monto_reprogramado
                 FROM cuota c
                 INNER JOIN factura f ON f.id = c.factura_id
                 WHERE f.id_agente = :agenteId
@@ -330,10 +330,10 @@ class CuotasCollection extends Model
                 ':desde' => $desde,
                 ':hasta' => $hasta
             ]);
-            $this->logger->info("Cuotas activas encontradas: " . count($cuotas));
     
             foreach ($cuotas as $cuota) {
                 $id = $cuota['id'];
+                $facturaId = $cuota['factura_id'];
                 $montoTotal = (float)$cuota['monto'];
                 $pagado = (float)$cuota['monto_pagado'];
                 $reprogramado = (float)$cuota['monto_reprogramado'];
@@ -341,28 +341,41 @@ class CuotasCollection extends Model
                 $pendiente = $reprogramado > 0 ? $reprogramado : $montoTotal - $pagado;
     
                 if ($pendiente <= 0) {
-                    $this->logger->info("Cuota $id ya saldada.");
                     continue;
                 }
     
+                $factura = $this->queryBuilder->select(
+                    'factura',
+                    'id, nro_factura, condicion_venta, id_agente',
+                    ['id' => $facturaId]
+                )[0] ?? null;
+    
+                if (!$factura) {
+                    $this->logger->warning("Factura no encontrada para cuota $id");
+                    continue;
+                }
+    
+                $montoDescontado = 0.00;
+                $nuevoReprogramado = 0.00;
+    
                 if ($acumulado + $pendiente <= $tope) {
+                    // Pago total
+                    $montoDescontado = $pendiente;
+    
                     $this->queryBuilder->query(
                         "UPDATE cuota 
                          SET estado = 'pagada', 
                              monto_pagado = monto_pagado + :monto,
                              monto_reprogramado = 0
                          WHERE id = :id",
-                        [':monto' => $pendiente, ':id' => $id]
+                        [':monto' => $montoDescontado, ':id' => $id]
                     );
-                    $acumulado += $pendiente;
-                    $totalDescontado += $pendiente;
-                    $detalleDescuento[] = "$" . number_format($pendiente, 2, '.', '') . " de cuota #$id";
     
-                    $this->logger->info("Cuota $id pagada completamente con $pendiente");
-    
+                    $detalleDescuento[] = "$" . number_format($montoDescontado, 2, '.', '') . " de cuota #$id";
                 } elseif ($acumulado < $tope) {
-                    $pagoDisponible = $tope - $acumulado;
-                    $nuevoReprogramado = $pendiente - $pagoDisponible;
+                    // Pago parcial
+                    $montoDescontado = $tope - $acumulado;
+                    $nuevoReprogramado = $pendiente - $montoDescontado;
     
                     $this->queryBuilder->query(
                         "UPDATE cuota 
@@ -372,18 +385,15 @@ class CuotasCollection extends Model
                              periodo = DATE_ADD(IFNULL(periodo, fecha_vencimiento), INTERVAL 1 MONTH)
                          WHERE id = :id",
                         [
-                            ':pagado' => $pagoDisponible,
+                            ':pagado' => $montoDescontado,
                             ':reprogramado' => $nuevoReprogramado,
                             ':id' => $id
                         ]
                     );
-                    $acumulado = $tope;
-                    $totalDescontado += $pagoDisponible;
-                    $detalleDescuento[] = "parcial: $" . number_format($pagoDisponible, 2, '.', '') . " de cuota #$id";
     
-                    $this->logger->info("Cuota $id paga parcialmente: $pagoDisponible, repro: $nuevoReprogramado");
-    
+                    $detalleDescuento[] = "parcial: $" . number_format($montoDescontado, 2, '.', '') . " de cuota #$id";
                 } else {
+                    // No hay más cupo para descontar
                     $this->queryBuilder->query(
                         "UPDATE cuota 
                          SET estado = 'reprogramada',
@@ -395,11 +405,38 @@ class CuotasCollection extends Model
                             ':id' => $id
                         ]
                     );
-                    $this->logger->info("Cuota $id reprogramada totalmente por $pendiente");
+                    continue; // No insertamos nada si no hubo pago
+                }
+    
+                // Solo si se descontó algo
+                if ($montoDescontado > 0) {
+                    $saldoRestante = $montoTotal - ($pagado + $montoDescontado);
+    
+                    $this->queryBuilder->insert('cuenta_corriente', [
+                        'agente_id' => $factura['id_agente'],
+                        'fecha' => date('Y-m-d'),
+                        'descripcion' => ($nuevoReprogramado > 0 ? 'Descuento parcial' : 'Descuento total') . " cuota #$id - Factura N° {$factura['nro_factura']}",
+                        'condicion_venta' => $factura['condicion_venta'],
+                        'tipo_movimiento' => 'credito',
+                        'monto' => $montoDescontado,
+                        'saldo' => $saldoRestante,
+                        'cuota_id' => $id
+                    ]);
+    
+                    $movimientosCuentaCorriente[] = [
+                        'cuota_id' => $id,
+                        'monto' => $montoDescontado,
+                        'saldo' => $saldoRestante,
+                        'descripcion' => "Descuento " . ($nuevoReprogramado > 0 ? 'parcial' : 'total') . " cuota #$id",
+                        'fecha' => date('Y-m-d')
+                    ];
+    
+                    $acumulado += $montoDescontado;
+                    $totalDescontado += $montoDescontado;
                 }
             }
     
-            $this->logger->info("Consultando cuotas actualizadas...");
+            // Consultar cuotas actualizadas
             $cuotasActualizadas = $this->queryBuilder->query("
                 SELECT c.id, f.nro_factura, c.nro_cuota, c.monto, c.monto_pagado, c.monto_reprogramado, 
                        c.fecha_vencimiento, c.periodo, c.estado
@@ -415,12 +452,23 @@ class CuotasCollection extends Model
                 ':hasta' => $hasta
             ]);
     
-            $this->logger->info("Cuotas actualizadas obtenidas: " . count($cuotasActualizadas));
+            // Calcular total adeudado post-descuento
+            $deudaPendiente = $this->queryBuilder->query("
+                SELECT SUM(monto - monto_pagado) AS total
+                FROM cuota c
+                INNER JOIN factura f ON f.id = c.factura_id
+                WHERE f.id_agente = :agenteId
+                  AND c.estado IN ('pendiente', 'reprogramada')
+            ", [
+                ':agenteId' => $agenteId
+            ])[0]['total'] ?? 0.00;
     
             return [
                 'cuotas' => $cuotasActualizadas,
                 'total_descontado' => $totalDescontado,
-                'detalle_descontado' => $detalleDescuento
+                'detalle_descontado' => $detalleDescuento,
+                'movimientos' => $movimientosCuentaCorriente,
+                'total_adeudado' => (float) $deudaPendiente
             ];
     
         } catch (Exception $e) {
@@ -429,6 +477,7 @@ class CuotasCollection extends Model
         }
     }
     
+        
     
     
     

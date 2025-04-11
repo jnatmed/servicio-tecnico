@@ -30,68 +30,90 @@
     <h3>Movimientos</h3>
 
     {% if movimientos is not empty %}
-    <table>
-        <thead
+    <table class="table table-bordered table-striped">
+        <thead class="table-primary">
             <tr>
-                    <th>Fecha</th>
-                    <th>Descripción</th>
-                    <th>Condición de Venta</th>
-                    <th>Tipo</th>
-                    <th>Monto</th>
-                    <th>Saldo</th>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th>Condición de Venta</th>
+                <th>Tipo</th>
+                <th>Monto Cuota</th>
+                <th>Pagado Ahora</th>
+                <th>Saldo de Cuota</th>
+                <th>Saldo Acumulado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mov in movimientos %}
+                {# Clase de fila según tipo de movimiento #}
+                {% set row_class = '' %}
+                {% if mov.tipo_movimiento == 'credito' %}
+                    {% set row_class = 'table-success' %}
+                {% elseif mov.tipo_movimiento == 'debito' %}
+                    {% set row_class = 'table-danger' %}
+                {% endif %}
+    
+                {# Ícono #}
+                {% set icono = '' %}
+                {% if mov.tipo_movimiento == 'credito' %}
+                    {% set icono = '💰' %}
+                {% elseif mov.tipo_movimiento == 'debito' %}
+                    {% set icono = '📅' %}
+                {% endif %}
+    
+                <tr class="{{ row_class }}">
+                    <td>{{ mov.fecha|date("d/m/Y") }}</td>
+                    <td>
+                        {{ icono }}
+                        {% if mov.factura_id is not null %}
+                            <a href="/facturacion/ver?id={{ mov.factura_id }}">{{ mov.descripcion }}</a>
+                        {% else %}
+                            {{ mov.descripcion }}
+                        {% endif %}
+    
+                        {% if mov.cuota_id is not null %}
+                            <span class="badge bg-primary ms-2">Cuota</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ mov.condicion_venta }}</td>
+                    <td>{{ mov.tipo_movimiento|capitalize }}</td>
+    
+                    {# Monto Cuota #}
+                    <td class="text-end">
+                        ${{ mov.monto_cuota|number_format(2, '.', ',') }}
+                    </td>
+    
+                    {# Pagado Ahora (solo para créditos) #}
+                    <td class="text-end">
+                        {% if mov.tipo_movimiento == 'credito' %}
+                            ${{ mov.pagado_ahora|number_format(2, '.', ',') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+    
+                    {# Saldo de Cuota (puede ser null) #}
+                    <td class="text-end">
+                        {% if mov.saldo is not null %}
+                            ${{ mov.saldo|number_format(2, '.', ',') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+    
+                    {# Saldo Acumulado del agente #}
+                    <td class="text-end {{ mov.saldo_acumulado < 0 ? 'text-danger' : 'text-success' }}">
+                        ${{ mov.saldo_acumulado|number_format(2, '.', ',') }}
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for mov in movimientos %}
-                    {# Colores para fila según tipo #}
-                    {% set row_class = '' %}
-                    {% if mov.cuota_id is not null %}
-                        {% set row_class = 'table-warning' %}
-                    {% elseif mov.tipo_movimiento == 'credito' %}
-                        {% set row_class = 'table-success' %}
-                    {% elseif mov.tipo_movimiento == 'debito' %}
-                        {% set row_class = 'table-secondary' %}
-                    {% endif %}
-            
-                    {# Ícono según tipo de movimiento o si es cuota #}
-                    {% set icono = '' %}
-                    {% if mov.cuota_id is not null %}
-                        {% set icono = '🧾' %}
-                    {% elseif mov.tipo_movimiento == 'credito' %}
-                        {% set icono = '💰' %}
-                    {% elseif mov.tipo_movimiento == 'debito' %}
-                        {% set icono = '📅' %}
-                    {% endif %}
-            
-                    <tr class="{{ row_class }}">
-                        <td>{{ mov.fecha|date("d/m/Y") }}</td>
-                        <td>
-                            {{ icono }}
-                            {% if mov.factura_id is not null %}
-                                <a href="/facturacion/ver?id={{ mov.factura_id }}">{{ mov.descripcion }}</a>
-                            {% else %}
-                                {{ mov.descripcion }}
-                            {% endif %}
-                            
-                            {% if mov.cuota_id is not null %}
-                                <span class="badge bg-primary ms-2">Cuota</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ mov.condicion_venta }}</td>
-                        <td>{{ mov.tipo_movimiento|capitalize }}</td>
-                        <td class="text-end">${{ mov.monto|number_format(2, '.', ',') }}</td>
-                        <td class="text-end">${{ mov.saldo_acumulado|number_format(2, '.', ',') }}</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-            
-            
-            
-        </table>
+            {% endfor %}
+        </tbody>
+    </table>
     {% else %}
         <p>No se encontraron movimientos para este agente.</p>
     {% endif %}
-
+    
+    
     <br>
     {% set exportable = movimientos is not empty or saldo != 0 %}
     <form action="/cuenta-corriente/exportar-pdf?agente_id={{ agente.id }}" method="get" target="_blank">

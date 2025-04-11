@@ -17,7 +17,8 @@ class CuentaCorrienteCollection extends Model
         $sql = "
             SELECT 
                 cc.*,
-                c.factura_id
+                c.factura_id,
+                c.monto AS monto_cuota
             FROM cuenta_corriente cc
             LEFT JOIN cuota c ON cc.cuota_id = c.id
             WHERE cc.agente_id = :agente_id
@@ -29,16 +30,26 @@ class CuentaCorrienteCollection extends Model
         $saldo = 0;
         foreach ($movimientos as &$mov) {
             $tipo = strtolower($mov['tipo_movimiento']);
+    
+            // Monto total original de la cuota (si existe)
+            $mov['monto_cuota'] = isset($mov['monto_cuota']) ? (float) $mov['monto_cuota'] : $mov['monto'];
+    
+            // Monto pagado en este movimiento (solo si es crédito)
+            $mov['pagado_ahora'] = $tipo === 'credito' ? (float) $mov['monto'] : 0.0;
+    
+            // Calcular saldo acumulado del agente
             if ($tipo === 'credito') {
                 $saldo += $mov['monto'];
             } elseif ($tipo === 'debito') {
                 $saldo -= $mov['monto'];
             }
+    
             $mov['saldo_acumulado'] = $saldo;
         }
     
         return $movimientos;
     }
+    
     
 
     public function registrarMovimiento(CuentaCorriente $movimiento)
