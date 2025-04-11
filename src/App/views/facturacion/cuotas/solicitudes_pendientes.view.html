@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  {% include 'parts/head.view.html' %}
+</head>
+<body>
+  {% include "parts/modulos.view.html" %}
+
+  <section class="container mt-5">
+    <h1 class="mb-4">Solicitudes de Descuento de Haberes Pendientes</h1>
+
+    {% if solicitudes is not empty %}
+      {% set agrupadas = {} %}
+      {% for s in solicitudes %}
+        {% set fecha = s.fecha_solicitud|date('d/m/Y') %}
+        {% if agrupadas[fecha] is not defined %}
+          {% set agrupadas = agrupadas|merge({ (fecha): [] }) %}
+        {% endif %}
+        {% set agrupadas = agrupadas|merge({ (fecha): agrupadas[fecha]|merge([s]) }) %}
+      {% endfor %}
+
+      {% for fecha, solicitudesFecha in agrupadas %}
+        <details class="mb-4" open>
+          <summary class="h5 mb-2">📅 Fecha de Solicitud: {{ fecha }} ({{ solicitudesFecha|length }} solicitud{{ solicitudesFecha|length > 1 ? 'es' : '' }})</summary>
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>ID Cuota</th>
+                <th>Nro. Factura</th>
+                <th>Agente</th>
+                <th>Monto Cuota</th>
+                <th>Pagado</th>
+                <th>Reprogramado</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in solicitudesFecha %}
+              <tr>
+                <td>{{ s.cuota_id }}</td>
+                <td>{{ s.nro_factura }}</td>
+                <td><a href="/facturacion/agente/ver?agente_id={{ s.agente_id }}">{{ s.agente }}</a></td>
+                <td>$ {{ s.monto|number_format(2, '.', ',') }}</td>
+                <td>$ {{ s.monto_pagado|number_format(2, '.', ',') }}</td>
+                <td>$ {{ s.monto_reprogramado|number_format(2, '.', ',') }}</td>
+                <td><span class="badge bg-warning text-dark">{{ s.resultado }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </details>
+      {% endfor %}
+    {% else %}
+      <div class="alert alert-info">No hay solicitudes pendientes por mostrar.</div>
+    {% endif %}
+
+    <a href="/facturacion/cuotas/listado" class="btn btn-secondary mt-3">
+      <i class="bi bi-arrow-left"></i> Volver al Listado de Cuotas
+    </a>
+  </section>
+
+  {% include 'parts/footer.view.html' %}
+</body>
+</html>

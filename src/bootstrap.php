@@ -213,6 +213,8 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
  $router->post('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@reporteAgrupado');
  $router->post('/facturacion/cuotas/aplicar-descuento-masivo', 'Facturacion\\CuotasController@aplicarDescuentoMasivo');
  $router->get('/facturacion/cuotas/exportar-txt', 'Facturacion\\CuotasController@exportarTxt');
+ $router->get('/facturacion/cuotas/solicitudes-pendientes', 'Facturacion\\CuotasController@verSolicitudesPendientes');
+
 
  /**
   * 15) Facturacion

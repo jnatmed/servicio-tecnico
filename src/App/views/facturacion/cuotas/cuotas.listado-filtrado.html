@@ -9,6 +9,8 @@
     <section class="container_cuotas">
         <div class="container mt-5">
             <h1 class="mb-4">Descuento de Haberes</h1>
+            
+            <div id="solicitudesPendientesContainer" class="mb-4"></div>
 
             <form method="get" class="row g-3 mb-4">
                 <div class="col-md-4">
@@ -55,12 +57,16 @@
         const acciones = document.getElementById('accionesDescuento');
         const mensajeExito = document.getElementById('mensajeExito');
 
+        cargarSolicitudesPendientes();
+
         let periodoDesde = '';
         let periodoHasta = '';
 
         btnFiltrar.addEventListener('click', function () {
             const desde = inputDesde.value; // recibo parametro desde
             const hasta = inputHasta.value; // recibo parametro hasta
+
+
 
             if (!desde || !hasta) { // controlo que no sean vacios sino cargo un alert, tengo que corregir esta parte con un modal
                 mostrarAlertaModal('Seleccioná un periodo válido.');
@@ -360,6 +366,99 @@
         
             const modal = new bootstrap.Modal(document.getElementById('modalAlerta'));
             modal.show();
+        }
+
+        function cargarSolicitudesPendientes() {
+            fetch('/facturacion/cuotas/solicitudes-pendientes', {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const contenedor = document.getElementById('solicitudesPendientesContainer');
+                if (!data.success || !data.solicitudes || data.solicitudes.length === 0) {
+                    contenedor.innerHTML = '';
+                    return;
+                }
+        
+                let html = `<details open>
+                    <summary>📬 Hay ${data.solicitudes.length} solicitud(es) pendiente(s) - Ver detalles</summary>
+                    <ul class="mt-2">`;
+        
+                data.solicitudes.forEach(s => {
+                    const fecha = new Date(s.fecha_solicitud).toLocaleDateString('es-AR');
+                    html += `<li>Solicitud del ${fecha} (${s.cantidad} cuota/s) - 
+                                <a href="#" class="verSolicitudAjax" data-fecha="${s.fecha_solicitud}">Ver</a>
+                            </li>`;
+                });
+        
+                html += '</ul></details>';
+                contenedor.innerHTML = html;
+        
+                // Añadir listeners AJAX a cada enlace
+                document.querySelectorAll('.verSolicitudAjax').forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const fecha = this.dataset.fecha;
+        
+                        fetch(`/facturacion/cuotas/solicitudes-pendientes?fecha=${fecha}`, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            const detalle = document.getElementById('tablaCuotasAgrupadas');
+                            if (!data.success || !data.solicitudes) {
+                                detalle.innerHTML = '<div class="alert alert-warning">No se encontraron cuotas para esa solicitud.</div>';
+                                return;
+                            }
+        
+                            let tabla = `
+                                <h4 class="mt-4">Detalle de Solicitudes del ${new Date(fecha).toLocaleDateString('es-AR')}</h4>
+                                <table class="table table-bordered mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Cuota</th>
+                                            <th>Nro. Factura</th>
+                                            <th>Agente</th>
+                                            <th>Monto</th>
+                                            <th>Pagado</th>
+                                            <th>Reprogramado</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>`;
+        
+                            data.solicitudes.forEach(s => {
+                                tabla += `
+                                    <tr>
+                                        <td>${s.cuota_id}</td>
+                                        <td>${s.nro_factura}</td>
+                                        <td>${s.agente}</td>
+                                        <td>$${parseFloat(s.monto).toFixed(2)}</td>
+                                        <td>$${parseFloat(s.monto_pagado).toFixed(2)}</td>
+                                        <td>$${parseFloat(s.monto_reprogramado).toFixed(2)}</td>
+                                        <td><span class="badge bg-warning text-dark">${s.resultado}</span></td>
+                                    </tr>`;
+                            });
+        
+                            tabla += '</tbody></table>';
+                            detalle.innerHTML = tabla;
+                        })
+                        .catch(error => {
+                            console.error('Error al cargar detalle de solicitudes:', error);
+                        });
+                    });
+                });
+        
+            })
+            .catch(err => {
+                console.error('Error cargando solicitudes agrupadas:', err);
+            });
         }
         
     });

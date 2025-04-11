@@ -83,6 +83,10 @@ class Controller
                             'name' => 'REPORTES'
                         ],
                         [
+                            'href' => '/facturacion/cuotas/solicitudes-pendientes',
+                            'name' => 'SOLICITUDES DESCUENTOS'
+                        ],
+                        [
                             'href' => '/facturacion/new',
                             'name' => 'NUEVA VENTA'
                         ],

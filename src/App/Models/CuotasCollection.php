@@ -104,6 +104,48 @@ class CuotasCollection extends Model
     }
 
 
+    public function getDetalleSolicitudesPendientesPorFecha($fecha = null)
+    {
+        try {
+            $this->logger->info("Consultando detalle de solicitudes pendientes" . ($fecha ? " para fecha $fecha" : ""));
+    
+            $sql = "
+                SELECT 
+                    sdh.cuota_id,
+                    f.nro_factura,
+                    CONCAT(a.nombre, ' ', a.apellido) AS agente,
+                    c.monto,
+                    c.monto_pagado,
+                    c.monto_reprogramado,
+                    sdh.fecha_solicitud,
+                    sdh.resultado
+                FROM solicitud_descuento_haberes sdh
+                INNER JOIN cuota c ON c.id = sdh.cuota_id
+                INNER JOIN factura f ON f.id = c.factura_id
+                INNER JOIN agente a ON a.id = f.id_agente
+                WHERE sdh.resultado = 'pendiente'
+            ";
+    
+            $params = [];
+    
+            if ($fecha) {
+                $sql .= " AND sdh.fecha_solicitud = :fecha";
+                $params[':fecha'] = $fecha;
+            }
+    
+            $sql .= " ORDER BY sdh.fecha_solicitud DESC, sdh.cuota_id ASC";
+    
+            return $this->queryBuilder->query($sql, $params);
+    
+        } catch (Exception $e) {
+            $this->logger->error("Error en getDetalleSolicitudesPendientesPorFecha: " . $e->getMessage());
+            return [];
+        }
+    }
+    
+    
+    
+
     public function getCuotasByFecha($desde, $hasta, $limit, $offset)
     {
         try {
@@ -433,6 +475,26 @@ class CuotasCollection extends Model
     
                     $acumulado += $montoDescontado;
                     $totalDescontado += $montoDescontado;
+
+                    // Verificamos si ya existe una solicitud pendiente para esta cuota
+                    $solicitudes = $this->queryBuilder->select('solicitud_descuento_haberes', '*', [
+                        'cuota_id' => $id,
+                        'resultado' => 'pendiente'
+                    ]);
+
+                    if (empty($solicitudes)) {
+                        // Insertar solicitud pendiente
+                        $this->queryBuilder->insert('solicitud_descuento_haberes', [
+                            'cuota_id' => $id,
+                            'fecha_solicitud' => date('Y-m-d'),
+                            'resultado' => 'pendiente',
+                            'motivo' => null
+                        ]);
+                        
+                        $this->logger->info("Solicitud de descuento registrada para cuota #$id");
+                    } else {
+                        $this->logger->info("Solicitud ya existente para cuota #$id, se omite inserción duplicada.");
+                    }
                 }
             }
     

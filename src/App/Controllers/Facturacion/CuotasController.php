@@ -110,6 +110,49 @@ class CuotasController extends Controller
         }
     }
 
+
+    public function verSolicitudesPendientes()
+    {
+        try {
+            $fecha = $this->request->get('fecha') ?? null;
+    
+            $solicitudes = $this->model->getDetalleSolicitudesPendientesPorFecha($fecha);
+    
+            // Si es una solicitud AJAX, devolvemos JSON
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'solicitudes' => $solicitudes
+                ]);
+                exit;
+            }
+    
+            // Si no es AJAX, renderiza la vista completa
+            return view('facturacion/cuotas/solicitudes_pendientes.view', array_merge(
+                ['solicitudes' => $solicitudes],
+                $this->menu
+            ));
+        } catch (Exception $e) {
+            $this->logger->error("Error en verSolicitudesPendientes: " . $e->getMessage());
+    
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error al obtener las solicitudes.'
+                ]);
+                exit;
+            }
+    
+            return view('facturacion/cuotas/solicitudes_pendientes.view', [
+                'solicitudes' => [],
+                'error' => 'Ocurrió un error al obtener las solicitudes pendientes.'
+            ]);
+        }
+    }
+    
+    
     
     public function reporteAgrupado()
     {
