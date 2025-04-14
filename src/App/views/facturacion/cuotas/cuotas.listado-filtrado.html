@@ -386,7 +386,10 @@
                 console.log(data);
 
                 let html = `<details>
-                    <summary>📬 Hay ${data.solicitudes.length} solicitud(es) pendiente(s) - Ver detalles</summary>
+                        <summary style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-bell fa-beat text-warning" style="font-size: 1.4rem;"></i>
+                        Hay ${data.solicitudes.length} solicitud(es) pendiente(s) - Ver detalles
+                        </summary>
                     <ul class="mt-2">`;
         
                 data.solicitudes.forEach(s => {
