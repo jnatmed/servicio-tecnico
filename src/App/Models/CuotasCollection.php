@@ -107,18 +107,26 @@ class CuotasCollection extends Model
     public function getDetalleSolicitudesPendientesPorFecha($fecha = null)
     {
         try {
-            $this->logger->info("Consultando detalle de solicitudes pendientes" . ($fecha ? " para fecha $fecha" : ""));
+            $this->logger->info("Consultando solicitudes agrupadas por agente" . ($fecha ? " para fecha $fecha" : ""));
     
             $sql = "
                 SELECT 
-                    sdh.cuota_id,
-                    f.nro_factura,
+                    a.id AS agente_id,
                     CONCAT(a.nombre, ' ', a.apellido) AS agente,
-                    c.monto,
-                    c.monto_pagado,
-                    c.monto_reprogramado,
                     sdh.fecha_solicitud,
-                    sdh.resultado
+                    SUM(c.monto_pagado) AS total_pagado,
+                    SUM(c.monto_reprogramado) AS total_reprogramado,
+                    SUM(c.monto_pagado) AS total_a_descontar,
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'cuota_id', sdh.cuota_id,
+                            'nro_factura', f.nro_factura,
+                            'monto', c.monto,
+                            'monto_pagado', c.monto_pagado,
+                            'monto_reprogramado', c.monto_reprogramado,
+                            'resultado', sdh.resultado
+                        )
+                    ) AS cuotas
                 FROM solicitud_descuento_haberes sdh
                 INNER JOIN cuota c ON c.id = sdh.cuota_id
                 INNER JOIN factura f ON f.id = c.factura_id
@@ -133,15 +141,26 @@ class CuotasCollection extends Model
                 $params[':fecha'] = $fecha;
             }
     
-            $sql .= " ORDER BY sdh.fecha_solicitud DESC, sdh.cuota_id ASC";
+            $sql .= " GROUP BY a.id, a.nombre, a.apellido, sdh.fecha_solicitud
+                      ORDER BY sdh.fecha_solicitud DESC";
     
-            return $this->queryBuilder->query($sql, $params);
+            $resultados = $this->queryBuilder->query($sql, $params);
+    
+            // Decodificar el campo JSON cuotas
+            foreach ($resultados as &$grupo) {
+                if (isset($grupo['cuotas'])) {
+                    $grupo['cuotas'] = json_decode($grupo['cuotas'], true);
+                }
+            }
+    
+            return $resultados;
     
         } catch (Exception $e) {
             $this->logger->error("Error en getDetalleSolicitudesPendientesPorFecha: " . $e->getMessage());
             return [];
         }
     }
+    
     
     
     
