@@ -73,6 +73,13 @@
                 return;
             }
 
+            // 👉 Validación de que HASTA sea mayor o igual a DESDE
+            if (new Date(hasta) < new Date(desde)) {
+                mostrarAlertaModal('La fecha "Hasta" no puede ser anterior a la fecha "Desde".');
+                resetearCamposPorId(['fechaDesde', 'fechaHasta']);
+                return;
+            }
+
             periodoDesde = desde;
             periodoHasta = hasta;
 
@@ -386,11 +393,12 @@
                 console.log(data);
 
                 let html = `<details>
-                        <summary style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-bell fa-beat text-warning" style="font-size: 1.4rem;"></i>
-                        Hay ${data.solicitudes.length} solicitud(es) pendiente(s) - Ver detalles
-                        </summary>
+                    <summary style="display: flex; align-items: center; gap: 8px;">
+                      <i id="iconoCampana" class="fa-solid fa-bell fa-beat text-warning" style="font-size: 1.4rem;"></i>
+                      Hay ${data.solicitudes.length} solicitud(es) pendiente(s) - Ver detalles
+                    </summary>
                     <ul class="mt-2">`;
+                  
         
                 data.solicitudes.forEach(s => {
                     const fecha = new Date(s.fecha_solicitud).toLocaleDateString('es-AR');
@@ -407,53 +415,98 @@
                 // Añadir listeners AJAX a cada enlace
                 document.querySelectorAll('.verSolicitudAjax').forEach(link => {
                     link.addEventListener('click', function (e) {
-                        e.preventDefault();
-                        const dataAgente = JSON.parse(this.dataset.agente);
-                        const detalle = document.getElementById('tablaCuotasAgrupadas');
-                    
-                        let tabla = `
-                            <details>
-                            <summary class="h5 mb-2">
-                                Agente: ${dataAgente.agente} – Fecha: ${new Date(dataAgente.fecha_solicitud).toLocaleDateString('es-AR')} –
-                                Total a descontar: <strong>$${parseFloat(dataAgente.total_a_descontar).toFixed(2)}</strong>
-                            </summary>
-                            <table class="table table-bordered mt-3">
-                                <thead>
-                                    <tr>
-                                        <th>ID Cuota</th>
-                                        <th>Nro. Factura</th>
-                                        <th>Monto</th>
-                                        <th>Pagado</th>
-                                        <th>Reprogramado</th>
-                                        <th>Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-                    
-                        dataAgente.cuotas.forEach(q => {
-                            tabla += `
-                                <tr>
-                                    <td>${q.cuota_id}</td>
-                                    <td>${q.nro_factura}</td>
-                                    <td>$${parseFloat(q.monto).toFixed(2)}</td>
-                                    <td>$${parseFloat(q.monto_pagado).toFixed(2)}</td>
-                                    <td>$${parseFloat(q.monto_reprogramado).toFixed(2)}</td>
-                                    <td><span class="badge bg-warning text-dark">${q.resultado}</span></td>
-                                </tr>`;
-                        });
-                    
-                        tabla += `</tbody></table></details>`;
-                        detalle.innerHTML = tabla;
+                    e.preventDefault();
+                
+                    // 👉 Modificar el ícono de la campana
+                    const icono = document.getElementById('iconoCampana');
+                    if (icono) {
+                        icono.classList.remove('fa-beat', 'text-warning');
+                        icono.classList.add('text-secondary');
+                    }
+                
+                    const dataAgente = JSON.parse(this.dataset.agente);
+                    const detalle = document.getElementById('tablaCuotasAgrupadas');
+                
+                    let tabla = `
+                        <details>
+                        <summary class="h5 mb-2">
+                            Agente: ${dataAgente.agente} – Fecha: ${new Date(dataAgente.fecha_solicitud).toLocaleDateString('es-AR')} –
+                            Total a descontar: <strong>$${parseFloat(dataAgente.total_a_descontar).toFixed(2)}</strong>
+                        </summary>
+                        <table class="table table-bordered mt-3">
+                            <thead>
+                            <tr>
+                                <th>ID Cuota</th>
+                                <th>Nro. Factura</th>
+                                <th>Monto</th>
+                                <th>Pagado</th>
+                                <th>Reprogramado</th>
+                                <th>Estado</th>
+                            </tr>
+                            </thead>
+                            <tbody>`;
+                
+                    dataAgente.cuotas.forEach(q => {
+                        tabla += `
+                        <tr>
+                            <td>${q.cuota_id}</td>
+                            <td>${q.nro_factura}</td>
+                            <td>$${parseFloat(q.monto).toFixed(2)}</td>
+                            <td>$${parseFloat(q.monto_pagado).toFixed(2)}</td>
+                            <td>$${parseFloat(q.monto_reprogramado).toFixed(2)}</td>
+                            <td><span class="badge bg-warning text-dark">${q.resultado}</span></td>
+                        </tr>`;
                     });
-                    
+                
+                    tabla += `</tbody></table></details>`;
+                    detalle.innerHTML = tabla;
+                    });
+                });
+                      
                 /*
                 * fin evento click, link
                 */    
-                });
+               
         
             })
             .catch(err => {
                 console.error('Error cargando solicitudes agrupadas:', err);
+            });
+        }
+        
+        function resetearCamposPorId(listaIds, opciones = {}) {
+            listaIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+        
+                const tipo = el.type || el.tagName.toLowerCase();
+        
+                switch (tipo) {
+                    case 'text':
+                    case 'date':
+                    case 'email':
+                    case 'password':
+                    case 'textarea':
+                        el.value = '';
+                        break;
+        
+                    case 'number':
+                        el.value = opciones.usarNullParaNumeros ? null : 0;
+                        break;
+        
+                    case 'select-one':
+                    case 'select':
+                        el.selectedIndex = 0;
+                        break;
+        
+                    case 'checkbox':
+                    case 'radio':
+                        el.checked = false;
+                        break;
+        
+                    default:
+                        el.value = '';
+                }
             });
         }
         

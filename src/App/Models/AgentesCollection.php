@@ -38,9 +38,17 @@ class AgentesCollection extends Model
     {
         try {
             if ($id !== null) {
-                // Buscar agente por ID usando select()
-                $this->logger->info("Buscando agente por ID..");
-                $result = $this->queryBuilder->select('agente', '*', ['id' => $id]);
+
+
+                $this->logger->info("Buscando agente por ID usando selectAdHoc..", [$id]);
+                // selectAdHoc no está preparado para múltiples condiciones, pero podemos adaptarlo:
+                $result = $this->queryBuilder->selectAdHoc(
+                    'agente',
+                    '*',
+                    'id',          // campo a buscar
+                    $id,           // valor a buscar
+                    ['id']         // lista de campos a hacer LIKE, aunque se usará con = en este caso especial
+                );
             } elseif ($searchAgente !== null) {
                 // Buscar por término
                 $this->logger->info("Buscando agentes por término..");
@@ -106,7 +114,7 @@ class AgentesCollection extends Model
             'agente', 
             $limit, 
             $offset, 
-            $search,['credencial', 'nombre', 'apellido', 'cuil', 'dependencia', 'estado_agente']
+            $search,['credencial', 'nombre', 'apellido', 'cuil', 'nombre_dependencia', 'estado_agente']
         );
     }
     

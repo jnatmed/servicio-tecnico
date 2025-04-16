@@ -4,7 +4,6 @@
     {% include 'parts/head.view.html' %}
 </head>
 
-
 {% include "parts/modulos.view.html" %}
 
 <div class="agentes-container">
@@ -21,7 +20,7 @@
     <table class="agentes-table">
         <thead>
             <tr>
-                <th>Credencial</th>
+                <th>Credencial/ Beneficio</th>
                 <th>Nombre</th>
                 <th>Apellido</th>
                 <th>CUIL</th>
@@ -33,21 +32,7 @@
             </tr>
         </thead>
         <tbody id="agentes-list">
-            {% for agente in agentes %}
-                <tr>
-                    <td>{{ agente.credencial }}</td>
-                    <td>{{ agente.nombre }}</td>
-                    <td>{{ agente.apellido }}</td>
-                    <td>{{ agente.cuil }}</td>
-                    <td>{{ agente.dependencia }}</td>
-                    <td class="{{ agente.estado_agente == 'retirado' ? 'estado-retirado' : 'estado-activo' }}">
-                        {{ agente.estado_agente | capitalize }}
-                    </td>
-                    <td><a href="/facturacion/agente/ver?agente_id={{ agente.id }}">Ver</a></td>
-                    <td><a href="/agente/editar?id={{ agente.id }}">Editar</a></td>
-                    <td><a href="/agente/eliminar?id={{ agente.id }}" class="eliminar-link">Eliminar</a></td>
-                </tr>
-            {% endfor %}
+            <!-- Filas serán generadas por JS -->
         </tbody>
     </table>
 
@@ -58,179 +43,159 @@
     <div id="paginacion-container">
         <span id="pagination-numbers"></span>
     </div>
-
 </div>
 
 {% include "parts/cierre-modulos.view.html" %}
 {% include 'parts/footer.view.html' %}
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("search-input");
+    const searchBtn = document.getElementById("search-btn");
+    const paginationContainer = document.getElementById("pagination-numbers");
 
-    document.addEventListener("DOMContentLoaded", function () {
-        let searchInput = document.getElementById("search-input");
-        let searchBtn = document.getElementById("search-btn");
-        let prevPageBtn = document.getElementById("prevPage");
-        let nextPageBtn = document.getElementById("nextPage");
-        let paginationContainer = document.getElementById("pagination-numbers");
-    
-        let currentPage = 1;
-        let limit = 10;
-        let totalPages = 1;
-    
-        if (searchBtn) {
-            searchBtn.addEventListener("click", function () {
-                let searchValue = searchInput.value;
-                currentPage = 1; // Reiniciar la paginación
-                fetchAgentes(currentPage, searchValue, true);
-            });
+    let currentPage = 1;
+    let limit = 10;
+    let totalPages = 1;
+
+    searchBtn?.addEventListener("click", () => {
+        currentPage = 1;
+        fetchAgentes(currentPage, searchInput.value, true);
+    });
+
+    searchInput?.addEventListener("keypress", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            realizarBusqueda();
+        }
+    });
+
+    function fetchAgentes(page, search, clearTable) {
+        fetch(`/facturacion/agentes/listado?page=${page}&search=${encodeURIComponent(search)}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById("agentes-list");
+                if (clearTable) tbody.innerHTML = '';
+
+                limit = data.limit;
+                totalPages = Math.ceil(data.total / limit);
+                currentPage = parseInt(data.currentPage);
+
+                data.agentes.forEach(agente => {
+                    let estadoHtml = '';
+                    if (agente.estado_agente === 'retirado') {
+                        const badgeMap = {
+                            "RETIRADO": "secondary",
+                            "CONCUBINA": "purple",
+                            "CONCUBINA/O": "purple",
+                            "CONVIVIENTE": "indigo",
+                            "CONYUGE": "primary",
+                            "MADRE": "dark",
+                            "HIJA MENOR": "info",
+                            "HIJO MENOR": "info",
+                            "HIJO O MENOR": "info",
+                            "HIJA SOLTERA": "primary",
+                            "HIJA SOLTERA (2)": "primary",
+                            "HIJA SOLTERA DISCAPACITADA": "teal",
+                            "HIJA DISCAPACITADA": "teal",
+                            "HERMANA DISCAPACITADA": "teal",
+                            "HIJO CON DISCAPACIDAD": "teal",
+                            "HIJO DISCAPACITADO": "teal"
+                        };
+                        const badgeColor = badgeMap[agente.caracter?.toUpperCase()] || 'secondary';
+                        estadoHtml = `<span class="badge bg-${badgeColor}">${agente.caracter}</span>`;
+                    } else {
+                        estadoHtml = `<i class="fa-solid fa-user-check text-success" title="Activo"></i> Activo`;
+                    }
+
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${agente.credencial || agente.beneficio}</td>
+                        <td>${agente.nombre}</td>
+                        <td>${agente.apellido}</td>
+                        <td>
+                            ${agente.cuil?.trim() ? agente.cuil : `<i class='fa-solid fa-circle-exclamation text-muted' title='CUIL no disponible'></i> No disponible`}
+                        </td>
+                        <td>
+                            ${agente.descripcion?.trim() ? agente.descripcion : `<i class='fa-solid fa-building-circle-xmark text-secondary' title='Sin dependencia'></i> Sin dependencia`}
+                        </td>
+                        <td>${estadoHtml}</td>
+                        <td><a href="/facturacion/agente/ver?agente_id=${agente.id}">Ver</a></td>
+                        <td><a href="/agente/editar?id=${agente.id}">Editar</a></td>
+                        <td><a href="/agente/eliminar?id=${agente.id}" class="eliminar-link">Eliminar</a></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                updatePagination(search);
+            }
+        })
+        .catch(error => console.error("Error cargando agentes:", error));
+    }
+
+    function updatePagination(search) {
+        paginationContainer.innerHTML = '';
+        const maxVisiblePages = 5;
+        const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        if (currentPage > 1) {
+            const prev = document.createElement("button");
+            prev.textContent = "Anterior";
+            prev.onclick = () => fetchAgentes(currentPage - 1, search, true);
+            paginationContainer.appendChild(prev);
         }
 
-        // Enter en input
-        if (searchInput) {
-            searchInput.addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    realizarBusqueda();
-                }
-            });
-        }        
-    
-        function fetchAgentes(page, search, clearTable) {
-            fetch(`/facturacion/agentes/listado?page=${page}&search=${encodeURIComponent(search)}`, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log("Respuesta AJAX:", data);
-    
-                if (data.success) {
-                    let tbody = document.getElementById("agentes-list");
-                    if (clearTable) tbody.innerHTML = ''; // Limpiar si es una nueva búsqueda
-    
-                    limit = data.limit;
-                    let total = data.total;
-                    totalPages = Math.ceil(total / limit);
-                    currentPage = parseInt(data.currentPage);
-    
-                    console.log(`🔍 Página: ${currentPage}, Total páginas: ${totalPages}, Filtro: ${search}`);
-    
-                    data.agentes.forEach(agente => {
-                        let row = document.createElement("tr");
-                        row.innerHTML = `
-                            <td>${agente.credencial}</td>
-                            <td>${agente.nombre}</td>
-                            <td>${agente.apellido}</td>
-                            <td>${agente.cuil ? agente.cuil : 'No disponible'}</td>
-                            <td>${agente.dependencia}</td>
-                            <td class="${agente.estado_agente === 'retirado' ? 'estado-retirado' : 'estado-activo'}">
-                                ${agente.estado_agente.charAt(0).toUpperCase() + agente.estado_agente.slice(1)}
-                            </td>
-                            <td><a href="/facturacion/agente/ver?agente_id=${agente.id}">Ver</a></td>
-                            <td><a href="/agente/editar?id=${agente.id}">Editar</a></td>
-                            <td><a href="/agente/eliminar?id=${agente.id}" class="eliminar-link">Eliminar</a></td>
-                        `;
-                        tbody.appendChild(row);
-                    });
-    
-                    updatePagination(search);
-                }
-            })
-            .catch(error => console.error("Error cargando más agentes:", error));
+        if (startPage > 1) {
+            const first = document.createElement("button");
+            first.textContent = "1";
+            first.onclick = () => fetchAgentes(1, search, true);
+            paginationContainer.appendChild(first);
+            if (startPage > 2) paginationContainer.appendChild(document.createTextNode("..."));
         }
-    
-        function updatePagination(search) {
-            // 🔥 Limpiar el contenedor antes de agregar nuevos elementos
-            paginationContainer.innerHTML = '';
-        
-            const maxVisiblePages = 5;
-            const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-        
-            // 🔹 Botón "Anterior" (solo agregar si no existe)
-            if (currentPage > 1) {
-                let prevBtn = document.createElement("button");
-                prevBtn.textContent = "Anterior";
-                prevBtn.addEventListener("click", function () {
-                    fetchAgentes(currentPage - 1, search, true);
-                });
-                paginationContainer.appendChild(prevBtn);
-            }
-        
-            // 🔹 Mostrar primera página y puntos suspensivos si es necesario
-            if (startPage > 1) {
-                let firstPageBtn = document.createElement("button");
-                firstPageBtn.textContent = "1";
-                firstPageBtn.addEventListener("click", function () {
-                    fetchAgentes(1, search, true);
-                });
-                paginationContainer.appendChild(firstPageBtn);
-        
-                if (startPage > 2) {
-                    let dots = document.createElement("span");
-                    dots.textContent = "...";
-                    paginationContainer.appendChild(dots);
-                }
-            }
-        
-            // 🔹 Generar las páginas visibles
-            for (let i = startPage; i <= endPage; i++) {
-                let pageBtn = document.createElement("button");
-                pageBtn.textContent = i;
-                pageBtn.classList.add("page-button");
-                if (i === currentPage) pageBtn.classList.add("active");
-        
-                pageBtn.addEventListener("click", function () {
-                    fetchAgentes(i, search, true);
-                });
-        
-                paginationContainer.appendChild(pageBtn);
-            }
-        
-            // 🔹 Mostrar última página y puntos suspensivos si es necesario
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    let dots = document.createElement("span");
-                    dots.textContent = "...";
-                    paginationContainer.appendChild(dots);
-                }
-        
-                let lastPageBtn = document.createElement("button");
-                lastPageBtn.textContent = totalPages;
-                lastPageBtn.addEventListener("click", function () {
-                    fetchAgentes(totalPages, search, true);
-                });
-                paginationContainer.appendChild(lastPageBtn);
-            }
-        
-            // 🔹 Botón "Siguiente" (solo agregar si no existe)
-            if (currentPage < totalPages) {
-                let nextBtn = document.createElement("button");
-                nextBtn.textContent = "Siguiente";
-                nextBtn.addEventListener("click", function () {
-                    fetchAgentes(currentPage + 1, search, true);
-                });
-                paginationContainer.appendChild(nextBtn);
-            }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            if (i === currentPage) btn.classList.add("active");
+            btn.onclick = () => fetchAgentes(i, search, true);
+            paginationContainer.appendChild(btn);
         }
-        
-        function realizarBusqueda() {
-            let searchValue = searchInput.value.trim();
-            let errorLabel = document.getElementById("search-error");
-        
-            if (searchValue === '') {
-                errorLabel.style.display = 'inline';
-                return;
-            }
-        
-            errorLabel.style.display = 'none'; // Ocultar si está todo bien
-            currentPage = 1;
-            fetchAgentes(currentPage, searchValue, true);
-        }        
-    
-        // Cargar primera página al iniciar
-        fetchAgentes(currentPage, '', true);
-        });
-    
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) paginationContainer.appendChild(document.createTextNode("..."));
+            const last = document.createElement("button");
+            last.textContent = totalPages;
+            last.onclick = () => fetchAgentes(totalPages, search, true);
+            paginationContainer.appendChild(last);
+        }
+
+        if (currentPage < totalPages) {
+            const next = document.createElement("button");
+            next.textContent = "Siguiente";
+            next.onclick = () => fetchAgentes(currentPage + 1, search, true);
+            paginationContainer.appendChild(next);
+        }
+    }
+
+    function realizarBusqueda() {
+        const searchValue = searchInput.value.trim();
+        const errorLabel = document.getElementById("search-error");
+
+        if (searchValue === '') {
+            errorLabel.style.display = 'inline';
+            return;
+        }
+
+        errorLabel.style.display = 'none';
+        currentPage = 1;
+        fetchAgentes(currentPage, searchValue, true);
+    }
+
+    fetchAgentes(currentPage, '', true);
+});
 </script>
+</html>

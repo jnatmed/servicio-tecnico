@@ -51,7 +51,7 @@ class CuentaCorrienteController extends Controller
         $movimientos = $this->model->obtenerExtractoConSaldo($agenteId);
         $saldo = $this->model->obtenerSaldoActual($agenteId);
 
-        $this->logger->info("agente: ", [$agente]);
+        $this->logger->info("agente recuperado: ", [$agente]);
         $this->logger->info("cuentaCorriente: ", [$movimientos]);
 
         return view('facturacion/agentes/cuentaCorriente_agente.view', array_merge(

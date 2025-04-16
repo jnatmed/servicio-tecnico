@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
+
 </head>
 
 {% include "parts/modulos.view.html" %}
@@ -11,19 +12,63 @@
     <hr>
 
     {% if agente is defined %}
-        <h3 class="tipo-nro">Agente ID #{{ agente.id }}</h3>
-        <p><strong>Credencial:</strong> {{ agente.credencial }}</p>
-        <p><strong>Nombre:</strong> {{ agente.nombre }} {{ agente.apellido }}</p>
-        <p><strong>CUIL:</strong> {{ agente.cuil }}</p>
-        <p><strong>Dependencia:</strong> {{ agente.dependencia }}</p>
-        <p><strong>Estado:</strong> {{ agente.estado_agente }}</p>
-        <p>
-            <strong>Saldo Actual:</strong>
-            <span style="color: {{ saldo < 0 ? 'red' : 'green' }};">
-                ${{ saldo|number_format(2, '.', ',') }}
-            </span>
-        </p>
-        
+        <div class="mb-3">
+            <h3 class="tipo-nro">
+                <i class="fa-solid fa-user"></i> {{ agente.nombre }} {{ agente.apellido }}
+            </h3>
+            <p><i class="fa-solid fa-id-card"></i>
+                <strong>Credencial / Beneficio:</strong>
+                {{ agente.estado_agente == 'retirado' ? agente.beneficio : agente.credencial }}
+            </p>
+            <p><i class="fa-solid fa-fingerprint"></i> <strong>CUIL:</strong>
+                {{ agente.cuil ?? 'No disponible' }}
+            </p>
+            <p><i class="fa-solid fa-building"></i> <strong>Dependencia:</strong>
+                {{ agente.descripcion_dependencia ?? 'Sin dependencia' }}
+            </p>
+            <p>
+                <i class="fa-solid {{ agente.estado_agente == 'retirado' ? 'fa-user-slash text-danger' : 'fa-user-check text-success' }}"></i>
+                <strong>Estado:</strong> {{ agente.estado_agente|capitalize }}
+            </p>
+
+            {% if agente.caracter %}
+            <p><strong><i class="fa-solid fa-person-cane"></i> Carácter:</strong>
+                {% set badge_class = 'bg-secondary' %}
+                {% if agente.caracter in ['HIJO MENOR', 'HIJA MENOR', 'HIJO', 'HIJA'] %}
+                    {% set badge_class = 'bg-warning text-dark' %}
+                {% elseif agente.caracter in ['MADRE', 'CONYUGE', 'CONVIVIENTE'] %}
+                    {% set badge_class = 'bg-info text-dark' %}
+                {% elseif agente.caracter in ['HIJO CON DISCAPACIDAD', 'HIJA DISCAPACITADA', 'HIJA SOLTERA DISCAPACITADA'] %}
+                    {% set badge_class = 'bg-danger' %}
+                {% elseif agente.caracter == 'RETIRADO' %}
+                    {% set badge_class = 'bg-success' %}
+                {% endif %}
+                <span class="badge {{ badge_class }}">{{ agente.caracter }}</span>
+            </p>
+            {% endif %}
+                        
+            <p><i class="fa-solid fa-money-check-dollar"></i>
+                <strong>Saldo Actual:</strong>
+                <span style="color: {{ saldo < 0 ? 'red' : 'green' }};">
+                    ${{ saldo|number_format(2, '.', ',') }}
+                </span>
+            </p>
+
+            {% if agente.estado_agente == 'retirado' %}
+                <p><i class="fa-solid fa-person-cane"></i> <strong>Pensión derivada por:</strong>
+                    {{ agente.pension_derivada_por ?? '-' }}
+                </p>
+                <p><i class="fa-solid fa-location-dot"></i> <strong>Domicilio:</strong>
+                    {{ agente.domicilio ?? '-' }}
+                </p>
+                <p><i class="fa-solid fa-phone"></i> <strong>Teléfono:</strong>
+                    {{ agente.telefono ?? '-' }}
+                </p>
+                <p><i class="fa-solid fa-envelope"></i> <strong>Mail:</strong>
+                    {{ agente.mail ?? '-' }}
+                </p>
+            {% endif %}
+        </div>
     {% endif %}
 
     <hr>
@@ -45,22 +90,9 @@
         </thead>
         <tbody>
             {% for mov in movimientos %}
-                {# Clase de fila según tipo de movimiento #}
-                {% set row_class = '' %}
-                {% if mov.tipo_movimiento == 'credito' %}
-                    {% set row_class = 'table-success' %}
-                {% elseif mov.tipo_movimiento == 'debito' %}
-                    {% set row_class = 'table-danger' %}
-                {% endif %}
-    
-                {# Ícono #}
-                {% set icono = '' %}
-                {% if mov.tipo_movimiento == 'credito' %}
-                    {% set icono = '💰' %}
-                {% elseif mov.tipo_movimiento == 'debito' %}
-                    {% set icono = '📅' %}
-                {% endif %}
-    
+                {% set row_class = mov.tipo_movimiento == 'credito' ? 'table-success' : 'table-danger' %}
+                {% set icono = mov.tipo_movimiento == 'credito' ? '💰' : '📅' %}
+
                 <tr class="{{ row_class }}">
                     <td>{{ mov.fecha|date("d/m/Y") }}</td>
                     <td>
@@ -70,38 +102,23 @@
                         {% else %}
                             {{ mov.descripcion }}
                         {% endif %}
-    
                         {% if mov.cuota_id is not null %}
                             <span class="badge bg-primary ms-2">Cuota</span>
                         {% endif %}
                     </td>
                     <td>{{ mov.condicion_venta }}</td>
                     <td>{{ mov.tipo_movimiento|capitalize }}</td>
-    
-                    {# Monto Cuota #}
-                    <td class="text-end">
-                        ${{ mov.monto_cuota|number_format(2, '.', ',') }}
-                    </td>
-    
-                    {# Pagado Ahora (solo para créditos) #}
+                    <td class="text-end">${{ mov.monto_cuota|number_format(2, '.', ',') }}</td>
                     <td class="text-end">
                         {% if mov.tipo_movimiento == 'credito' %}
                             ${{ mov.pagado_ahora|number_format(2, '.', ',') }}
-                        {% else %}
-                            -
-                        {% endif %}
+                        {% else %}-{% endif %}
                     </td>
-    
-                    {# Saldo de Cuota (puede ser null) #}
                     <td class="text-end">
                         {% if mov.saldo is not null %}
                             ${{ mov.saldo|number_format(2, '.', ',') }}
-                        {% else %}
-                            -
-                        {% endif %}
+                        {% else %}-{% endif %}
                     </td>
-    
-                    {# Saldo Acumulado del agente #}
                     <td class="text-end {{ mov.saldo_acumulado < 0 ? 'text-danger' : 'text-success' }}">
                         ${{ mov.saldo_acumulado|number_format(2, '.', ',') }}
                     </td>
@@ -112,19 +129,18 @@
     {% else %}
         <p>No se encontraron movimientos para este agente.</p>
     {% endif %}
-    
-    
+
     <br>
     {% set exportable = movimientos is not empty or saldo != 0 %}
     <form action="/cuenta-corriente/exportar-pdf?agente_id={{ agente.id }}" method="get" target="_blank">
         <button type="submit" class="btn btn-success" {{ not exportable ? 'disabled' : '' }}>
-            Exportar PDF
+            <i class="fa-solid fa-file-pdf"></i> Exportar PDF
         </button>
     </form>
     <hr class="my-4">
 
     <button class="btn btn-secondary" onclick="window.history.back();">
-        <i class="bi bi-arrow-left"></i> Volver
+        <i class="fa-solid fa-arrow-left"></i> Volver
     </button>
 </section>
 

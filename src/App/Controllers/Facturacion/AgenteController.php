@@ -114,7 +114,8 @@ class AgenteController extends Controller
             // 🔥 Log después de obtener los datos
             $this->logger->info("Datos obtenidos de la BD", [
                 'cantidad' => count($listaAgentes),
-                'total' => $totalAgentes
+                'total' => $totalAgentes,
+                'lista' => $listaAgentes
             ]);
     
             // 🔥 Verificar si la solicitud es AJAX

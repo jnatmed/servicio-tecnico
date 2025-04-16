@@ -78,7 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     li.addEventListener('click', () => {
                         document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
                         document.getElementById('agente').value = agent.id;
-                        document.getElementById('destino_agente').textContent = `(Destino: ${agent.dependencia ?? "No especificado"})`;
+                        const descripcionFinal = agent.descripcion?.trim() ? agent.descripcion : agent.nombre_dependencia;
+                        document.getElementById('destino_agente').textContent = `(Destino: ${descripcionFinal})`;
                         console.log("Agente seleccionado:", agent);
                         agentModal.hide();
                     });

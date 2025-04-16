@@ -86,7 +86,7 @@ class QueryBuilder
                 $query = "
                     SELECT agente.*, dependencia.descripcion AS descripcion_dependencia 
                           FROM agente 
-                          INNER JOIN dependencia ON agente.dependencia = dependencia.id
+                          LEFT JOIN dependencia ON agente.dependencia = dependencia.id
                     ";
             } else {
                 $query = "SELECT $columns FROM $table";
@@ -98,8 +98,13 @@ class QueryBuilder
             if (!empty($searchValue) && !empty($fieldsToSearch)) {
                 $likeClauses = [];
                 foreach ($fieldsToSearch as $field) {
-                    $likeClauses[] = "$field LIKE :searchValue";
+                    if ($field === 'id' && is_numeric($searchValue)) {
+                        $likeClauses[] = "agente.$field = :searchValue";
+                    } else {
+                        $likeClauses[] = "$field LIKE :searchValue";
+                    }
                 }
+                
                 $query .= " WHERE " . implode(' OR ', $likeClauses);
                 $bindings[":searchValue"] = "%$searchValue%";
             }
@@ -111,8 +116,13 @@ class QueryBuilder
     
             // Enlazar el valor de búsqueda
             foreach ($bindings as $key => $value) {
-                $stmt->bindValue($key, $value, PDO::PARAM_STR);
+                if ($searchField === 'id') {
+                    $stmt->bindValue(':searchValue', (int) $searchValue, PDO::PARAM_INT);
+                } else {
+                    $stmt->bindValue(':searchValue', "%$searchValue%", PDO::PARAM_STR);
+                }
             }
+            
     
             // Ejecutar y obtener resultados
             $stmt->setFetchMode(PDO::FETCH_ASSOC);
@@ -420,25 +430,68 @@ class QueryBuilder
     public function getPaginatedWithSearch($table, $limit, $offset, $search = '', array $searchFields = [])
     {
         try {
-            $query = "SELECT * FROM {$table}";
-            $params = [];
-    
-            if (!empty($search) && !empty($searchFields)) {
-                $conditions = [];
-                foreach ($searchFields as $field) {
-                    $conditions[] = "{$field} LIKE :search";
-                }
-                $query .= " WHERE " . implode(' OR ', $conditions);
-                $params[':search'] = '%' . $search . '%';
+            // Armar SELECT con JOIN si corresponde
+            if ($table === 'agente') {
+                $query = "
+                    SELECT a.*, d.nombre_dependencia, d.descripcion
+                    FROM agente a
+                    LEFT JOIN dependencia d ON a.dependencia = d.id
+                ";
+            } else {
+                $query = "SELECT * FROM {$table}";
             }
     
-            $query .= " ORDER BY id LIMIT :limit OFFSET :offset";
+            $params = [];
     
+            // Si hay búsqueda, armar WHERE + ORDER CASE
+            if (!empty($search) && !empty($searchFields)) {
+                $this->logger->info("Buscando agentes con término:", ['search' => $search]);
+    
+                $conditions = [];
+                foreach ($searchFields as $field) {
+                    if (in_array($field, ['credencial', 'nombre', 'apellido', 'cuil', 'estado_agente'])) {
+                        $conditions[] = "a.{$field} LIKE :search";
+                    } elseif (in_array($field, ['nombre_dependencia', 'descripcion'])) {
+                        $conditions[] = "d.{$field} LIKE :search";
+                    } else {
+                        $conditions[] = "{$field} LIKE :search";
+                    }
+                }
+    
+                $query .= " WHERE " . implode(' OR ', $conditions);
+    
+                // Definir parámetros de búsqueda
+                $params[':search'] = '%' . $search . '%';
+                $params[':exact'] = $search;
+    
+                // Ordenar priorizando coincidencias exactas
+                $query .= "
+                    ORDER BY 
+                        CASE
+                            WHEN a.apellido LIKE :exact THEN 1
+                            WHEN a.nombre LIKE :exact THEN 2
+                            WHEN d.nombre_dependencia LIKE :exact THEN 3
+                            WHEN d.descripcion LIKE :exact THEN 4
+                            ELSE 5
+                        END,
+                        a.apellido, a.nombre
+                ";
+            } else {
+                // Si no hay búsqueda, orden normal
+                $query .= " ORDER BY a.apellido, a.nombre ";
+            }
+    
+            // Paginación
+            $query .= " LIMIT :limit OFFSET :offset";
+    
+            // Preparar y ejecutar
             $stmt = $this->pdo->prepare($query);
     
-            // Bind valores
             if (isset($params[':search'])) {
                 $stmt->bindValue(':search', $params[':search'], PDO::PARAM_STR);
+            }
+            if (isset($params[':exact'])) {
+                $stmt->bindValue(':exact', $params[':exact'], PDO::PARAM_STR);
             }
     
             $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
@@ -449,10 +502,11 @@ class QueryBuilder
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
     
         } catch (PDOException $e) {
-            $this->logger->error("Error en getPaginatedWithSearch: " , [$e->getMessage()]);
+            $this->logger->error("Error en getPaginatedWithSearch: ", [$e->getMessage()]);
             throw new Exception("Error al obtener los datos.");
         }
     }
+    
     
     
     public function countRowsWithSearch($table, $search = '')
