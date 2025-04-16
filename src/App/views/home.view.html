@@ -2,23 +2,148 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
+    <style>
+        .grafico-container {
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 3rem auto;
+        }
+
+        .dashboard-title {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.2rem;
+            color: #666;
+        }
+    </style>
 </head>
 
 {% include 'parts/modulos.view.html' %}
 
-    <section class="home-page__section">
-        {% for card in cards %}
-            <article class="home-page__card">
-                <h2 class="home-page__card-title {{ card.media_size_class|default('') }}">{{ card.title }}</h2>
-                <p class="home-page__card-description">{{ card.description }}</p>
-                <a href="{{ card.link }}" class="home-page__button">{{ card.button_text }}</a>
-            </article>
-        {% endfor %}
-    </section>
+<section class="container mt-5 text-center">
+    <h1 class="dashboard-title">Bienvenido al Sistema de Comercial</h1>
+    <p class="dashboard-subtitle mb-5">Panel Principal</p>
 
+    <div class="grafico-container text-center">
+        <h4 class="mb-3">📊 Estado de Facturas</h4>
+        <canvas id="graficoFacturas"></canvas>
+    </div>
+
+    <div class="grafico-container text-center">
+        <h4 class="mb-3">📦 Productos con y sin precio</h4>
+        <canvas id="graficoPrecios"></canvas>
+    </div>
+
+    <div class="grafico-container text-center">
+        <h4 class="mb-3">📏 Productos por unidad de medida</h4>
+        <canvas id="graficoUnidades"></canvas>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // --- FACTURAS ---
+    const ctxFacturas = document.getElementById('graficoFacturas').getContext('2d');
+    new Chart(ctxFacturas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Sin Comprobante', 'Con Comprobante'],
+            datasets: [{
+                label: 'Facturas',
+                data: [{{ cantidad_sin_comprobante }}, {{ total_facturas - cantidad_sin_comprobante }}],
+                backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(75, 192, 192, 0.6)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: function (evt, item) {
+                if (item.length > 0) {
+                    const label = this.data.labels[item[0].index];
+                    window.location.href = label === 'Sin Comprobante'
+                        ? '/facturacion/listar?sin_comprobante=1'
+                        : '/facturacion/listar?con_comprobante=1';
+                }
+            },
+            plugins: {
+                legend: { position: 'bottom' },
+                title: { display: true, text: 'Distribución de Facturas según comprobante' }
+            }
+        }
+    });
+
+    // --- PRODUCTOS CON/SIN PRECIO ---
+    const ctxPrecios = document.getElementById('graficoPrecios').getContext('2d');
+    new Chart(ctxPrecios, {
+        type: 'bar',
+        data: {
+            labels: ['Con Precio', 'Sin Precio'],
+            datasets: [{
+                label: 'Productos',
+                data: [{{ total_productos - productos_sin_precio }}, {{ productos_sin_precio }}],
+                backgroundColor: ['rgba(54, 162, 235, 0.6)', 'rgba(255, 206, 86, 0.6)'],
+                borderColor: ['rgba(54, 162, 235, 1)', 'rgba(255, 206, 86, 1)'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            onClick: function (evt, item) {
+                if (item.length > 0) {
+                    const label = this.data.labels[item[0].index];
+                    window.location.href = label === 'Sin Precio'
+                        ? '/facturacion/productos/listado?sin_precio=1'
+                        : '/facturacion/productos/listado?con_precio=1';
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Productos con y sin precio registrado' }
+            }
+        }
+    });
+
+    // --- PRODUCTOS POR UNIDAD DE MEDIDA ---
+    const ctxUnidades = document.getElementById('graficoUnidades').getContext('2d');
+    new Chart(ctxUnidades, {
+        type: 'pie',
+        data: {
+            labels: {{ productos_unidad_labels|json_encode|raw }},
+            datasets: [{
+                label: 'Productos',
+                data: {{ productos_unidad_data|json_encode|raw }},
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: '#fff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' },
+                title: {
+                    display: true,
+                    text: 'Cantidad de productos por unidad de medida'
+                }
+            }
+        }
+    });
+</script>
 
 {% include "parts/cierre-modulos.view.html" %}
-
 {% include 'parts/footer.view.html' %}
 </body>
 </html>

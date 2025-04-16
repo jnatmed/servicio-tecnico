@@ -25,6 +25,20 @@ class FacturasCollection extends Model
             return [];
         }
     }
+    public function contarSinComprobanteAdjunto(): int
+    {
+        $sql = "SELECT COUNT(*) as total FROM factura WHERE path_comprobante IS NULL OR path_comprobante = ''";
+
+        $resultado = $this->queryBuilder->query($sql);
+        return (int) ($resultado[0]['total'] ?? 0);
+    }
+    
+    public function contarTodas(): int
+    {
+        $sql = "SELECT COUNT(*) as total FROM factura";
+        $resultado = $this->queryBuilder->query($sql);
+        return (int) ($resultado[0]['total'] ?? 0);
+    }
 
     public function eliminarFacturaPorId($facturaId)
     {

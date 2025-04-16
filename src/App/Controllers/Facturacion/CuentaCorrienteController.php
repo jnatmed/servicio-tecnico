@@ -88,40 +88,63 @@ class CuentaCorrienteController extends Controller
 
     public function exportarPdf()
     {
-        $idAgente = $this->request->sanitize(
-            $this->request->get('agente_id')
-        );
-        $agenteCollection = new AgentesCollection($this->qb, $this->logger);
-        $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
-
-        $agente = $agenteCollection->getAgentes(null, $idAgente)[0] ?? null;
-
-        if (!$agente) {
-            echo "Agente no encontrado";
-            exit;
+        try {
+            $idAgente = $this->request->sanitize($this->request->get('agente_id'));
+    
+            // Validar ID
+            if (empty($idAgente) || !is_numeric($idAgente)) {
+                http_response_code(400);
+                echo "ID de agente inválido o no especificado.";
+                return;
+            }
+    
+            // Cargar dependencias
+            $agenteCollection = new AgentesCollection($this->qb, $this->logger);
+            $cuentaCorriente = new CuentaCorrienteCollection($this->qb, $this->logger);
+    
+            $this->logger->info("Intentando exportar PDF para agente_id:", [$idAgente]);
+    
+            // Buscar agente
+            $agente = $agenteCollection->getAgentes(null, $idAgente)[0] ?? null;
+    
+            if (!$agente) {
+                http_response_code(404);
+                echo "Agente no encontrado.";
+                return;
+            }
+    
+            // Cargar movimientos y saldo
+            $movimientos = $cuentaCorriente->obtenerExtractoConSaldo($idAgente);
+            $saldo = $cuentaCorriente->obtenerSaldoActual($idAgente);
+    
+            // Renderizar HTML de la vista
+            ob_start();
+            $html = return_view('facturacion/agentes/cuentaCorriente_pdf.view', [
+                'agente' => $agente,
+                'movimientos' => $movimientos,
+                'saldo' => $saldo
+            ]);
+    
+            // Log opcional para depurar contenido
+            $this->logger->info("HTML generado para PDF", [$html]);
+    
+            // Generar PDF
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+    
+            // Preparar salida
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="cuenta_corriente_agente_' . $idAgente . '.pdf"');
+            echo $dompdf->output();
+        } catch (\Exception $e) {
+            $this->logger->error("Error exportando PDF: " . $e->getMessage());
+            http_response_code(500);
+            echo "Error al generar el PDF.";
         }
-
-        $movimientos = $cuentaCorriente->obtenerExtractoConSaldo($idAgente);
-        $saldo = $cuentaCorriente->obtenerSaldoActual($idAgente);
-
-        // Renderización simple con output buffering
-        ob_start();
-        $html = return_view('facturacion/agentes/cuentaCorriente_pdf.view', [
-            'agente' => $agente,
-            'movimientos' => $movimientos,
-            'saldo' => $saldo
-        ]);
-
-        $this->logger->info("HTML generado para PDF:", [$html]);
-
-        // Generar PDF
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
-
-        $dompdf->stream("cuenta_corriente_agente_{$idAgente}.pdf", ["Attachment" => false]);
     }
+    
 
 
 }

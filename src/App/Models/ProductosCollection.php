@@ -13,10 +13,15 @@ class ProductosCollection extends Model
     use Loggable;
     private $table = 'producto';
 
-    public function __construct($qb=null) {
-        if ($qb) {
+    public function __construct($qb=null, $logger=null) {
+        if ($qb !== null) {
             parent::setQueryBuilder($qb);
-        }    
+        }
+    
+        if ($logger !== null) {
+            parent::setLogger($logger);
+        }
+
     }
 
     public function actualizarProducto(array $data)
@@ -38,6 +43,46 @@ class ProductosCollection extends Model
         }
     }
     
+
+    public function contarSinPrecio(): int
+    {
+        $sql = "
+            SELECT COUNT(*) as total 
+            FROM producto p
+            WHERE NOT EXISTS (
+                SELECT 1 
+                FROM precio pr 
+                WHERE pr.id_producto = p.id
+            )
+        ";
+        $resultado = $this->queryBuilder->query($sql);
+        return (int) ($resultado[0]['total'] ?? 0);
+    }
+    
+
+    public function contarTodos(): int
+    {
+        $sql = "SELECT COUNT(*) as total FROM producto";
+        $resultado = $this->queryBuilder->query($sql);
+        return (int) ($resultado[0]['total'] ?? 0);
+    }
+
+    public function contarPorUnidadMedida(): array
+    {
+        $sql = "SELECT unidad_medida, COUNT(*) as cantidad FROM producto GROUP BY unidad_medida";
+        $resultado = $this->queryBuilder->query($sql);
+    
+        $this->logger->info("contarPorUnidadMedida: ", [$resultado]);
+
+        $formateado = [];
+        foreach ($resultado as $row) {
+            $formateado[$row['unidad_medida']] = (int) $row['cantidad'];
+        }
+    
+        return $formateado;
+    }
+    
+
 
     public function getDependencias(){
         try {

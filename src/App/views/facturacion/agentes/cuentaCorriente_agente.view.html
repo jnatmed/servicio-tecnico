@@ -2,9 +2,8 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-
 </head>
-
+<body>
 {% include "parts/modulos.view.html" %}
 
 <section class="section-ingreso">
@@ -46,7 +45,7 @@
                 <span class="badge {{ badge_class }}">{{ agente.caracter }}</span>
             </p>
             {% endif %}
-                        
+
             <p><i class="fa-solid fa-money-check-dollar"></i>
                 <strong>Saldo Actual:</strong>
                 <span style="color: {{ saldo < 0 ? 'red' : 'green' }};">
@@ -132,11 +131,9 @@
 
     <br>
     {% set exportable = movimientos is not empty or saldo != 0 %}
-    <form action="/cuenta-corriente/exportar-pdf?agente_id={{ agente.id }}" method="get" target="_blank">
-        <button type="submit" class="btn btn-success" {{ not exportable ? 'disabled' : '' }}>
-            <i class="fa-solid fa-file-pdf"></i> Exportar PDF
-        </button>
-    </form>
+    <button type="button" class="btn btn-success" id="btnExportarPdf" data-agente-id="{{ agente.id }}">
+        <i class="fa-solid fa-file-pdf"></i> Exportar PDF
+    </button>
     <hr class="my-4">
 
     <button class="btn btn-secondary" onclick="window.history.back();">
@@ -146,5 +143,58 @@
 
 {% include "parts/cierre-modulos.view.html" %}
 {% include 'parts/footer.view.html' %}
+
+<!-- Modal de alerta -->
+<div class="modal fade" id="modalAlerta" tabindex="-1" aria-labelledby="modalAlertaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="modalAlertaLabel">⚠ Atención</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="modalAlertaMensaje"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    document.getElementById('btnExportarPdf').addEventListener('click', function () {
+        const agenteId = this.dataset.agenteId;
+
+        if (!agenteId) {
+            mostrarAlertaModal("No se puede exportar el PDF: agente no especificado.");
+            return;
+        }
+
+        fetch(`/cuenta-corriente/exportar-pdf?agente_id=${encodeURIComponent(agenteId)}`, {
+            method: 'GET'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.text().then(msg => { throw new Error(msg); });
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        })
+        .catch(err => {
+            console.error("Error exportando PDF:", err);
+            mostrarAlertaModal(err.message || 'Ocurrió un error inesperado.');
+        });
+
+        function mostrarAlertaModal(mensaje) {
+            const modalBody = document.getElementById('modalAlertaMensaje');
+            modalBody.textContent = mensaje;
+
+            const modal = new bootstrap.Modal(document.getElementById('modalAlerta'));
+            modal.show();
+        }
+    });
+</script>
 </body>
 </html>
