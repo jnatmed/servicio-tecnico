@@ -227,23 +227,23 @@ class CuotasController extends Controller
         exit;
     }
     
-    
-    
-    
-        
-    
     public function exportarTxt()   
     {
         try {
-            $desde = $this->request->get('desde') ?? date('Y-m-01');
-            $hasta = $this->request->get('hasta') ?? date('Y-m-t');
+            $fechaSolicitud = $this->request->get('fecha_solicitud');
 
-            $contenido = $this->model->generarTextoExportacion($desde, $hasta);
+            if (!$fechaSolicitud) {
+                http_response_code(400);
+                echo "Falta el parámetro 'fecha_solicitud'.";
+                return;
+            }
+
+            $contenido = $this->model->generarTextoExportacion($fechaSolicitud);
 
             $this->logger->info("exportar txt Controller: " , [$contenido]);
 
             header('Content-Type: text/plain');
-            header('Content-Disposition: attachment; filename="cuotas_' . date('Ymd_His') . '.txt"');
+            header('Content-Disposition: attachment; filename="descuento_haberes_' . $fechaSolicitud . '.txt"');
             echo $contenido;
             exit;
 
@@ -253,8 +253,6 @@ class CuotasController extends Controller
             exit;
         }
     }
-
-    
 
 }
        

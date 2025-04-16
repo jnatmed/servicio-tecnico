@@ -89,9 +89,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (agente.estado_agente === 'retirado') {
                         const badgeMap = {
                             "RETIRADO": "secondary",
-                            "CONCUBINA": "purple",
-                            "CONCUBINA/O": "purple",
-                            "CONVIVIENTE": "indigo",
+                            "CONCUBINA": "warning",
+                            "CONCUBINA/O": "warning",
+                            "CONVIVIENTE": "primary",
                             "CONYUGE": "primary",
                             "MADRE": "dark",
                             "HIJA MENOR": "info",
@@ -99,11 +99,11 @@ document.addEventListener("DOMContentLoaded", function () {
                             "HIJO O MENOR": "info",
                             "HIJA SOLTERA": "primary",
                             "HIJA SOLTERA (2)": "primary",
-                            "HIJA SOLTERA DISCAPACITADA": "teal",
-                            "HIJA DISCAPACITADA": "teal",
-                            "HERMANA DISCAPACITADA": "teal",
-                            "HIJO CON DISCAPACIDAD": "teal",
-                            "HIJO DISCAPACITADO": "teal"
+                            "HIJA SOLTERA DISCAPACITADA": "info",
+                            "HIJA DISCAPACITADA": "info",
+                            "HERMANA DISCAPACITADA": "info",
+                            "HIJO CON DISCAPACIDAD": "info",
+                            "HIJO DISCAPACITADO": "info"
                         };
                         const badgeColor = badgeMap[agente.caracter?.toUpperCase()] || 'secondary';
                         estadoHtml = `<span class="badge bg-${badgeColor}">${agente.caracter}</span>`;

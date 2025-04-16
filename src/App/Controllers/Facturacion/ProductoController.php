@@ -132,7 +132,7 @@ class ProductoController extends Controller
                     
                     if ($success) {
                         $this->logger->info("Producto actualizado correctamente", [$data]);
-                        redirect('/facturacion/productos/ver?id_producto=' . $data['id']);
+                        redirect('facturacion/productos/ver?id_producto=' . $data['id']);
                     } else {
                         throw new Exception("No se pudo actualizar el producto.");
                     }

@@ -111,20 +111,19 @@ class CuotasCollection extends Model
     
             $sql = "
                 SELECT 
-                    a.id AS agente_id,
-                    CONCAT(a.nombre, ' ', a.apellido) AS agente,
-                    sdh.fecha_solicitud,
-                    SUM(c.monto_pagado) AS total_pagado,
-                    SUM(c.monto_reprogramado) AS total_reprogramado,
+                    CONCAT(sdh.fecha_solicitud, 'T12:00:00') AS fecha_solicitud,
+                    COUNT(DISTINCT a.id) AS total_agentes,
                     SUM(c.monto_pagado) AS total_a_descontar,
                     JSON_ARRAYAGG(
                         JSON_OBJECT(
-                            'cuota_id', sdh.cuota_id,
+                            'agente_id', a.id,
+                            'agente', CONCAT(a.nombre, ' ', a.apellido),
+                            'cuota_id', c.id,
                             'nro_factura', f.nro_factura,
                             'monto', c.monto,
                             'monto_pagado', c.monto_pagado,
                             'monto_reprogramado', c.monto_reprogramado,
-                            'resultado', sdh.resultado
+                            'estado', c.estado
                         )
                     ) AS cuotas
                 FROM solicitud_descuento_haberes sdh
@@ -132,6 +131,8 @@ class CuotasCollection extends Model
                 INNER JOIN factura f ON f.id = c.factura_id
                 INNER JOIN agente a ON a.id = f.id_agente
                 WHERE sdh.resultado = 'pendiente'
+                GROUP BY sdh.fecha_solicitud
+                ORDER BY sdh.fecha_solicitud DESC
             ";
     
             $params = [];
@@ -141,30 +142,22 @@ class CuotasCollection extends Model
                 $params[':fecha'] = $fecha;
             }
     
-            $sql .= " GROUP BY a.id, a.nombre, a.apellido, sdh.fecha_solicitud
-                      ORDER BY sdh.fecha_solicitud DESC";
-    
             $resultados = $this->queryBuilder->query($sql, $params);
-    
-            // Decodificar el campo JSON cuotas
+
             foreach ($resultados as &$grupo) {
-                if (isset($grupo['cuotas'])) {
+                if (isset($grupo['cuotas']) && is_string($grupo['cuotas'])) {
                     $grupo['cuotas'] = json_decode($grupo['cuotas'], true);
                 }
-            }
-    
+            }            
+            
             return $resultados;
     
         } catch (Exception $e) {
-            $this->logger->error("Error en getDetalleSolicitudesPendientesPorFecha: " . $e->getMessage());
+            $this->logger->error("Error en getSolicitudesPendientesPorFecha: " . $e->getMessage());
             return [];
         }
     }
     
-    
-    
-    
-
     public function getCuotasByFecha($desde, $hasta, $limit, $offset)
     {
         try {
@@ -236,59 +229,52 @@ class CuotasCollection extends Model
         }
     }
 
-    public function generarTextoExportacion($desde, $hasta)
+    public function generarTextoExportacion($fechaSolicitud)
     {
         try {
-            $this->logger->info("Generando texto exportable de cuotas entre $desde y $hasta.");
+            $this->logger->info("Generando TXT para solicitudes con fecha $fechaSolicitud (pendientes).");
     
             $registros = $this->queryBuilder->query("
                 SELECT 
                     d.nombre_dependencia,
                     a.credencial,
-                    a.apellido,
-                    a.nombre,
-                    a.cuil
-                FROM cuota c
+                    SUM(COALESCE(c.monto_pagado, 0)) AS total_descontado
+                FROM solicitud_descuento_haberes s
+                INNER JOIN cuota c ON c.id = s.cuota_id
                 INNER JOIN factura f ON f.id = c.factura_id
                 INNER JOIN agente a ON a.id = f.id_agente
                 INNER JOIN dependencia d ON d.id = a.dependencia
-                WHERE c.fecha_vencimiento BETWEEN :desde AND :hasta
+                WHERE s.resultado = 'pendiente'
+                AND s.fecha_solicitud = :fecha_solicitud
+                GROUP BY d.nombre_dependencia, a.credencial
             ", [
-                ':desde' => $desde,
-                ':hasta' => $hasta
+                ':fecha_solicitud' => $fechaSolicitud
             ]);
     
             $contenido = "";
-            $this->logger->debug("resultado consulta generarTextoExportacion: ", [$registros]);    
             foreach ($registros as $r) {
-                // Concatenar nombre completo
-                $nombreCompleto = strtoupper(trim($r['apellido'] . ' ' . $r['nombre']));
-                $nombreFormateado = str_pad(substr($nombreCompleto, 0, 30), 30, ' ', STR_PAD_RIGHT);
+                $dependencia = strtoupper(substr($r['nombre_dependencia'], 0, 2));
+                $credencial = str_pad($r['credencial'], 6, '0', STR_PAD_LEFT);
+                $monto = floatval($r['total_descontado']);
     
-                // CUIT/CUIL: asegurar 11 dígitos (rellenar con ceros si hiciera falta)
-                $cuilLimpio = $r['cuil'] !== null ? preg_replace('/\D/', '', $r['cuil']) : '';
-                $cuil = str_pad($cuilLimpio, 11, '0', STR_PAD_LEFT);
+                $montoFormateado = number_format($monto, 2, '.', '');
+                $montoNumerico = str_replace('.', '', $montoFormateado);
+                $montoFinal = str_pad($montoNumerico, 9, '0', STR_PAD_LEFT);
     
-                // Línea formateada
-                $linea = sprintf(
-                    "%-4s %-6s%s%s+ 00       608\n",
-                    substr($r['nombre_dependencia'], 0, 4), // Abreviado a 4 caracteres si es largo
-                    $r['credencial'],
-                    $nombreFormateado,
-                    $cuil
-                );
-    
+                $linea = "41{$dependencia}   0{$credencial}11 608{$montoFinal}\n";
                 $contenido .= $linea;
             }
     
-            $this->logger->debug("Contenido TXT generado:", [$contenido]);
             return $contenido;
     
         } catch (Exception $e) {
-            $this->logger->error("Error en generarTextoExportacion: " . $e->getMessage());
+            $this->logger->error("Error en generarTextoExportacionPorSolicitud: " . $e->getMessage());
             return "ERROR EN EXPORTACIÓN";
         }
     }
+    
+    
+    
         
     public function getCuotasAgrupadasPorAgente($desde, $hasta)
     {
