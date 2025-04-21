@@ -731,9 +731,11 @@ class QueryBuilder
     public function confirmarDescuentosParaFecha(string $fecha, array $descuentos): array
     {
         try {
-            // Obtener todas las cuotas solicitadas ese día con su credencial y monto_pagado
+            $this->logger->info("📥 Confirmar descuentos – Fecha original: $fecha");
+    
             $query = "
-                SELECT s.id AS solicitud_id, s.cuota_id, c.monto_pagado, a.credencial
+                SELECT s.id AS solicitud_id, s.cuota_id, c.monto, c.monto_pagado, c.monto_pagado_solicitado,
+                       c.monto_reprogramado, c.estado, a.credencial, f.nro_factura
                 FROM solicitud_descuento_haberes s
                 JOIN cuota c ON c.id = s.cuota_id
                 JOIN factura f ON f.id = c.factura_id
@@ -746,43 +748,137 @@ class QueryBuilder
             $stmt->execute();
             $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-            // Agrupar por credencial
+            $this->logger->info("🔍 Solicitudes encontradas:", $solicitudes);
+    
             $pagosPorCredencial = [];
             $cuotasPorCredencial = [];
     
             foreach ($solicitudes as $s) {
                 $cred = ltrim($s['credencial'], '0');
-                $pagosPorCredencial[$cred] = ($pagosPorCredencial[$cred] ?? 0) + floatval($s['monto_pagado']);
-                $cuotasPorCredencial[$cred][] = [
-                    'solicitud_id' => $s['solicitud_id'],
-                    'cuota_id' => $s['cuota_id']
-                ];
+                $pagosPorCredencial[$cred] = ($pagosPorCredencial[$cred] ?? 0) + floatval($s['monto_pagado_solicitado']);
+                $cuotasPorCredencial[$cred][] = $s;
             }
     
+            $this->logger->info("📊 Pagos registrados por credencial:", $pagosPorCredencial);
+            $this->logger->info("📤 Lista de descuentos recibidos:", $descuentos);
+    
             $resultados = [];
+            $credencialesProcesadas = [];
     
             foreach ($descuentos as $d) {
                 $cred = ltrim($d['credencial'], '0');
+                $credencialesProcesadas[] = $cred;
                 $montoArchivo = floatval($d['saldo']);
                 $montoRegistrado = $pagosPorCredencial[$cred] ?? 0;
     
-                $estado = ($montoArchivo === $montoRegistrado) ? 'aprobado' : 'rechazado';
+                $diferencia = abs($montoArchivo - $montoRegistrado);
+                $this->logger->info("🧮 Comparando credencial $cred → archivo: $montoArchivo vs registrado: $montoRegistrado (dif: $diferencia)");
     
-                // Actualizar cada solicitud de ese agente
+                $estado = ($diferencia < 0.01) ? 'aprobado' : 'rechazado';
+                $this->logger->info("🟢 Resultado para credencial $cred: $estado");
+    
                 foreach ($cuotasPorCredencial[$cred] ?? [] as $cuota) {
-                    $update = $this->pdo->prepare("
+                    $cuotaId = $cuota['cuota_id'];
+                    $solicitado = (float)$cuota['monto_pagado_solicitado'];
+                    $pagado = (float)$cuota['monto_pagado'];
+                    $monto = (float)$cuota['monto'];
+                    $nuevoPagado = $estado === 'aprobado' ? $pagado + $solicitado : $pagado;
+    
+                    if ($estado === 'aprobado') {
+                        $nuevoEstado = ($nuevoPagado >= $monto) ? 'pagada' : 'reprogramada';
+                        $this->logger->info("✅ Aprobando cuota #$cuotaId, nuevo estado: $nuevoEstado");
+                        $this->pdo->prepare("
+                            UPDATE cuota
+                            SET monto_pagado = monto_pagado + monto_pagado_solicitado,
+                                monto_pagado_solicitado = 0,
+                                estado = :estado
+                            WHERE id = :id
+                        ")->execute([
+                            ':estado' => $nuevoEstado,
+                            ':id' => $cuotaId
+                        ]);
+                    } else {
+                        $this->logger->warning("❌ Rechazando cuota #$cuotaId");
+                        $this->pdo->prepare("
+                            UPDATE cuota
+                            SET monto_reprogramado = monto_reprogramado + monto_pagado_solicitado,
+                                monto_pagado_solicitado = 0,
+                                estado = 'reprogramada',
+                                periodo = DATE_ADD(IFNULL(periodo, fecha_vencimiento), INTERVAL 1 MONTH)
+                            WHERE id = :id
+                        ")->execute([':id' => $cuotaId]);
+    
+                        $descripcion = "Cuota {$cuota['cuota_id']} - Factura N° {$cuota['nro_factura']}, RECHAZADO";
+                        $this->pdo->prepare("
+                            INSERT INTO cuenta_corriente (agente_id, fecha, descripcion, condicion_venta, tipo_movimiento, monto, cuota_id)
+                            SELECT f.id_agente, CURDATE(), :desc, f.condicion_venta, 'debito', :monto, c.id
+                            FROM cuota c
+                            JOIN factura f ON f.id = c.factura_id
+                            WHERE c.id = :cuota_id
+                        ")->execute([
+                            ':desc' => $descripcion,
+                            ':monto' => $solicitado,
+                            ':cuota_id' => $cuotaId
+                        ]);
+                    }
+    
+                    $this->pdo->prepare("
                         UPDATE solicitud_descuento_haberes
                         SET resultado = :estado, fecha_resultado = CURDATE(), motivo = NULL
                         WHERE id = :id
-                    ");
-                    $update->execute([
+                    ")->execute([
                         ':estado' => $estado,
                         ':id' => $cuota['solicitud_id']
                     ]);
     
                     $resultados[] = [
-                        'cuota_id' => $cuota['cuota_id'],
-                        'solicitud_pago' => $estado === 'aprobado' ? 'confirmado' : 'rechazado'
+                        'cuota_id' => $cuotaId,
+                        'solicitud_pago' => $estado
+                    ];
+                }
+            }
+    
+            // Procesa faltantes
+            foreach ($cuotasPorCredencial as $cred => $cuotas) {
+                if (in_array($cred, $credencialesProcesadas)) continue;
+    
+                foreach ($cuotas as $cuota) {
+                    $cuotaId = $cuota['cuota_id'];
+                    $solicitado = (float)$cuota['monto_pagado_solicitado'];
+    
+                    $this->logger->warning("🚫 Cuota faltante en archivo – #$cuotaId para credencial $cred");
+    
+                    $this->pdo->prepare("
+                        UPDATE cuota
+                        SET monto_reprogramado = monto_reprogramado + monto_pagado_solicitado,
+                            monto_pagado_solicitado = 0,
+                            estado = 'reprogramada',
+                            periodo = DATE_ADD(IFNULL(periodo, fecha_vencimiento), INTERVAL 1 MONTH)
+                        WHERE id = :id
+                    ")->execute([':id' => $cuotaId]);
+    
+                    $descripcion = "Cuota {$cuota['cuota_id']} - Factura N° {$cuota['nro_factura']}, RECHAZADO";
+                    $this->pdo->prepare("
+                        INSERT INTO cuenta_corriente (agente_id, fecha, descripcion, condicion_venta, tipo_movimiento, monto, cuota_id)
+                        SELECT f.id_agente, CURDATE(), :desc, f.condicion_venta, 'debito', :monto, c.id
+                        FROM cuota c
+                        JOIN factura f ON f.id = c.factura_id
+                        WHERE c.id = :cuota_id
+                    ")->execute([
+                        ':desc' => $descripcion,
+                        ':monto' => $solicitado,
+                        ':cuota_id' => $cuotaId
+                    ]);
+    
+                    $this->pdo->prepare("
+                        UPDATE solicitud_descuento_haberes
+                        SET resultado = 'rechazado', fecha_resultado = CURDATE(), motivo = 'Faltante en archivo'
+                        WHERE id = :id
+                    ")->execute([':id' => $cuota['solicitud_id']]);
+    
+                    $resultados[] = [
+                        'cuota_id' => $cuotaId,
+                        'solicitud_pago' => 'rechazado'
                     ];
                 }
             }
@@ -794,5 +890,6 @@ class QueryBuilder
             throw new Exception("Error al confirmar descuentos.");
         }
     }
-             
+    
+                     
 }

@@ -306,10 +306,17 @@
         
         document.getElementById('btnConfirmarDescuentosDesdeModal').addEventListener('click', async function () {
             const archivo = document.getElementById('archivoDescuentoTxt').files[0];
+            const btnConfirmar = document.getElementById('btnConfirmarDescuentosDesdeModal');
+            const resumenDiv = document.getElementById('resumenConfirmacion');
+        
             if (!archivo) {
                 mostrarAlertaModal('Debés seleccionar un archivo .txt primero.');
                 return;
             }
+        
+            // Bloquea el botón mientras procesa
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...`;
         
             const contenido = await archivo.text();
             const lineas = contenido.split('\n').filter(l => l.trim() !== '');
@@ -326,6 +333,8 @@
         
             if (!fechaSolicitud) {
                 mostrarAlertaModal('No se pudo detectar la fecha de la solicitud.');
+                btnConfirmar.disabled = false;
+                btnConfirmar.textContent = 'Confirmar descuentos';
                 return;
             }
         
@@ -350,12 +359,14 @@
                 const data = await response.json();
         
                 if (!data.success) {
-                    mostrarAlertaModal(data.error || 'Error al procesar descuentos');
-                    return;
+                    throw new Error(data.error || 'Error al procesar descuentos');
                 }
         
                 const estados = data.resultados;
         
+                console.log("estado recibido: ");
+                console.log(estados);
+
                 const filas = document.querySelectorAll('#modalDetalleSolicitudBody tr');
                 estados.forEach(e => {
                     filas.forEach(fila => {
@@ -363,47 +374,46 @@
                         if (celdaId && celdaId.textContent.trim() == e.cuota_id) {
                             const estadoCelda = fila.querySelector('td:last-child');
                             if (estadoCelda) {
+                                const estado = e.solicitud_pago;
                                 estadoCelda.innerHTML = `
-                                    <span class="badge ${e.solicitud_pago === 'confirmado' ? 'bg-success' : 'bg-danger'}">
-                                        ${e.solicitud_pago === 'confirmado' ? 'descuento_confirmado' : 'rechazado'}
-                                    </span>`;
+                                <span class="badge ${e.solicitud_pago === 'aprobado' ? 'bg-success' : 'bg-danger'}">
+                                    ${e.solicitud_pago === 'aprobado' ? 'descuento_confirmado' : 'rechazado'}
+                                </span>`;
                             }
                         }
                     });
                 });
-
-                const resumenDiv = document.getElementById('resumenConfirmacion');
-
+        
+                // Resumen
                 let confirmados = 0;
                 let rechazados = 0;
-                
                 estados.forEach(e => {
-                    if (e.solicitud_pago === 'confirmado') confirmados++;
+                    if (e.solicitud_pago === 'aprobado') confirmados++;
                     else rechazados++;
                 });
-                
-                // Limpia clases anteriores
+        
                 resumenDiv.classList.remove('text-success', 'text-danger');
-
-                // Determina color
-                if (rechazados === 0) {
-                    resumenDiv.classList.add('text-success');
-                } else {
-                    resumenDiv.classList.add('text-danger');
-                }
-
+                resumenDiv.classList.add(rechazados === 0 ? 'text-success' : 'text-danger');
                 resumenDiv.innerHTML = `
                     <strong>Resultado:</strong>
                     ✔ ${confirmados} confirmado(s) / ❌ ${rechazados} rechazado(s)
                 `;
-
-                
+        
+                // Mostrar finalizado
+                btnConfirmar.innerHTML = `✅ Confirmado`;
+                btnConfirmar.classList.remove('btn-primary');
+                btnConfirmar.classList.add('btn-success');
+        
             } catch (error) {
                 console.error('❌ Error al confirmar descuentos:', error);
                 mostrarAlertaModal('Ocurrió un error inesperado al confirmar descuentos.');
+                btnConfirmar.disabled = false;
+                btnConfirmar.textContent = 'Confirmar descuentos';
+                btnConfirmar.classList.remove('btn-success');
+                btnConfirmar.classList.add('btn-primary');
             }
         });
-        
+                
         
 
         function renderizarTablaCuotas(agenteId, agenteNombre, cuotas = [], totalDescontado = 0, detalleDescuento = []) {
@@ -565,6 +575,7 @@
                                         <th>Factura</th>
                                         <th>Monto</th>
                                         <th>Pagado</th>
+                                        <th>Monto Solicitado Pagado</th>
                                         <th>Reprogramado</th>
                                         <th>Estado</th>
                                     </tr>
@@ -576,8 +587,11 @@
                                             <td>${q.nro_factura}</td>
                                             <td>$${parseFloat(q.monto).toFixed(2)}</td>
                                             <td>$${parseFloat(q.monto_pagado).toFixed(2)}</td>
+                                            <td>$${parseFloat(q.monto_pagado_solicitado).toFixed(2)}</td>
                                             <td>$${parseFloat(q.monto_reprogramado).toFixed(2)}</td>
-                                            <td><span class="badge bg-warning text-dark">${q.estado}</span></td>
+                                            <td><span class="badge ${q.resultado === 'aprobado' ? 'bg-success' : q.resultado === 'rechazado' ? 'bg-danger' : 'bg-warning text-dark'}">
+                                                ${q.resultado ?? q.estado}
+                                            </span></td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -631,7 +645,6 @@
                 }
             });
         }
-
 
         
     });
