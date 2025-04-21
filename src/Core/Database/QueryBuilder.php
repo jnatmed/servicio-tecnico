@@ -532,7 +532,7 @@ class QueryBuilder
         }
     }
     
-    public function getFacturasPaginatedQuery($limit, $offset, $search = '')
+    public function getFacturasPaginatedQuery($limit, $offset, $search = '', $sinComprobante = false)
     {
         try {
             $query = "SELECT f.*, 
@@ -544,7 +544,8 @@ class QueryBuilder
                       LEFT JOIN dependencia d ON f.unidad_que_factura = d.id
                       LEFT JOIN agente a ON f.id_agente = a.id
                       LEFT JOIN cuota c ON f.id = c.factura_id"; // Relación con cuotas
-            
+
+            $whereClauses = [];
             $params = [];
     
             // Agregar filtro de búsqueda si se proporciona un término
@@ -554,7 +555,15 @@ class QueryBuilder
                             OR a.apellido LIKE :search";
                 $params['search'] = "%{$search}%";
             }
-    
+
+            if ($sinComprobante) {
+                $whereClauses[] = "f.path_comprobante IS NULL";
+            }
+            
+            if (count($whereClauses) > 0) {
+                $query .= " WHERE " . implode(" AND ", $whereClauses);
+            }
+
             $query .= " GROUP BY f.id, d.descripcion, a.nombre, a.apellido"; // Agrupar por factura
             $query .= " ORDER BY f.fecha_factura DESC LIMIT :limit OFFSET :offset";
     
@@ -580,11 +589,12 @@ class QueryBuilder
     
     
     
-    public function countFacturasQuery($search = '')
+    public function countFacturasQuery($search = '', $sinComprobante = false)
     {
         try {
             $query = "SELECT COUNT(*) as total FROM factura";
             
+            $whereClauses = [];
             $params = [];
     
             if (!empty($search)) {
@@ -592,6 +602,15 @@ class QueryBuilder
                 $params['search'] = "%{$search}%";
             }
     
+
+            if ($sinComprobante) {
+                $whereClauses[] = "path_comprobante IS NULL";
+            }
+            
+            if (count($whereClauses) > 0) {
+                $query .= " WHERE " . implode(" AND ", $whereClauses);
+            }
+
             // Preparar la consulta manualmente en lugar de usar select()
             $stmt = $this->pdo->prepare($query);
     
@@ -709,5 +728,71 @@ class QueryBuilder
         }
     }
     
-         
+    public function confirmarDescuentosParaFecha(string $fecha, array $descuentos): array
+    {
+        try {
+            // Obtener todas las cuotas solicitadas ese día con su credencial y monto_pagado
+            $query = "
+                SELECT s.id AS solicitud_id, s.cuota_id, c.monto_pagado, a.credencial
+                FROM solicitud_descuento_haberes s
+                JOIN cuota c ON c.id = s.cuota_id
+                JOIN factura f ON f.id = c.factura_id
+                JOIN agente a ON a.id = f.id_agente
+                WHERE s.fecha_solicitud = :fecha
+            ";
+    
+            $stmt = $this->pdo->prepare($query);
+            $stmt->bindValue(':fecha', $fecha);
+            $stmt->execute();
+            $solicitudes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+            // Agrupar por credencial
+            $pagosPorCredencial = [];
+            $cuotasPorCredencial = [];
+    
+            foreach ($solicitudes as $s) {
+                $cred = ltrim($s['credencial'], '0');
+                $pagosPorCredencial[$cred] = ($pagosPorCredencial[$cred] ?? 0) + floatval($s['monto_pagado']);
+                $cuotasPorCredencial[$cred][] = [
+                    'solicitud_id' => $s['solicitud_id'],
+                    'cuota_id' => $s['cuota_id']
+                ];
+            }
+    
+            $resultados = [];
+    
+            foreach ($descuentos as $d) {
+                $cred = ltrim($d['credencial'], '0');
+                $montoArchivo = floatval($d['saldo']);
+                $montoRegistrado = $pagosPorCredencial[$cred] ?? 0;
+    
+                $estado = ($montoArchivo === $montoRegistrado) ? 'aprobado' : 'rechazado';
+    
+                // Actualizar cada solicitud de ese agente
+                foreach ($cuotasPorCredencial[$cred] ?? [] as $cuota) {
+                    $update = $this->pdo->prepare("
+                        UPDATE solicitud_descuento_haberes
+                        SET resultado = :estado, fecha_resultado = CURDATE(), motivo = NULL
+                        WHERE id = :id
+                    ");
+                    $update->execute([
+                        ':estado' => $estado,
+                        ':id' => $cuota['solicitud_id']
+                    ]);
+    
+                    $resultados[] = [
+                        'cuota_id' => $cuota['cuota_id'],
+                        'solicitud_pago' => $estado === 'aprobado' ? 'confirmado' : 'rechazado'
+                    ];
+                }
+            }
+    
+            return $resultados;
+    
+        } catch (PDOException $e) {
+            $this->logger->error("❌ Error en confirmarDescuentosParaFecha: " . $e->getMessage());
+            throw new Exception("Error al confirmar descuentos.");
+        }
+    }
+             
 }

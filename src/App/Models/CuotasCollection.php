@@ -545,7 +545,18 @@ class CuotasCollection extends Model
     }
     
         
+    public function confirmarDescuentosPorAgente(string $fecha, array $descuentos): array
+    {
+        try {
+            $this->logger->info("💾 confirmando descuentos desde modelo para fecha: $fecha");
     
+            return $this->queryBuilder->confirmarDescuentosParaFecha($fecha, $descuentos);
+        } catch (Exception $e) {
+            $this->logger->error("❌ Error en confirmarDescuentosPorAgente: " . $e->getMessage());
+            throw new Exception("No se pudieron confirmar los descuentos.");
+        }
+    }
+        
     
     
 }

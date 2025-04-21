@@ -226,7 +226,36 @@ class CuotasController extends Controller
         }
         exit;
     }
+
+    public function confirmarDescuentos()
+    {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $fechaOriginal = $data['fecha_solicitud'] ?? null;
+
+            // Convertir a formato MySQL si viene como dd/mm/yyyy
+            $fecha = \DateTime::createFromFormat('d/m/Y', $fechaOriginal)?->format('Y-m-d');
+
+            $descuentos = $data['descuentos'] ?? [];
     
+            if (!$fecha || empty($descuentos)) {
+                throw new Exception("Datos incompletos");
+            }
+    
+            $this->logger->info("📥 Confirmar descuentos – Fecha original: $fechaOriginal → Formateada: $fecha");
+            $this->logger->info("📥 Lista de descuentos:", $descuentos);
+    
+            $resultados = $this->model->confirmarDescuentosPorAgente($fecha, $descuentos);
+    
+            echo json_encode(['success' => true, 'resultados' => $resultados]);
+        } catch (Exception $e) {
+            $this->logger->error("❌ Error en confirmarDescuentos: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+        exit;
+    }
+        
+
     public function exportarTxt()   
     {
         try {

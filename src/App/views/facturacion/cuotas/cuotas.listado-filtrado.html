@@ -222,7 +222,6 @@
             });
         });
 
-
         btnAplicar.addEventListener('click', function () {
             const agenteLinks = document.querySelectorAll('a[href*="agente_id="]');
             if (agenteLinks.length === 0) {
@@ -305,6 +304,107 @@
             window.open(url, '_blank');
         });
         
+        document.getElementById('btnConfirmarDescuentosDesdeModal').addEventListener('click', async function () {
+            const archivo = document.getElementById('archivoDescuentoTxt').files[0];
+            if (!archivo) {
+                mostrarAlertaModal('Debés seleccionar un archivo .txt primero.');
+                return;
+            }
+        
+            const contenido = await archivo.text();
+            const lineas = contenido.split('\n').filter(l => l.trim() !== '');
+        
+            const descuentos = lineas.map(linea => {
+                const credencial = parseInt(linea.substring(6, 12));
+                const match = linea.match(/(\d{8})\+/);
+                const saldo = match ? parseInt(match[1]) / 100 : 0;
+                return { credencial, saldo };
+            });
+        
+            const fechaSolicitud = document.getElementById('modalDetalleSolicitudLabel')
+                .textContent.match(/\d{1,2}\/\d{1,2}\/\d{4}/)?.[0] || null;
+        
+            if (!fechaSolicitud) {
+                mostrarAlertaModal('No se pudo detectar la fecha de la solicitud.');
+                return;
+            }
+        
+            console.log("📤 Enviando al backend:", {
+                fecha_solicitud: fechaSolicitud,
+                descuentos: descuentos
+            });
+        
+            try {
+                const response = await fetch('/facturacion/cuotas/confirmar-descuentos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        fecha_solicitud: fechaSolicitud,
+                        descuentos: descuentos
+                    })
+                });
+        
+                const data = await response.json();
+        
+                if (!data.success) {
+                    mostrarAlertaModal(data.error || 'Error al procesar descuentos');
+                    return;
+                }
+        
+                const estados = data.resultados;
+        
+                const filas = document.querySelectorAll('#modalDetalleSolicitudBody tr');
+                estados.forEach(e => {
+                    filas.forEach(fila => {
+                        const celdaId = fila.querySelector('td');
+                        if (celdaId && celdaId.textContent.trim() == e.cuota_id) {
+                            const estadoCelda = fila.querySelector('td:last-child');
+                            if (estadoCelda) {
+                                estadoCelda.innerHTML = `
+                                    <span class="badge ${e.solicitud_pago === 'confirmado' ? 'bg-success' : 'bg-danger'}">
+                                        ${e.solicitud_pago === 'confirmado' ? 'descuento_confirmado' : 'rechazado'}
+                                    </span>`;
+                            }
+                        }
+                    });
+                });
+
+                const resumenDiv = document.getElementById('resumenConfirmacion');
+
+                let confirmados = 0;
+                let rechazados = 0;
+                
+                estados.forEach(e => {
+                    if (e.solicitud_pago === 'confirmado') confirmados++;
+                    else rechazados++;
+                });
+                
+                // Limpia clases anteriores
+                resumenDiv.classList.remove('text-success', 'text-danger');
+
+                // Determina color
+                if (rechazados === 0) {
+                    resumenDiv.classList.add('text-success');
+                } else {
+                    resumenDiv.classList.add('text-danger');
+                }
+
+                resumenDiv.innerHTML = `
+                    <strong>Resultado:</strong>
+                    ✔ ${confirmados} confirmado(s) / ❌ ${rechazados} rechazado(s)
+                `;
+
+                
+            } catch (error) {
+                console.error('❌ Error al confirmar descuentos:', error);
+                mostrarAlertaModal('Ocurrió un error inesperado al confirmar descuentos.');
+            }
+        });
+        
+        
 
         function renderizarTablaCuotas(agenteId, agenteNombre, cuotas = [], totalDescontado = 0, detalleDescuento = []) {
 
@@ -379,7 +479,6 @@
             contenedor.appendChild(tabla);
         }
                                 
-
         function mostrarAlertaModal(mensaje) {
             const modalBody = document.getElementById('modalAlertaMensaje');
             modalBody.textContent = mensaje;
@@ -568,9 +667,18 @@
             <div class="modal-body" id="modalDetalleSolicitudBody">
             <!-- Aquí se inyecta dinámicamente el contenido -->
             </div>
-            <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <div class="modal-footer justify-content-between">
+                <div class="input-group w-50">
+                    <input type="file" class="form-control" id="archivoDescuentoTxt" accept=".txt">
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarDescuentosDesdeModal">Confirmar descuentos</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
+            <div id="resumenConfirmacion" class="mt-3 text-muted small"></div>
+
         </div>
         </div>
     </div>

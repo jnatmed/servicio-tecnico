@@ -227,13 +227,14 @@ class FacturacionController extends Controller
     {
         $page = (int) ($this->request->get('page') ?? 1);
         $searchItem = trim($this->request->get('search') ?? '');
+        $filtrarSinComprobante = $this->request->get('sin_comprobante') == '1';
         $limit = 10;
         $offset = ($page - 1) * $limit;
     
         try {
             // Obtener facturas paginadas
-            $facturas = $this->model->getFacturasPaginated($limit, $offset, $searchItem);
-            $totalFacturas = $this->model->countFacturas($searchItem);
+            $facturas = $this->model->getFacturasPaginated($limit, $offset, $searchItem, $filtrarSinComprobante);
+            $totalFacturas = $this->model->countFacturas($searchItem, $filtrarSinComprobante);
     
             // Si es AJAX, devolver JSON
             if ($this->request->isAjax()) {

@@ -139,7 +139,7 @@
                             facturaList.appendChild(row);
                         });
                     } else {
-                        facturaList.innerHTML = `<tr><td colspan="9" class="text-center">No se encontraron facturas.</td></tr>`;
+                        facturaList.innerHTML = `<tr><td colspan="10" class="text-center">No se encontraron facturas.</td></tr>`;
                     }
                 })
                 .catch(error => console.error("Error en fetch:", error));

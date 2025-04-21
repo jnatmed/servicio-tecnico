@@ -208,12 +208,14 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
 /**
  *  14) Cuotas
  */
+// http://localhost:8080/facturacion/listar?con_comprobante=1
 
  $router->get('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar');
  $router->post('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@reporteAgrupado');
  $router->post('/facturacion/cuotas/aplicar-descuento-masivo', 'Facturacion\\CuotasController@aplicarDescuentoMasivo');
  $router->get('/facturacion/cuotas/exportar-txt', 'Facturacion\\CuotasController@exportarTxt');
  $router->get('/facturacion/cuotas/solicitudes-pendientes', 'Facturacion\\CuotasController@verSolicitudesPendientes');
+ $router->post('/facturacion/cuotas/confirmar-descuentos', 'Facturacion\\CuotasController@confirmarDescuentos');
 
 
  /**
