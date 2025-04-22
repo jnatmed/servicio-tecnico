@@ -38,8 +38,25 @@
                             <p class="card-text"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
                             <p class="card-text"><strong>Stock Inicial:</strong> {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}</p>
                             <p class="card-text">
-                                <strong>Stock Actual:</strong> {{ stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
-                            </p>                            
+                                <strong>Stock Actual:</strong> 
+                                {% if stock_actual <= 2 %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> 
+                                        {{ stock_actual }} {{ producto.unidad_medida }}
+                                    </span>
+                                {% elseif stock_actual <= 5 %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i> 
+                                        {{ stock_actual }} {{ producto.unidad_medida }}
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i> 
+                                        {{ stock_actual }} {{ producto.unidad_medida }}
+                                    </span>
+                                {% endif %}
+                            </p>           
+                          
                             <p class="card-text"><strong>Creado el:</strong> {{ producto.created_at }}</p>
                             <p class="card-text"><strong>Última Actualización:</strong> {{ producto.updated_at }}</p>
                         </div>

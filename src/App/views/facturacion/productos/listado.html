@@ -40,7 +40,8 @@
                                 <th>Estado</th>
                                 <th>Expediente</th>
                                 <th>Precio</th>
-                                <th>Stock</th>
+                                <th>Stock Inicial</th>
+                                <th>Stock Actual</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -62,9 +63,28 @@
                                         <td>{{ producto.nro_proyecto_productivo }}</td>
                                         <td>${{ producto.precio|number_format(2, '.', ',') }}</td>   
                                         <td>
-                                            <i class="bi bi-box-seam text-primary" title="Stock inicial"></i>
+                                            <i class="bi bi-box-seam text-primary" title="Stock Inicial"></i>
                                             {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
                                         </td>                                                                             
+                                        <td>
+                                            {% if producto.stock_actual <= 2 %}
+                                                <span class="badge bg-danger">
+                                                    <i class="bi bi-exclamation-triangle-fill me-1" title="Stock Crítico"></i>
+                                                    {{ producto.stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                                </span>
+                                            {% elseif producto.stock_actual <= 5 %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="bi bi-exclamation-circle-fill me-1" title="Stock Bajo"></i>
+                                                    {{ producto.stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check-circle-fill me-1" title="Stock Óptimo"></i>
+                                                    {{ producto.stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                                                                                                
                                         <td>
                                             <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-info">Ver</a>
                                             <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-sm btn-warning">Editar</a>

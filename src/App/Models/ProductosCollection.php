@@ -385,14 +385,24 @@ class ProductosCollection extends Model
                 ORDER BY p.created_at DESC
             ";
     
-            $this->logger->info("Consulta productos con último precio:", [$sql]);
+            $productos = $this->queryBuilder->query($sql);
+            $productosConStock = [];
     
-            return $this->queryBuilder->query($sql);
+            foreach ($productos as $producto) {
+                $stock = $this->getStockActual($producto['id']);
+                if ($stock > 0) {
+                    $producto['stock_actual'] = $stock;
+                    $productosConStock[] = $producto;
+                }
+            }
+    
+            return $productosConStock;
         } catch (Exception $e) {
-            $this->logger->error("Error al obtener productos con precio más reciente: " . $e->getMessage());
+            $this->logger->error("❌ Error al obtener productos con precio más reciente: " . $e->getMessage());
             return [];
         }
     }
+    
     
     public function insertarPrecio(array $data)
     {
