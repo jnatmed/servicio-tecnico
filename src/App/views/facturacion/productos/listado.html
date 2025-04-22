@@ -124,11 +124,30 @@
                                 
                                 <p class="card-text mb-2"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
                                 <p class="card-text mb-2">
-                                    <strong>Precio:</strong> ${{ producto.precio|number_format(2, '.', ',') }}
-                                    <br>
-                                    <strong><i class="bi bi-box-seam text-primary"></i> Stock:</strong>
-                                    {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                    <strong>Precio:</strong> ${{ producto.precio|number_format(2, '.', ',') }}<br>
+                                
+                                    <strong><i class="bi bi-box text-secondary"></i> Stock Inicial:</strong>
+                                    {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}<br>
+                                
+                                    <strong><i class="bi bi-box-seam text-primary"></i> Stock Actual:</strong>
+                                    {% if producto.stock_actual <= 2 %}
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> 
+                                            {{ producto.stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                        </span>
+                                    {% elseif producto.stock_actual <= 5 %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-exclamation-circle-fill me-1"></i> 
+                                            {{ producto.stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle-fill me-1"></i> 
+                                            {{ producto.stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                                        </span>
+                                    {% endif %}
                                 </p>
+                                
                                 
                                 <div class="d-flex gap-2">
                                     <a href="/facturacion/productos/ver?id_producto={{ producto.id }}" class="btn btn-sm btn-info">Ver</a>
