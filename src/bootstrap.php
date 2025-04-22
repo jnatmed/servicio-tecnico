@@ -194,7 +194,9 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->get('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto'); 
   $router->post('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto'); 
   $router->get('/facturacion/productos/eliminar', 'Facturacion\\ProductoController@eliminarProducto'); 
-  
+  $router->post('/facturacion/productos/informar-decomiso', 'Facturacion\\ProductoController@registrarDecomiso'); 
+  $router->get('/facturacion/productos/ver-comprobante', 'Facturacion\\ProductoController@verComprobanteDecomiso');
+
 /**
  * 13) Agentes
  *  */  

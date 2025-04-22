@@ -44,6 +44,164 @@ class ProductosCollection extends Model
     }
     
 
+    public function obtenerStockActual($productoId)
+    {
+        try {
+            $result = $this->queryBuilder->select('producto', 'stock_inicial', ['id' => $productoId]);
+
+            if (!$result || !isset($result[0]['stock_inicial'])) {
+                throw new Exception("No se encontró el producto con ID $productoId");
+            }
+
+            $stockInicial = (int) $result[0]['stock_inicial'];
+
+            $sql = "
+                SELECT 
+                    SUM(CASE WHEN tipo_movimiento = 'in' THEN cantidad ELSE 0 END) AS total_in,
+                    SUM(CASE WHEN tipo_movimiento = 'out' THEN cantidad ELSE 0 END) AS total_out
+                FROM movimiento_inventario
+                WHERE producto_id = :producto_id
+            ";
+
+            $params = ['producto_id' => $productoId];
+            $movimientos = $this->queryBuilder->query($sql, $params);
+
+            $in = (int) ($movimientos[0]['total_in'] ?? 0);
+            $out = (int) ($movimientos[0]['total_out'] ?? 0);
+
+            return $stockInicial + $in - $out;
+
+        } catch (Exception $e) {
+            $this->logger->error("Error en obtenerStockActual: " . $e->getMessage(), ['producto_id' => $productoId]);
+            throw $e;
+        }
+    }
+
+    public function registrarMovimientoInventario(array $data)
+    {
+        try {
+            $this->logger->info("Registrando movimiento inventario:", $data);
+
+            list($idInsertado, $success) = $this->queryBuilder->insert('movimiento_inventario', [
+                'producto_id' => $data['producto_id'],
+                'fecha_movimiento' => date('Y-m-d H:i:s'),
+                'tipo_movimiento' => $data['tipo_movimiento'],
+                'cantidad' => $data['cantidad'],
+                'descripcion_decomiso' => $data['descripcion_decomiso'] ?? null,
+                'path_comprobante_decomiso' => $data['path_comprobante_decomiso'] ?? null,
+                'factura_id' => $data['factura_id'] ?? null
+            ]);
+
+            if (!$success) {
+                throw new Exception("No se pudo registrar el movimiento de inventario.");
+            }
+
+            return $idInsertado;
+
+        } catch (Exception $e) {
+            $this->logger->error("Error al registrar movimiento de inventario: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+
+    public function getMovimientosInventario($idProducto)
+    {
+        try {
+            $sql = "
+                SELECT 
+                    id,
+                    fecha_movimiento,
+                    tipo_movimiento,
+                    cantidad,
+                    descripcion_decomiso,
+                    path_comprobante_decomiso
+                FROM movimiento_inventario
+                WHERE producto_id = :id
+                ORDER BY fecha_movimiento DESC
+            ";
+    
+            $params = [':id' => $idProducto];
+            return $this->queryBuilder->query($sql, $params);
+        } catch (\Exception $e) {
+            $this->logger->error("Error al obtener movimientos de inventario: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    
+    public function obtenerComprobanteDecomiso($productoId, $fechaMovimiento)
+    {
+        try {
+            $desde = date('Y-m-d H:i:s', strtotime($fechaMovimiento));
+            $hasta = date('Y-m-d H:i:s', strtotime($fechaMovimiento) + 1);
+    
+            $this->logger->debug("🔍 Buscando comprobante para decomiso", [
+                'producto_id' => $productoId,
+                'fecha_movimiento_original' => $fechaMovimiento,
+                'desde' => $desde,
+                'hasta' => $hasta
+            ]);
+    
+            $sql = "
+                SELECT path_comprobante_decomiso
+                FROM movimiento_inventario
+                WHERE producto_id = :producto_id
+                AND tipo_movimiento = 'out'
+                AND fecha_movimiento BETWEEN :desde AND :hasta
+                LIMIT 1
+            ";
+    
+            $params = [
+                ':producto_id' => $productoId,
+                ':desde' => $desde,
+                ':hasta' => $hasta
+            ];
+    
+            $resultado = $this->queryBuilder->query($sql, $params);
+    
+            $this->logger->debug("📄 Resultado consulta comprobante:", $resultado);
+    
+            return $resultado[0]['path_comprobante_decomiso'] ?? null;
+    
+        } catch (Exception $e) {
+            $this->logger->error("❌ Error al obtener comprobante de decomiso: " . $e->getMessage());
+            return null;
+        }
+    }
+    
+    public function getStockActual($idProducto)
+    {
+        try {
+            // Obtener el stock inicial
+            $producto = $this->getById($idProducto);
+            $stockInicial = (float) $producto['stock_inicial'] ?? 0;
+    
+            // Obtener total de entradas
+            $sqlIn = "SELECT SUM(cantidad) AS total_in FROM movimiento_inventario WHERE producto_id = :id AND tipo_movimiento = 'in'";
+            $totalIn = $this->queryBuilder->query($sqlIn, [':id' => $idProducto])[0]['total_in'] ?? 0;
+    
+            // Obtener total de salidas
+            $sqlOut = "SELECT SUM(cantidad) AS total_out FROM movimiento_inventario WHERE producto_id = :id AND tipo_movimiento = 'out'";
+            $totalOut = $this->queryBuilder->query($sqlOut, [':id' => $idProducto])[0]['total_out'] ?? 0;
+    
+            // Log para depurar
+            $this->logger->debug("🧮 Stock calculado:", [
+                'stock_inicial' => $stockInicial,
+                'in' => $totalIn,
+                'out' => $totalOut
+            ]);
+    
+            // Calcular y retornar stock actual
+            return $stockInicial + (float) $totalIn - (float) $totalOut;
+    
+        } catch (Exception $e) {
+            $this->logger->error("❌ Error al calcular stock actual: " . $e->getMessage());
+            return 0;
+        }
+    }
+    
+
     public function contarSinPrecio(): int
     {
         $sql = "

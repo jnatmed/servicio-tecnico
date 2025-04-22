@@ -79,6 +79,54 @@ class ProductoController extends Controller
         }
     }
 
+    public function registrarDecomiso()
+    {
+        try {
+            $productoId = $this->request->sanitize($this->request->get('id_producto'), 'int');
+            $cantidad = $this->request->sanitize($this->request->get('cantidad'), 'int');
+            $descripcion = $this->request->sanitize($this->request->get('descripcion_decomiso'), 'string');
+            $archivo = $this->request->file('comprobante');
+
+            $this->logger->debug("parametros entrada registrarDecomiso: [productoId, cantidad, descripcion, archivo]", [$productoId, $cantidad, $descripcion, $archivo]);
+
+            if (!$productoId || !$cantidad || !$descripcion || !$archivo || $archivo['error'] !== 0) {
+                throw new Exception('Faltan datos obligatorios o el archivo no se subió correctamente.');
+            }
+    
+            // Validar stock actual
+            $stockActual = $this->model->obtenerStockActual($productoId); // implementado en ProductosCollection
+    
+            if ($cantidad > $stockActual) {
+                throw new Exception("No se puede decomisar $cantidad unidades. Stock disponible: $stockActual.");
+            }
+    
+            // Subida del archivo
+            $resultadoUpload = \Paw\App\Models\Uploader::uploadFile($archivo);
+    
+            if ($resultadoUpload['exito'] !== \Paw\App\Models\Uploader::UPLOAD_COMPLETED) {
+                throw new Exception("Error al subir el comprobante: " . ($resultadoUpload['description'] ?? ''));
+            }
+    
+            // Registrar movimiento
+            $this->model->registrarMovimientoInventario([
+                'producto_id' => $productoId,
+                'fecha_movimiento' => date('Y-m-d H:i:s'),
+                'tipo_movimiento' => 'out',
+                'cantidad' => $cantidad,
+                'descripcion_decomiso' => $descripcion,
+                'path_comprobante_decomiso' => $resultadoUpload['nombre_imagen']
+            ]);
+    
+            $this->logger->info("✔️ Decomiso registrado: Producto #$productoId - Cantidad: $cantidad");
+    
+            redirect("facturacion/productos/ver?id_producto=$productoId");
+    
+        } catch (Exception $e) {
+            $this->logger->error("❌ Error al registrar decomiso: " . $e->getMessage());
+            redirect("facturacion/productos/ver?id_producto=$productoId");
+        }
+    }
+        
     public function editarProducto()
     {
         $id = $this->request->get('id_producto');
@@ -302,20 +350,71 @@ class ProductoController extends Controller
         }
     }
     
+    public function verComprobanteDecomiso()
+    {
+        $productoId = $this->request->get('producto_id');
+        $fechaMovimiento = $this->request->get('fecha');
     
+        try {
+            $path = $this->model->obtenerComprobanteDecomiso($productoId, $fechaMovimiento);
+    
+            $rutaAbsoluta = realpath(__DIR__ . '/../../../' . \Paw\App\Models\Uploader::UPLOADDIRECTORY . $path);
+    
+            $this->logger->debug("🧾 Ruta comprobante decomiso:", [
+                'producto_id' => $productoId,
+                'fecha' => $fechaMovimiento,
+                'archivo' => $path,
+                'ruta' => $rutaAbsoluta
+            ]);
+    
+            if (!$path || !$rutaAbsoluta || !file_exists($rutaAbsoluta)) {
+                throw new \Exception("No se encontró el comprobante.");
+            }
+    
+            if (ob_get_length()) {
+                ob_end_clean();
+            }
+    
+            $mime = \Paw\App\Models\Uploader::getMimeType($path);
+    
+            header('Content-Type: ' . $mime);
+            header('Content-Disposition: inline; filename="' . basename($path) . '"');
+            header('Content-Length: ' . filesize($rutaAbsoluta));
+            header('Cache-Control: private');
+            header('Pragma: public');
+    
+            readfile($rutaAbsoluta);
+            exit;
+    
+        } catch (\Exception $e) {
+            $this->logger->error("❌ Error al visualizar comprobante de decomiso: " . $e->getMessage());
+            http_response_code(404);
+            echo "No se pudo visualizar el comprobante.";
+            exit;
+        }
+    }
+    
+    
+        
 
     public function ver()
     {
-        if ($this->request->get('id_producto') !== null) {
-            $id = $this->request->get('id_producto');
+        $id = $this->request->get('id_producto');
+        
+        if ($id !== null) {
             $this->logger->info("id_producto: ", [$id]);
     
             $detalleProducto = $this->model->getDetalleProducto($id);
             $precios = $this->model->getHistorialPrecios($id);
+            $movimientos = $this->model->getMovimientosInventario($id); 
+            $stockActual = $this->model->getStockActual($id);
+
     
             view('facturacion/productos/detalle.producto', array_merge(
                 ['producto' => $detalleProducto],
                 ['precios' => $precios],
+                ['movimientos' => $movimientos],
+                ['stock_actual' => $stockActual],
                 $this->menu
             ));
         } else {
@@ -324,6 +423,9 @@ class ProductoController extends Controller
         }
     }
     
+    
+
+
     public function agregarPrecio()
     {
         $id = $this->request->sanitize($this->request->get('id_producto'));

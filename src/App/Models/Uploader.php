@@ -1,6 +1,7 @@
 <?php
 
-namespace Paw\App\Utils;
+namespace Paw\App\Models;
+
 use Exception;
 use Paw\Core\Model;
 
@@ -11,6 +12,7 @@ class Uploader extends Model
     const ERROR_TIPO_NO_PERMITIDO = 1;
     const ERROR_TAMANIO_NO_PERMITIDO = 2;
     const ERROR_SUBIDA = 3;
+    const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'application/pdf'];
 
     public static function uploadFile($file)
     {
@@ -45,13 +47,13 @@ class Uploader extends Model
         finfo_close($finfo);        
 
         $log->info("TIPO ARCHIVO ", [$fileMimeType]);
-        if ($fileMimeType !== 'image/jpeg' && $fileMimeType !== 'image/png') {
+
+        if (!in_array($fileMimeType, self::TIPOS_PERMITIDOS)) {
             return [
                 'exito' => self::ERROR_TIPO_NO_PERMITIDO,
-                'description' => "El tipo de archivo $fileName no está permitido."
+                'description' => "El tipo de archivo $fileName ($fileMimeType) no está permitido."
             ];
         }
-
 
         // Verificar el tamaño del archivo
         $maxFileSize = 1 * 1024 * 1024; // 1 MB en bytes

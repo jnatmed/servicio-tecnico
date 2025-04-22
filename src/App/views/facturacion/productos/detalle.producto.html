@@ -37,6 +37,9 @@
                             </p>
                             <p class="card-text"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
                             <p class="card-text"><strong>Stock Inicial:</strong> {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}</p>
+                            <p class="card-text">
+                                <strong>Stock Actual:</strong> {{ stock_actual|number_format(2, '.', ',') }} {{ producto.unidad_medida }}
+                            </p>                            
                             <p class="card-text"><strong>Creado el:</strong> {{ producto.created_at }}</p>
                             <p class="card-text"><strong>Última Actualización:</strong> {{ producto.updated_at }}</p>
                         </div>
@@ -46,6 +49,9 @@
             <div class="text-start mt-3">
                 <a href="/facturacion/productos/editar?id_producto={{ producto.id }}" class="btn btn-warning">
                     <i class="bi bi-pencil-square"></i> Editar producto
+                </a>
+                <a href="#" class="btn btn-danger ms-2" data-bs-toggle="modal" data-bs-target="#modalDecomiso">
+                    <i class="bi bi-x-circle-fill"></i> Informar decomiso
                 </a>
             </div>
 
@@ -57,7 +63,46 @@
                         <i class="bi bi-tags-fill me-1"></i> Nuevo Precio
                     </button>
                 </div>
-                             
+
+                
+                <div class="modal fade" id="modalDecomiso" tabindex="-1" aria-labelledby="modalDecomisoLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                      <form class="modal-content" method="POST" action="/facturacion/productos/informar-decomiso" enctype="multipart/form-data">
+                        <input type="hidden" name="id_producto" value="{{ producto.id }}">
+                        <div class="modal-header bg-danger text-white">
+                          <h5 class="modal-title" id="modalDecomisoLabel">Informar Decomiso</h5>
+                          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="mb-3">
+                            <label for="cantidad" class="form-label">Cantidad a decomisar</label>
+                            <input type="number" class="form-control" name="cantidad" id="cantidad" min="1" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="descripcion_decomiso" class="form-label">Descripción</label>
+                            <input 
+                              type="text" 
+                              class="form-control" 
+                              name="descripcion_decomiso" 
+                              id="descripcion_decomiso" 
+                              required 
+                              placeholder="Indique un nro de expte/ providencia o nro de movimiento"
+                            >
+                          </div>
+                          <div class="mb-3">
+                            <label for="comprobante" class="form-label">Comprobante (PDF o imagen)</label>
+                            <input type="file" class="form-control" name="comprobante" id="comprobante" accept=".pdf,.jpg,.jpeg,.png" required>
+                          </div>
+                        </div>
+                        <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                          <button type="submit" class="btn btn-danger">Registrar Decomiso</button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  
+
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -84,6 +129,59 @@
                         {% endif %}
                     </tbody>
                 </table>
+
+
+                <h3 class="mt-5">Historial de Inventario</h3>
+                <table class="table table-bordered table-sm mt-3">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Fecha</th>
+                      <th>Tipo</th>
+                      <th>Cantidad</th>
+                      <th>Descripción</th>
+                      <th>Comprobante</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% if movimientos|length > 0 %}
+                      {% for mov in movimientos %}
+                        <tr>
+                          <td>{{ loop.index }}</td>
+                          <td>{{ mov.fecha_movimiento|date("d/m/Y H:i") }}</td>
+                          <td>
+                            {% if mov.tipo_movimiento == 'in' %}
+                              <span class="badge bg-success">Ingreso</span>
+                            {% else %}
+                              <span class="badge bg-danger">Salida</span>
+                            {% endif %}
+                          </td>
+                          <td>{{ mov.cantidad }}</td>
+                          <td>{{ mov.descripcion_decomiso ?? '-' }}</td>
+                          <td>
+                            {% if mov.path_comprobante_decomiso %}
+                                <a href="#" 
+                                    class="ver-comprobante" 
+                                    data-producto="{{ producto.id }}" 
+                                    data-fecha="{{ mov.fecha_movimiento }}"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalVerComprobante">
+                                    📎 Ver
+                                </a>
+                            {% else %}
+                              -
+                            {% endif %}
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="6" class="text-center">No se registraron movimientos.</td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+                
             {% endif %}
         
 
@@ -123,6 +221,40 @@
           </form>
         </div>
       </div>
-          
+
+      <div class="modal fade" id="modalVerComprobante" tabindex="-1" aria-labelledby="modalVerComprobanteLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+          <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title" id="modalVerComprobanteLabel">Comprobante de Decomiso</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+              <iframe id="iframeComprobante" src="" width="100%" height="600px" frameborder="0"></iframe>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        document.querySelectorAll('.ver-comprobante').forEach(link => {
+          link.addEventListener('click', function (e) {
+            e.preventDefault();
+            const productoId = this.dataset.producto;
+            const fecha = this.dataset.fecha;
+      
+            const url = `/facturacion/productos/ver-comprobante?producto_id=${encodeURIComponent(productoId)}&fecha=${encodeURIComponent(fecha)}`;
+            document.getElementById('iframeComprobante').src = url;
+          });
+        });
+      
+        // Limpiar iframe al cerrar modal
+        const modalEl = document.getElementById('modalVerComprobante');
+        modalEl.addEventListener('hidden.bs.modal', function () {
+          document.getElementById('iframeComprobante').src = '';
+        });
+      </script>
+            
+      
 </body>
 </html>
