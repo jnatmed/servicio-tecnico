@@ -127,4 +127,34 @@ class UserCollection extends Model
             return null;
         }
     }
+
+    public function actualizarDependenciaUsuario($usuarioId, $dependenciaId, $ordenativaFunciona)
+    {
+        $sql = "UPDATE usuarios 
+                SET dependencia_id = :dep, 
+                    ordenativa_funcion = :ordFun 
+                WHERE id = :id";
+    
+        $this->queryBuilder->query($sql, [
+            ':dep' => $dependenciaId ?: null,
+            ':ordFun' => $ordenativaFunciona,
+            ':id' => $usuarioId
+        ]);
+    }
+    
+
+    public function getNombrePorId($id)
+    {
+        $sql = "SELECT descripcion FROM dependencia WHERE id = :id";
+        $resultados = $this->queryBuilder->query($sql, [':id' => $id]);
+    
+        foreach ($resultados as $fila) {
+            return $fila['descripcion'];
+        }
+    
+        return null;
+    }
+    
+    
+    
 }

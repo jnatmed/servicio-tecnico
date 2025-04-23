@@ -178,4 +178,5 @@ class AgenteController extends Controller
         }
     }
 
+
 }

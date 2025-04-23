@@ -151,6 +151,7 @@ $router->get('/user/logout', 'UserController@logout');
 $router->get('/user/register', 'UserController@register');
 $router->post('/user/register', 'UserController@register');
 $router->get('/user/ver-perfil', 'UserController@verPerfil');
+$router->post('/user/asignar-dependencia', 'UserController@asignarDestino');
 $router->get('/auth/google/callback', 'UserController@callback');
 
 $router->get('/enviar-mail', 'UserController@enviarMail');

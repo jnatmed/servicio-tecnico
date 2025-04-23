@@ -14,6 +14,20 @@
                     <p><label>Cuenta:</label> <span class="user-info">{{ usuario.account }}</span></p>
                     <p><label>Email:</label> <span class="user-info">{{ usuario.email }}</span></p>
                     <p><label>Destino:</label> <span class="user-info">{{ usuario.tipo_usuario }}</span></p>
+                    <p>
+                      <label>Dependencia:</label>
+                      <span class="user-info user-info-dependencia">
+                          {% if usuario.dependencia %}
+                              {{ usuario.dependencia }}
+                          {% else %}
+                              <span class="text-muted">Sin asignar</span>
+                          {% endif %}
+                      </span>
+                      <button class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#modalAsignarDependencia">
+                          Asignar dependencia
+                      </button>
+                  </p>
+                  
                 </div>
 
                 {% if usuario.imagen %}
@@ -26,6 +40,74 @@
         {% include "parts/cierre-modulos.view.html" %}
 
         {% include 'parts/footer.view.html' %}
+
+        <div class="modal fade" id="modalAsignarDependencia" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <form id="formAsignarDependencia" class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="modalLabel">Asignar Dependencia</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                  <input type="hidden" name="usuario_id" value="{{ usuario.id }}">
+          
+                  <!-- Dependencia -->
+                  <div class="mb-3">
+                    <label for="dependencia_id" class="form-label">Seleccionar dependencia</label>
+                    <select class="form-select" id="dependencia_id" name="dependencia_id" required>
+                      <option value="">-- Seleccionar --</option>
+                      {% for d in dependencias %}
+                        <option value="{{ d.id }}">{{ d.descripcion }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+          
+                  <!-- Ordenativa Función -->
+                  <div class="mb-3">
+                    <label for="ordenativa_funcion" class="form-label">Nro de Ordenativa Función</label>
+                    <input type="text" class="form-control" id="ordenativa_funcion" name="ordenativa_funcion"
+                           value="{{ usuario.ordenativa_funcion ?? '' }}">
+                  </div>
+          
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary">Guardar</button>
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+
+          <script>
+            document.getElementById('formAsignarDependencia').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const form = e.target;
+                const data = new FormData(form);
+            
+                const response = await fetch('/user/asignar-dependencia', {
+                    method: 'POST',
+                    body: data
+                });
+            
+                const resultado = await response.json();
+            
+                if (resultado.ok && resultado.nombre_dependencia) {
+                    // Cierra el modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('modalAsignarDependencia'));
+                    modal.hide();
+            
+                    // Actualiza el texto en el perfil
+                    const spanDependencia = document.querySelector('.user-info-dependencia');
+                    if (spanDependencia) {
+                        spanDependencia.textContent = resultado.nombre_dependencia;
+                        spanDependencia.classList.remove('text-muted');
+                    }
+                }
+            });
+            </script>
+            
+                      
     </body>
 </html>
     

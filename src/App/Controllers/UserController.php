@@ -116,8 +116,10 @@ class UserController extends Controller
 
                 $userInfo['id_user'] = $nuevoIdUser;
 
+                $this->setIdUser($nuevoIdUser);
+
                 $parametros = [
-                    'id_user' => $nuevoIdUser,
+                    'id_user' => 'id_user',
                     'nombre_usuario' => 'name',
                     'tipo_usuario' => 'group',
                     'email' => 'email',
@@ -224,6 +226,10 @@ class UserController extends Controller
     {
         return $_SESSION['id_user'];
     }
+    public function setIdUser($id)
+    {
+        $_SESSION['id_user'] = $id;
+    }
 
     public function logout()
     {
@@ -273,22 +279,71 @@ class UserController extends Controller
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-        
+
+        $user = $this->model->getUserById($this->getIdUser());
+
+
         $datos = [
             'usuario' => [
                 'usuario' => $this->getUserName(),
                 'email' => $this->getUserEmail(),
                 'tipo_usuario' => $this->getUserType(),
                 'account' => $this->getAccount(),
+                'account' => $this->getAccount(),
+                'dependencia' => $this->model->getNombrePorId($user['dependencia_id'])
             ]
         ];
-        
+
+        $dependenciaCollection = new \Paw\App\Models\DependenciasCollection($this->logger, $this->qb);
+        $dependencias = $dependenciaCollection->getDependencias();
+
         $this->logger->info("datos: ",[$datos]);
 
         view('perfil.view', array_merge(
-            $datos, $this->menu));
+            $datos + ['dependencias' => $dependencias],
+            $this->menu
+        ));
     }
 
+
+    public function asignarDestino()
+    {
+        $dependencia_id = $this->request->get('dependencia_id');
+        $ordenativa_funcion = $this->request->get('ordenativa_funcion');
+        
+        // Obtener ID del usuario logueado (desde sesión)
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+    
+        $usuario_id = $this->getIdUser();
+    
+        $this->logger->info("usuario id: ", [$usuario_id, $_SESSION]);
+
+        if (!$usuario_id) {
+            echo json_encode(['ok' => false, 'error' => 'Usuario no autenticado']);
+            return;
+        }
+    
+        try {
+            // Actualiza la dependencia del usuario
+            $this->model->actualizarDependenciaUsuario($usuario_id, $dependencia_id, $ordenativa_funcion);
+
+            // Obtener nombre de la dependencia asignada
+            $dependencia = $this->model->getNombrePorId($dependencia_id);
+            
+            echo json_encode([
+                'ok' => true,
+                'nombre_dependencia' => $dependencia
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->error("Error al asignar dependencia: " . $e->getMessage());
+            echo json_encode(['ok' => false, 'error' => 'Error al guardar los datos.']);
+        }
+    
+        exit;
+    }
+    
     public function enviarMail()
     {
         try {
@@ -306,6 +361,7 @@ class UserController extends Controller
             echo 'Error: ' . $e->getMessage();
         }        
     }
+
 
 
 }
