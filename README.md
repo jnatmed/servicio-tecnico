@@ -148,7 +148,8 @@ Este sistema cubre:
 ├── composer.json                   # Dependencias PHP
 └── README.md                       # Este documento
 
----
+```
+plaintext---
 
 # 🛠️ Sistema de Servicio Técnico - Dirección de Comercialización
 
