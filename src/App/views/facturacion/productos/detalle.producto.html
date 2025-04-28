@@ -174,7 +174,14 @@
                             {% endif %}
                           </td>
                           <td>{{ mov.cantidad }}</td>
-                          <td>{{ mov.descripcion_decomiso ?? '-' }}</td>
+                          <td>
+                            {% if mov.factura_id %}
+                                <a href="/facturacion/ver?id={{ mov.factura_id }}">{{ mov.descripcion_movimiento }}</a>
+                            {% else %}
+                                {{ mov.descripcion_movimiento }}
+                            {% endif %}
+                          </td>
+                          </a></td>
                           <td>
                             {% if mov.path_comprobante_decomiso %}
                                 <a href="#" 
@@ -185,8 +192,18 @@
                                     data-bs-target="#modalVerComprobante">
                                     📎 Ver
                                 </a>
-                            {% else %}
-                              -
+                                {% else %}
+                                {% if mov.factura_id %}
+                                    <a href="#"
+                                       class="ver-comprobante-factura"
+                                       data-factura="{{ mov.factura_id }}"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#modalVerComprobanteInline">
+                                        📄 Ver
+                                    </a>
+                                {% else %}
+                                    -
+                                {% endif %}
                             {% endif %}
                           </td>
                         </tr>
@@ -265,13 +282,41 @@
           });
         });
       
+
+        const links = document.querySelectorAll('.ver-comprobante-factura');
+        links.forEach(link => {
+            link.addEventListener('click', function () {
+                const facturaId = this.dataset.factura;
+                const iframe = document.getElementById('iframeComprobanteFactura');
+                iframe.src = `/facturacion/ver-comprobante?id_factura=${facturaId}`;
+            });
+        });
+
         // Limpiar iframe al cerrar modal
         const modalEl = document.getElementById('modalVerComprobante');
         modalEl.addEventListener('hidden.bs.modal', function () {
           document.getElementById('iframeComprobante').src = '';
         });
       </script>
-            
-      
+
+      <!-- Modal de vista previa del comprobante generado por factura -->
+    <div class="modal fade" id="modalVerComprobanteInline" tabindex="-1" aria-labelledby="modalComprobanteLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl"> <!-- modal-xl para mostrar más grande -->
+      <div class="modal-content">
+          <div class="modal-header">
+          <h5 class="modal-title" id="modalComprobanteLabel">Vista de Comprobante</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body" style="height: 80vh">
+          <iframe id="iframeComprobanteFactura"
+              src=""
+              style="width:100%; height:100%; border:none;"
+              allowfullscreen>
+          </iframe>
+          </div>
+      </div>
+      </div>
+    </div>
+
 </body>
 </html>

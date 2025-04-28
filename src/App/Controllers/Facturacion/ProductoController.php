@@ -113,7 +113,7 @@ class ProductoController extends Controller
                 'fecha_movimiento' => date('Y-m-d H:i:s'),
                 'tipo_movimiento' => 'out',
                 'cantidad' => $cantidad,
-                'descripcion_decomiso' => $descripcion,
+                'descripcion_movimiento' => "Decomiso: " . $descripcion,
                 'path_comprobante_decomiso' => $resultadoUpload['nombre_imagen']
             ]);
     
@@ -405,10 +405,13 @@ class ProductoController extends Controller
             $this->logger->info("id_producto: ", [$id]);
     
             $detalleProducto = $this->model->getDetalleProducto($id);
+            $this->logger->info("getDetalleProducto, ", [$detalleProducto]);
             $precios = $this->model->getHistorialPrecios($id);
+            $this->logger->info("getHistorialPrecios, ", [$precios]);
             $movimientos = $this->model->getMovimientosInventario($id); 
+            $this->logger->info("getMovimientosInventario, ", [$movimientos]);
             $stockActual = $this->model->getStockActual($id);
-
+            $this->logger->info("getStockActual, ", [$stockActual]);
     
             view('facturacion/productos/detalle.producto', array_merge(
                 ['producto' => $detalleProducto],

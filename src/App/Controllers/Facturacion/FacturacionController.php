@@ -129,7 +129,7 @@ class FacturacionController extends Controller
                     try {
                         $this->logger->debug("Producto Data para inserción: ", [$productoData]);
     
-                        $queryProducto = new ProductosCollection($this->qb);
+                        $queryProducto = new ProductosCollection($this->qb, $this->logger);
 
                         // Validar que el producto exista en la BD antes de agregarlo al detalle
                         $productoExistente = $queryProducto->getById($productoData['id']);
@@ -149,6 +149,18 @@ class FacturacionController extends Controller
                             ], $this->logger));
 
                         $this->logger->debug("DetalleFactura insertado con ID: ", [$detalleFacturaId]);
+
+                        $this->logger->debug("Paso previo a registrar movimiento Factura: ", [$factura]);
+                        // 🟡 Registrar movimiento de inventario (salida de stock por venta)
+                        $queryProducto->registrarMovimientoInventario([
+                            'factura_id' => $facturaId,
+                            'producto_id' => $productoData['id'],
+                            'tipo_movimiento' => 'out',
+                            'cantidad' => $productoData['cantidad'],
+                            'descripcion_movimiento' => "Descuento de inventario por Factura #" . $data['nro_factura'],
+                            'path_comprobante_decomiso' => null,
+                        ]);
+                        $this->logger->debug("Movimiento de inventario registrado para producto ID {$productoData['id']}");
     
                     } catch (Exception $e) {
                         throw new Exception("Error en producto: " . $e->getMessage());

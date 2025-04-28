@@ -64,6 +64,7 @@ class Factura extends Model
             throw new Exception("Número de factura debe ser una cadena de texto.");
         }
         $this->nro_factura = $nro_factura;
+        $this->logger->info("Id Factura Seteado correctamente: ", [$this->nro_factura]);
     }
 
     public function setFechaFactura($fecha_factura)

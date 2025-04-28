@@ -83,13 +83,13 @@ class ProductosCollection extends Model
             $this->logger->info("Registrando movimiento inventario:", $data);
 
             list($idInsertado, $success) = $this->queryBuilder->insert('movimiento_inventario', [
+                'factura_id' => $data['factura_id'] ?? null,
                 'producto_id' => $data['producto_id'],
                 'fecha_movimiento' => date('Y-m-d H:i:s'),
                 'tipo_movimiento' => $data['tipo_movimiento'],
                 'cantidad' => $data['cantidad'],
-                'descripcion_decomiso' => $data['descripcion_decomiso'] ?? null,
+                'descripcion_movimiento' => $data['descripcion_movimiento'] ?? null,
                 'path_comprobante_decomiso' => $data['path_comprobante_decomiso'] ?? null,
-                'factura_id' => $data['factura_id'] ?? null
             ]);
 
             if (!$success) {
@@ -111,10 +111,11 @@ class ProductosCollection extends Model
             $sql = "
                 SELECT 
                     id,
+                    factura_id,
                     fecha_movimiento,
                     tipo_movimiento,
                     cantidad,
-                    descripcion_decomiso,
+                    descripcion_movimiento,
                     path_comprobante_decomiso
                 FROM movimiento_inventario
                 WHERE producto_id = :id
