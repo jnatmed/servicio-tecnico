@@ -148,6 +148,7 @@ Este sistema cubre:
 ├── composer.json                   # Dependencias PHP
 └── README.md                       # Este documento
 
+---
 
 # 🛠️ Sistema de Servicio Técnico - Dirección de Comercialización
 
@@ -159,4 +160,4 @@ Este sistema cubre:
 Bienvenido al repositorio del sistema de **Servicio Técnico y Descuento de Haberes**, desarrollado para la **Dirección de Comercialización**.  
 Este sistema permite gestionar órdenes de servicio, facturación de productos, administración de agentes, control de stock y generación de reportes automáticos.
 
----
+
