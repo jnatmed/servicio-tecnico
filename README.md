@@ -1,5 +1,10 @@
 # 🛠️ Sistema de Servicio Técnico - Dirección de Comercialización
 
+![Versión](https://img.shields.io/badge/versión-1.0.0-blue.svg)
+![Estado](https://img.shields.io/badge/estado-En%20desarrollo-yellow.svg)
+![PHP](https://img.shields.io/badge/PHP-8.1+-blueviolet.svg)
+![Licencia](https://img.shields.io/badge/Licencia-Privado-lightgrey.svg)
+
 Bienvenido al repositorio del sistema de **Servicio Técnico y Descuento de Haberes**, desarrollado para la **Dirección de Comercialización**.  
 Este sistema permite gestionar órdenes de servicio, facturación de productos, administración de agentes, control de stock y generación de reportes automáticos.
 
@@ -149,16 +154,8 @@ Este sistema cubre:
 └── README.md                       # Este documento
 
 ```
-plaintext---
 
-# 🛠️ Sistema de Servicio Técnico - Dirección de Comercialización
 
-![Versión](https://img.shields.io/badge/versión-1.0.0-blue.svg)
-![Estado](https://img.shields.io/badge/estado-En%20desarrollo-yellow.svg)
-![PHP](https://img.shields.io/badge/PHP-8.1+-blueviolet.svg)
-![Licencia](https://img.shields.io/badge/Licencia-Privado-lightgrey.svg)
 
-Bienvenido al repositorio del sistema de **Servicio Técnico y Descuento de Haberes**, desarrollado para la **Dirección de Comercialización**.  
-Este sistema permite gestionar órdenes de servicio, facturación de productos, administración de agentes, control de stock y generación de reportes automáticos.
 
 
