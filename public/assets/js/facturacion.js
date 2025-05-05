@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchAgent').addEventListener('input', (e) => {
         const searchValue = e.target.value;
         console.log("Buscando agentes:", searchValue);
-    
+
         fetch(`api_get_agentes?search=${searchValue}`, {
             method: 'GET',
             headers: {
@@ -65,40 +65,74 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(res => res.json())
         .then(data => {
-            const agentList = document.getElementById('agentList');
-            agentList.innerHTML = '';
+            const tbody = document.querySelector('#agentTable tbody');
+            tbody.innerHTML = ''; // 🧹 Limpiar antes de cargar nuevos resultados
 
-    
-            // Accedemos correctamente a data.agentes
             if (data.success && Array.isArray(data.agentes)) {
                 data.agentes.forEach(agent => {
-                    const li = document.createElement('li');
-                    li.classList.add('list-group-item', 'list-group-item-action');
-                    li.textContent = `${agent.nombre} ${agent.apellido}`;
-                    li.addEventListener('click', () => {
+                    const tr = document.createElement('tr');
+
+                    // Si está retirado, marcar fila con fondo gris
+                    if (agent.estado_agente === 'retirado') {
+                        tr.classList.add('table-secondary');
+                    }
+
+                    // Nombre
+                    const tdNombre = document.createElement('td');
+                    tdNombre.textContent = `${agent.nombre} ${agent.apellido}`;
+
+                    // CUIL
+                    const tdCuil = document.createElement('td');
+                    tdCuil.textContent = agent.cuil ?? '—';
+
+                    // Estado
+                    const tdEstado = document.createElement('td');
+                    if (agent.estado_agente === 'activo') {
+                        tdEstado.innerHTML = `<span class="badge bg-success">Activo</span>`;
+                    } else if (agent.estado_agente === 'retirado') {
+                        tdEstado.innerHTML = `<span class="badge bg-secondary">${agent.caracter ?? 'Retirado'}</span>`;
+                    } else {
+                        tdEstado.textContent = '—';
+                    }
+
+                    // Destino
+                    const tdDestino = document.createElement('td');
+                    tdDestino.textContent = agent.descripcion?.trim() ? agent.descripcion : agent.nombre_dependencia;
+
+                    // Botón seleccionar
+                    const tdAccion = document.createElement('td');
+                    const btnSelect = document.createElement('button');
+                    btnSelect.textContent = "Seleccionar";
+                    btnSelect.classList.add('btn', 'btn-sm', 'btn-primary');
+                    btnSelect.addEventListener('click', () => {
                         document.getElementById('selectedAgent').textContent = `${agent.nombre} ${agent.apellido}`;
                         document.getElementById('agente').value = agent.id;
-                        const descripcionFinal = agent.descripcion?.trim() ? agent.descripcion : agent.nombre_dependencia;
-                        document.getElementById('destino_agente').textContent = `(Destino: ${descripcionFinal})`;
+                        document.getElementById('destino_agente').textContent = `(Destino: ${tdDestino.textContent})`;
                         console.log("Agente seleccionado:", agent);
                         agentModal.hide();
                     });
-                    agentList.appendChild(li);
+                    tdAccion.appendChild(btnSelect);
+
+                    // Agregar todas las celdas
+                    tr.appendChild(tdNombre);
+                    // tr.appendChild(tdCuil);
+                    tr.appendChild(tdEstado);
+                    // tr.appendChild(tdDestino);
+                    tr.appendChild(tdAccion);
+
+                    tbody.appendChild(tr);
                 });
             } else {
-                console.warn("No se encontraron agentes.");
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No se encontraron agentes.</td></tr>`;
             }
-        })
-        .catch(error => console.error("Error en fetch:", error));
+        });
     });
-    
-    // Abrir modal de productos
+
     document.getElementById('addProduct').addEventListener('click', () => {
         console.log("Abriendo modal de productos...");
         productModal.show();
     });
 
-    // Buscar productos dinámicamente
     document.getElementById('searchProduct').addEventListener('input', (e) => {
         const searchValue = e.target.value;
         console.log("Buscando productos:", searchValue);
@@ -106,25 +140,50 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`productos/listado?jsonList=true&search=${searchValue}`)
             .then(res => res.json())
             .then(data => {
-                const productList = document.getElementById('productList');
-                productList.innerHTML = '';
-
                 console.log("Productos: " + JSON.stringify(data));
                 if (data.productos) {
+                    const tbody = document.querySelector('#productTable tbody');
+                    tbody.innerHTML = ''; // limpiar tabla
+                    
                     data.productos.forEach(product => {
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item', 'list-group-item-action');
-                        li.textContent = `${product.descripcion_proyecto} (${product.precio})`;
-                        li.addEventListener('click', () => {
-                            addProductToTable(product);
-                            productModal.hide();
-                        });
-                        productList.appendChild(li);
+                        const tr = document.createElement('tr');
+                        const tieneStock = parseFloat(product.stock_actual) > 0;
+
+                        const tdDescripcion = document.createElement('td');
+                        tdDescripcion.textContent = product.descripcion_proyecto;
+
+                        const tdPrecio = document.createElement('td');
+                        tdPrecio.textContent = `$${parseFloat(product.precio).toFixed(2)}`;
+
+                        const tdStock = document.createElement('td');
+                        tdStock.textContent = parseFloat(product.stock_actual).toFixed(2);
+
+                        const tdAccion = document.createElement('td');
+                        if (tieneStock) {
+                            const btnSelect = document.createElement('button');
+                            btnSelect.textContent = "Seleccionar";
+                            btnSelect.classList.add('btn', 'btn-sm', 'btn-success');
+                            btnSelect.addEventListener('click', () => {
+                                addProductToTable(product);
+                                productModal.hide();
+                            });
+                            tdAccion.appendChild(btnSelect);
+                        } else {
+                            tdAccion.innerHTML = '<span class="text-muted">Sin stock</span>';
+                        }
+
+                        tr.appendChild(tdDescripcion);
+                        tr.appendChild(tdPrecio);
+                        tr.appendChild(tdStock);
+                        tr.appendChild(tdAccion);
+                        tr.classList.add(tieneStock ? 'table-success' : 'table-danger');
+
+                        tbody.appendChild(tr);
                     });
                 }
             });
     });
-    
+
     document.getElementById('facturaForm').addEventListener('submit', (e) => {
         e.preventDefault(); // Evitar la recarga de la página
     

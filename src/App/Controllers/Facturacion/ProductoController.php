@@ -304,7 +304,8 @@ class ProductoController extends Controller
                     $this->logger->info("📥 Solicitud AJAX con búsqueda", ['searchItem' => $searchItem]);
                     
                     $listaProductos = $this->model->getProductosYPrecios($searchItem);
-    
+                    $this->logger->info("consulta json, id_producto: ", $listaProductos[0]);
+
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'productos' => $listaProductos]);
                     exit;

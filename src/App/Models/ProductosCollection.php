@@ -391,10 +391,10 @@ class ProductosCollection extends Model
     
             foreach ($productos as $producto) {
                 $stock = $this->getStockActual($producto['id']);
-                if ($stock > 0) {
+                // if ($stock > 0) {
                     $producto['stock_actual'] = $stock;
                     $productosConStock[] = $producto;
-                }
+                // }
             }
     
             return $productosConStock;

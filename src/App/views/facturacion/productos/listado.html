@@ -48,7 +48,8 @@
                         <tbody id="productoList">
                             {% if listaProductos %}
                                 {% for producto in listaProductos %}
-                                    <tr>
+                                <tr class="{% if producto.stock_actual == 0 %}table-danger{% endif %}">
+
                                         <td>{{ loop.index }}</td>
                                         <td>{{ producto.descripcion_proyecto }}</td>
                                         <td>
@@ -103,7 +104,8 @@
             <div id="gridView" class="row row-cols-1 row-cols-md-3 g-4 d-none grid-view">
                 {% for producto in listaProductos %}
                     <div class="col">
-                        <div class="card h-100 shadow-sm">
+                        <div class="card h-100 shadow-sm {% if producto.stock_actual == 0 %}border-danger bg-danger bg-opacity-25{% endif %}">
+
                             {% if producto.path_imagen %}
                                 <img src="/facturacion/productos/ver_imagen?id_producto={{ producto.id }}" class="card-img-top grid-img" alt="Imagen del producto">
                             {% else %}

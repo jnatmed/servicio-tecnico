@@ -1,0 +1,6 @@
+.stock-zero {
+    background-color: #f8d7da !important; /* similar a danger pero más pastel */
+    color: #842029;
+    font-style: italic;
+    opacity: 0.95;
+}

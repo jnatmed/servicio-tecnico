@@ -368,20 +368,35 @@ class QueryBuilder
 
     public function obtenerProductosConPrecioMasReciente($searchItem = null, $idProducto = null) {
         try {
-            $sql = "SELECT 
+            $sql = "
+                    SELECT 
                         p.id AS id_producto,
                         p.nro_proyecto_productivo,
                         p.descripcion_proyecto,
                         pr.precio,
                         p.stock_inicial,
-                        p.estado
+                        p.estado,
+                        (
+                            p.stock_inicial
+                            + COALESCE((
+                                SELECT SUM(mi.cantidad)
+                                FROM movimiento_inventario mi
+                                WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'in'
+                            ), 0)
+                            - COALESCE((
+                                SELECT SUM(mi.cantidad)
+                                FROM movimiento_inventario mi
+                                WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'out'
+                            ), 0)
+                        ) AS stock_actual
                     FROM producto p
                     INNER JOIN precio pr ON p.id = pr.id_producto
                     WHERE pr.fecha_precio = (
                         SELECT MAX(pr2.fecha_precio) 
                         FROM precio pr2 
                         WHERE pr2.id_producto = pr.id_producto
-                    )";
+                    )
+                    ";
     
             // Arreglo de parámetros para bind
             $params = [];
