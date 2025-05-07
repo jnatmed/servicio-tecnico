@@ -216,6 +216,15 @@ class UserController extends Controller
         }
     }
     
+    public function setDependenciaId($idDep)
+    {
+        $_SESSION['dependencia_id'] = $idDep;
+    }
+
+    public function getDependenciaId()
+    {
+        return $_SESSION['dependencia_id'];
+    }
 
     public function getUserType()
     {

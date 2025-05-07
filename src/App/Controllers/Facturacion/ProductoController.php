@@ -292,7 +292,9 @@ class ProductoController extends Controller
     {
         $jsonList = $this->request->get('jsonList');
         $searchItem = $this->request->get('search');
-    
+
+        $usuarioDependencia = $this->usuario->getIdUser();
+
         $this->logger->info("📡 Entrando al método listar()", [
             'jsonList' => $jsonList,
             'search' => $searchItem
