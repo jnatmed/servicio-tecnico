@@ -173,6 +173,12 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
   $router->post('/facturacion/listar', 'Facturacion\\FacturacionController@listar');
   $router->get('/facturacion/ver', 'Facturacion\\FacturacionController@ver'); // Ver factura específica
   $router->delete('/facturacion/eliminar', 'Facturacion\\FacturacionController@eliminarFactura'); // Eliminar factura
+  // Numeracion de Facturas
+  $router->get('/facturacion/numerador/lista', 'Facturacion\\FacturacionController@listarNumerador'); // Ver Numeracion de facturas
+  $router->get('/facturacion/numerador/solicitudes/pendientes/json', 'Facturacion\\FacturacionController@listarNumerador'); // Ver Numeracion de facturas
+  $router->post('/facturacion/numerador/solicitudes/aceptar', 'Facturacion\\FacturacionController@aceptarSolicitud');
+  $router->post('/facturacion/numerador/solicitudes/rechazar', 'Facturacion\\FacturacionController@rechazarSolicitud');
+  
 
 
   $router->get('/facturacion/listar', 'Facturacion\\FacturacionController@listar');

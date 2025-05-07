@@ -73,6 +73,183 @@ class FacturasCollection extends Model
     }
     
 
+    public function getSolicitudesPendientes()
+    {
+        $sql = "
+            SELECT nf.*, d.nombre_dependencia
+            FROM numerador_factura nf
+            INNER JOIN dependencia d ON d.id = nf.dependencia_id
+            WHERE estado_solicitud_numeracion = 'pendiente'
+            ORDER BY fecha_solicitud DESC
+        ";
+    
+        return $this->queryBuilder->query($sql);
+    }
+    
+    
+    public function getUltimaAceptadaPorDependencia($dependenciaId)
+    {
+        $sql = "
+            SELECT *
+            FROM numerador_factura
+            WHERE dependencia_id = :dependencia_id
+              AND estado_solicitud_numeracion = 'aceptada'
+            ORDER BY fecha_solicitud DESC
+            LIMIT 1
+        ";
+    
+        return $this->queryBuilder->query($sql, ['dependencia_id' => $dependenciaId]);
+    }
+
+    public function getUltimasSolicitudesPorDependencia()
+    {
+        try {
+            $sql = "
+                SELECT *
+                FROM (
+                    SELECT nf.*, d.nombre_dependencia,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY nf.dependencia_id
+                            ORDER BY
+                                CASE
+                                    WHEN nf.estado_solicitud_numeracion = 'pendiente' THEN 1
+                                    WHEN nf.estado_solicitud_numeracion = 'aceptada' THEN 2
+                                    ELSE 3
+                                END,
+                                nf.fecha_solicitud DESC
+                        ) AS rn
+                    FROM numerador_factura nf
+                    INNER JOIN dependencia d ON d.id = nf.dependencia_id
+                ) t
+                WHERE t.rn = 1
+                ORDER BY t.nombre_dependencia ASC;
+            ";
+    
+            return $this->queryBuilder->query($sql);
+
+            $this->logger->debug('Resultado SQL:', [$resultado]);
+    
+        } catch (\Exception $e) {
+            $this->logger->error('Error en getUltimasSolicitudesAceptadas(): ' . $e->getMessage());
+            return [];
+        }
+    }
+    
+
+    public function aceptarSolicitudPorId($id)
+    {
+        try {
+            $sql = "UPDATE numerador_factura SET estado_solicitud_numeracion = 'aceptada' WHERE id = :id";
+            $this->logger->info("Intentando aceptar solicitud de numeración con ID: $id");
+    
+            $this->queryBuilder->query($sql, ['id' => $id]);
+    
+            $this->logger->info("Solicitud aceptada correctamente para ID: $id");
+        } catch (\Exception $e) {
+            $this->logger->error("Error en aceptarSolicitudPorId($id): " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function rechazarSolicitudPorId($id, $motivo)
+    {
+        try {
+            $sql = "UPDATE numerador_factura 
+                    SET estado_solicitud_numeracion = 'rechazada', motivo_rechazo = :motivo 
+                    WHERE id = :id";
+    
+            $this->logger->info("Intentando rechazar solicitud de numeración con ID: $id y motivo: $motivo");
+    
+            $this->queryBuilder->query($sql, [
+                'id' => $id,
+                'motivo' => $motivo
+            ]);
+    
+            $this->logger->info("Solicitud rechazada correctamente para ID: $id");
+        } catch (\Exception $e) {
+            $this->logger->error("Error en rechazarSolicitudPorId($id): " . $e->getMessage());
+            throw $e;
+        }
+    }
+        
+
+    public function getHistorialPorDependencia($dependenciaId)
+    {
+        $sql = "
+            SELECT *
+            FROM numerador_factura
+            WHERE dependencia_id = :dependencia_id
+            ORDER BY fecha_solicitud DESC
+        ";
+
+        return $this->queryBuilder->query($sql, ['dependencia_id' => $dependenciaId]);
+    }
+
+    public function aceptarSolicitudNumeracion($numeradorId)
+    {
+        $sql = "
+            UPDATE numerador_factura
+            SET estado_solicitud_numeracion = 'aceptada',
+                motivo_rechazo = NULL
+            WHERE id = :id
+        ";
+    
+        return $this->queryBuilder->query($sql, ['id' => $numeradorId]);
+    }
+
+    public function rechazarSolicitudNumeracion($numeradorId, $motivo)
+    {
+        $sql = "
+            UPDATE numerador_factura
+            SET estado_solicitud_numeracion = 'rechazada',
+                motivo_rechazo = :motivo
+            WHERE id = :id
+        ";
+    
+        return $this->queryBuilder->query($sql, [
+            'id' => $numeradorId,
+            'motivo' => $motivo
+        ]);
+    }
+        
+    public function getProximoNumeroFacturaPorUsuario($usuarioId) {
+        $sql = "
+            SELECT nf.id, nf.ultimo_utilizado, nf.hasta, d.punto_venta, u.dependencia_id
+            FROM usuarios u
+            JOIN numerador_factura nf ON u.dependencia_id = nf.dependencia_id
+            JOIN dependencia d ON nf.dependencia_id = d.id
+            WHERE u.id = :usuarioId
+            LIMIT 1
+        ";
+    
+        $result = $this->queryBuilder->query($sql, ['usuarioId' => $usuarioId]);
+    
+        if (count($result) === 0) {
+            throw new Exception("No se encontró numerador de factura para este usuario.");
+        }
+    
+        $numerador = $result[0];
+    
+        if ($numerador['ultimo_utilizado'] >= $numerador['hasta']) {
+            throw new Exception("Se alcanzó el límite de numeración para este punto de venta.");
+        }
+    
+        return [
+            'id_numerador' => $numerador['id'],
+            'proximo_numero' => $numerador['ultimo_utilizado'] + 1,
+            'punto_venta' => $numerador['punto_venta'],
+            'dependencia_idUser' => $numerador['dependencia_id']           
+        ];
+    }
+    
+    public function actualizarNumeradorFactura($idNumerador, $nuevoValor) {
+        $sql = "UPDATE numerador_factura SET ultimo_utilizado = :nuevoValor WHERE id = :idNumerador";
+        $this->queryBuilder->query($sql, [
+            'nuevoValor' => $nuevoValor,
+            'idNumerador' => $idNumerador
+        ]);
+    }
+    
     public function insertFactura($factura)
     {
         try {

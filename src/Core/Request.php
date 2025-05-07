@@ -10,7 +10,11 @@ class Request
     {
         return isset($_SERVER['REQUEST_URI']) ? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) : '/';
     }
-
+    public function getHeader($key)
+    {
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $key));
+        return $_SERVER[$key] ?? null;
+    }
 
     public function file($key)
     {
@@ -21,12 +25,15 @@ class Request
     {
         return $_SERVER['REQUEST_METHOD'];
     }
-    public function isAjax(): bool
+    public function isAjax()
     {
-        error_log("isAjax() llamado. HTTP_X_REQUESTED_WITH: " . ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'NO DEFINIDO'));
-    
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        return (
+            isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
+        ) || (
+            isset($_SERVER['HTTP_ACCEPT']) &&
+            strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
+        );
     }
     
     public function getKeySession($key){

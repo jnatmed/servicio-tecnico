@@ -23,25 +23,24 @@
 
             <div class="mb-3">
                 <label for="nro_comprobante" class="form-label">Nro de Comprobante:</label>
-                <input class="form-control" id="nro_comprobante" name="nro_comprobante" type="text" required>
+                <input class="form-control" id="nro_comprobante" name="nro_comprobante" type="text" value="{{ nro_factura }}" readonly>
             </div>                            
 
-            <div class="mb-3">
-                <label for="dependencia" class="form-label">Dependencia:</label>
-                <select id="dependencia" name="dependencia" class="form-select" required>
-                    <option value="" selected>Elija un destino</option>
-                    {% for dependencia in dependencias %}
-                        <option value="{{ dependencia.id }}">
-                            {% if dependencia.descripcion == "Falta descripción" %}
-                                {{ dependencia.nombre_dependencia }}
-                            {% else %}
-                                {{ dependencia.descripcion }}
-                            {% endif %}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
+            <label for="dependencia" class="form-label">Dependencia (Punto de Venta):</label>
+            <select id="dependencia" name="dependencia" class="form-select" required>
+                <option value="" {% if dependencia_id_user is not defined or dependencia_id_user == '' %}selected{% endif %}>Elija un destino</option>
+                {% for dependencia in dependencias %}
+                    {% set valor = dependencia.id %}
+                    <option value="{{ valor }}" {% if valor == dependencia_id_user %}selected{% endif %}>
+                        {% if dependencia.descripcion == "Falta descripción" %}
+                            {{ dependencia.nombre_dependencia }}
+                        {% else %}
+                            {{ dependencia.descripcion }}
+                        {% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+            
             <div class="mb-3">
                 <label for="condicion_venta" class="form-label">Condición de Venta:</label>
                 <select id="condicion_venta" name="condicion_venta" class="form-select" required>

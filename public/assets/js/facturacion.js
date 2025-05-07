@@ -52,40 +52,32 @@ document.addEventListener('DOMContentLoaded', () => {
         agentModal.show();
     });
 
-    // Buscar agentes dinámicamente
     document.getElementById('searchAgent').addEventListener('input', (e) => {
         const searchValue = e.target.value;
         console.log("Buscando agentes:", searchValue);
-
+    
         fetch(`api_get_agentes?search=${searchValue}`, {
             method: 'GET',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest' // Esto ayuda a que el backend detecte que es una solicitud AJAX
+                'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(res => res.json())
         .then(data => {
             const tbody = document.querySelector('#agentTable tbody');
-            tbody.innerHTML = ''; // 🧹 Limpiar antes de cargar nuevos resultados
-
+            tbody.innerHTML = '';
+    
             if (data.success && Array.isArray(data.agentes)) {
                 data.agentes.forEach(agent => {
                     const tr = document.createElement('tr');
-
-                    // Si está retirado, marcar fila con fondo gris
+    
                     if (agent.estado_agente === 'retirado') {
                         tr.classList.add('table-secondary');
                     }
-
-                    // Nombre
+    
                     const tdNombre = document.createElement('td');
                     tdNombre.textContent = `${agent.nombre} ${agent.apellido}`;
-
-                    // CUIL
-                    const tdCuil = document.createElement('td');
-                    tdCuil.textContent = agent.cuil ?? '—';
-
-                    // Estado
+    
                     const tdEstado = document.createElement('td');
                     if (agent.estado_agente === 'activo') {
                         tdEstado.innerHTML = `<span class="badge bg-success">Activo</span>`;
@@ -94,12 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         tdEstado.textContent = '—';
                     }
-
-                    // Destino
+    
                     const tdDestino = document.createElement('td');
                     tdDestino.textContent = agent.descripcion?.trim() ? agent.descripcion : agent.nombre_dependencia;
-
-                    // Botón seleccionar
+    
                     const tdAccion = document.createElement('td');
                     const btnSelect = document.createElement('button');
                     btnSelect.textContent = "Seleccionar";
@@ -110,16 +100,33 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('destino_agente').textContent = `(Destino: ${tdDestino.textContent})`;
                         console.log("Agente seleccionado:", agent);
                         agentModal.hide();
+    
+                        // 🔁 Actualizar select de condición de venta
+                        const selectCondicion = document.getElementById('condicion_venta');
+                        const condicionesBase = ['contado', 'cta_cte', 'codigo_608', 'codigo_689'];
+    
+                        let condicionesFiltradas = condicionesBase;
+                        if (agent.estado_agente === 'activo') {
+                            condicionesFiltradas = condicionesBase.filter(c => c !== 'codigo_689');
+                        } else if (agent.estado_agente === 'retirado') {
+                            condicionesFiltradas = condicionesBase.filter(c => c !== 'codigo_608');
+                        }
+    
+                        selectCondicion.innerHTML = '<option value="">Seleccione una opción</option>';
+                        condicionesFiltradas.forEach(cond => {
+                            const opt = document.createElement('option');
+                            opt.value = cond;
+                            opt.textContent = cond.charAt(0).toUpperCase() + cond.slice(1);
+                            selectCondicion.appendChild(opt);
+                        });
                     });
+    
                     tdAccion.appendChild(btnSelect);
-
-                    // Agregar todas las celdas
+    
                     tr.appendChild(tdNombre);
-                    // tr.appendChild(tdCuil);
                     tr.appendChild(tdEstado);
-                    // tr.appendChild(tdDestino);
                     tr.appendChild(tdAccion);
-
+    
                     tbody.appendChild(tr);
                 });
             } else {
@@ -127,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
+    
     document.getElementById('addProduct').addEventListener('click', () => {
         console.log("Abriendo modal de productos...");
         productModal.show();

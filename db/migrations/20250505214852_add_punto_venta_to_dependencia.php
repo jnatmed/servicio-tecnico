@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
 
-final class AddDescripcionAndPathComprobanteToMovimientoInventario extends AbstractMigration
+final class AddPuntoVentaToDependencia extends AbstractMigration
 {
     /**
      * Change Method.
@@ -19,10 +19,13 @@ final class AddDescripcionAndPathComprobanteToMovimientoInventario extends Abstr
      */
     public function change(): void
     {
-        $table = $this->table('movimiento_inventario');
+        $table = $this->table('dependencia');
         $table
-            ->addColumn('descripcion_decomiso', 'text', ['null' => true, 'after' => 'cantidad'])
-            ->addColumn('path_comprobante_decomiso', 'string', ['limit' => 255, 'null' => true, 'after' => 'descripcion_decomiso'])
+            ->addColumn('punto_venta', 'integer', [
+                'null' => true,
+                'default' => null,
+                'comment' => 'Número de punto de venta asociado a la dependencia'
+            ])
             ->update();
     }
 }

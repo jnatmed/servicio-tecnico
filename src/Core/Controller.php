@@ -79,6 +79,10 @@ class Controller
                             'name' => 'VENTAS'
                         ],
                         [
+                            'href' => '/facturacion/numerador/lista',
+                            'name' => 'NUMERADOR FACTURACION'
+                        ],
+                        [
                             'href' => '/facturacion/cuotas/listado',
                             'name' => 'REPORTES'
                         ],
@@ -109,6 +113,18 @@ class Controller
                         [
                             'href' => '/facturacion/agentes/nuevo',
                             'name' => 'NUEVO AGENTE'
+                        ]
+                    ]
+                    
+                ],
+                [
+                    'href' => '/user/listado',
+                    'class' => '.lista',
+                    'name' => 'USUARIOS',
+                    'submenu' => [
+                        [
+                            'href' => '/user/listado',
+                            'name' => 'LISTADO'
                         ]
                     ]
                     

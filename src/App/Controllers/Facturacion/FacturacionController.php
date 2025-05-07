@@ -56,142 +56,265 @@ class FacturacionController extends Controller
          */
         if ($this->request->method() == 'POST') {
             try {
-                /**
-                 * Recepcion de datos
-                 */
+                // Paso 1: Obtener ID del usuario
+                $userId = $this->usuario->getIdUser();
+                $this->logger->debug("Usuario autenticado ID: {$userId}");
+        
+                // Paso 2: Calcular número de factura seguro desde la tabla numerador_factura
+                $numeradorInfo = $this->model->getProximoNumeroFacturaPorUsuario($userId);
+                $puntoDeVenta = $numeradorInfo['punto_venta'];
+                $nroSecuencial = $numeradorInfo['proximo_numero'];
+                $nroFacturaGenerado = sprintf("%04d-%08d", $puntoDeVenta, $nroSecuencial);
+                $this->logger->info("Número de factura generado: {$nroFacturaGenerado}");
+        
+                // Paso 3: Preparar datos de la factura
                 $data = [
-                    'nro_factura' => $this->request->get('nro_comprobante'),
+                    'nro_factura' => $nroFacturaGenerado,
                     'id_agente' => $this->request->get('agente'),
                     'fecha_factura' => date('Y-m-d'),
                     'unidad_que_factura' => $this->request->get('dependencia'),
                     'condicion_venta' => $this->request->get('condicion_venta'),
                     'condicion_impositiva' => $this->request->get('condicion_impositiva'),
                     'total_facturado' => $this->request->get('total_facturado'),
-                    'cantidad_cuotas' => $this->request->get('cantidad_cuotas'), // Cantidad de cuotas seleccionadas
+                    'cantidad_cuotas' => $this->request->get('cantidad_cuotas'),
                     'path_comprobante' => ''
-
                 ];
-    
-                /**
-                 * La lista de productos la guardo en un arreglo, previamente
-                 * decodificado 
-                 */
+        
                 $productos = json_decode($this->request->get('productos'), true);
-    
-                /**
-                 * Sanitize de los datos
-                 */
                 $this->request->sanitize($data);
-                
-                $this->logger->debug("Data recibida: ", [$data]); // DEBUG
-    
-                // Validación de datos obligatorios
+                $this->logger->debug("Datos recibidos para alta de factura: ", $data);
+        
                 if (empty($data['nro_factura']) || empty($data['id_agente']) || empty($productos)) {
                     throw new Exception("Faltan datos obligatorios.");
                 }
-    
-                $this->logger->debug("Comenzando a instanciar Factura.");
-                // Crear instancia de Factura (con validaciones en el constructor)
+        
+                // Crear e insertar la factura
                 $factura = new Factura($data, $this->logger);
-
-                // Insertar la factura en la base de datos
                 $facturaId = $this->model->insertFactura($factura);
-    
-                $this->logger->debug("Factura insertada con ID: ", [$facturaId]);
-
-                // Si la condición de venta es en cuotas, generar las cuotas
-                try {
-                    $this->logger->debug("Datos de cuotas: ", [$data['condicion_venta'],$data['cantidad_cuotas']]);
-                    // Generación de cuotas si la condición de venta lo requiere
-                    if (in_array($data['condicion_venta'], ['codigo_608', 'codigo_689']) && $data['cantidad_cuotas'] > 0) {
-                        $this->logger->info("Solicitando generación de cuotas para la factura ID: " . $facturaId);
-                
-                        // Instanciar la colección de cuotas
-                        $this->cuotasCollection = new CuotasCollection($this->qb, $this->logger);
-                
-                        // Delegar la lógica al modelo
-                        $this->cuotasCollection->generarCuotas($facturaId, $data['total_facturado'], $data['cantidad_cuotas']);
-                        
-                    }else{
-                        $this->logger->info("No se solicita la generación de cuotas para la condición de venta {$data['condicion_venta']} o la cantidad de cuotas es 0.");
-                    }
-                
-                    $this->logger->info("Proceso de facturación finalizado correctamente para la factura ID: " . $facturaId);
-                } catch (Exception $e) {
-                    $this->logger->error("Error en el proceso de facturación para la factura ID {$facturaId}: " . $e->getMessage());
-                    throw new Exception("Error al procesar la factura: " . $e->getMessage());
+                $this->logger->debug("Factura insertada con ID: {$facturaId}");
+        
+                // Paso 4: Actualizar el numerador de factura
+                $this->model->actualizarNumeradorFactura($numeradorInfo['id_numerador'], $nroSecuencial);
+        
+                // Paso 5: Generar cuotas si corresponde
+                if (in_array($data['condicion_venta'], ['codigo_608', 'codigo_689']) && $data['cantidad_cuotas'] > 0) {
+                    $this->logger->info("Generando cuotas para la factura ID: {$facturaId}");
+                    $this->cuotasCollection = new CuotasCollection($this->qb, $this->logger);
+                    $this->cuotasCollection->generarCuotas($facturaId, $data['total_facturado'], $data['cantidad_cuotas']);
                 }
-
-                $this->logger->debug("Comenzando a insertar detalle de factura.");
-    
-                // Iteramos sobre la lista de productos para insertar cada detalle
+        
+                // Paso 6: Insertar detalle de productos y registrar movimiento
                 foreach ($productos as $productoData) {
-                    try {
-                        $this->logger->debug("Producto Data para inserción: ", [$productoData]);
-    
-                        $queryProducto = new ProductosCollection($this->qb, $this->logger);
-
-                        // Validar que el producto exista en la BD antes de agregarlo al detalle
-                        $productoExistente = $queryProducto->getById($productoData['id']);
-                        if (!$productoExistente) {
-                            throw new Exception("El producto con ID {$productoData['id']} no existe en la base de datos.");
-                        }
-                        $this->logger->debug("Producto Existente, ", [$productoExistente]);
-    
-                        // Crear instancia de DetalleFactura para cada producto    
-                        // Insertar en la tabla detalle_factura
-                        $detalleFacturaId = $this->model->insertDetalleFactura(
-                            new DetalleFactura([
-                                'factura_id' => $facturaId,
-                                'producto_id' => $productoData['id'], 
-                                'cantidad_facturada' => $productoData['cantidad'],
-                                'precio_unitario' => $productoData['precio_unitario']
-                            ], $this->logger));
-
-                        $this->logger->debug("DetalleFactura insertado con ID: ", [$detalleFacturaId]);
-
-                        $this->logger->debug("Paso previo a registrar movimiento Factura: ", [$factura]);
-                        // 🟡 Registrar movimiento de inventario (salida de stock por venta)
-                        $queryProducto->registrarMovimientoInventario([
+                    $queryProducto = new ProductosCollection($this->qb, $this->logger);
+                    $productoExistente = $queryProducto->getById($productoData['id']);
+        
+                    if (!$productoExistente) {
+                        throw new Exception("El producto con ID {$productoData['id']} no existe.");
+                    }
+        
+                    $detalleFacturaId = $this->model->insertDetalleFactura(
+                        new DetalleFactura([
                             'factura_id' => $facturaId,
                             'producto_id' => $productoData['id'],
-                            'tipo_movimiento' => 'out',
-                            'cantidad' => $productoData['cantidad'],
-                            'descripcion_movimiento' => "Descuento de inventario por Factura #" . $data['nro_factura'],
-                            'path_comprobante_decomiso' => null,
-                        ]);
-                        $this->logger->debug("Movimiento de inventario registrado para producto ID {$productoData['id']}");
-    
-                    } catch (Exception $e) {
-                        throw new Exception("Error en producto: " . $e->getMessage());
-                    }
+                            'cantidad_facturada' => $productoData['cantidad'],
+                            'precio_unitario' => $productoData['precio_unitario']
+                        ], $this->logger)
+                    );
+        
+                    $queryProducto->registrarMovimientoInventario([
+                        'factura_id' => $facturaId,
+                        'producto_id' => $productoData['id'],
+                        'tipo_movimiento' => 'out',
+                        'cantidad' => $productoData['cantidad'],
+                        'descripcion_movimiento' => "Descuento de inventario por Factura #{$data['nro_factura']}",
+                        'path_comprobante_decomiso' => null,
+                    ]);
                 }
-                
-                // Respuesta de éxito
+        
+                // Respuesta final
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'factura_id' => $facturaId]);
                 exit;
-    
+        
             } catch (Exception $e) {
-                // Captura de errores
                 $this->logger->error("Error en alta de factura", ['error' => $e->getMessage()]);
                 header('Content-Type: application/json');
                 echo json_encode(['success' => false, 'error' => $e->getMessage()]);
                 exit;
             }
+        
         } else {
-            // Si es una solicitud GET, se muestra el formulario
-            $datosFactura = ['fecha_factura' => date('d/m/Y')];
-    
-            $this->logger->info("Dependencias: __", ['dependencias' => $this->dependencias]);
-    
+            // Si es una solicitud GET, se muestra el formulario con nro_factura
+            try {
+                $this->logger->debug("Intentando obtener ID de usuario desde UserController...");
+                $userId = $this->usuario->getIdUser();
+                $this->logger->debug("ID de usuario obtenido: {$userId}");
+        
+                $this->logger->debug("Llamando a getProximoNumeroFacturaPorUsuario con usuario ID: {$userId}");
+                $numeradorInfo = $this->model->getProximoNumeroFacturaPorUsuario($userId);
+                $this->logger->debug("Datos del numerador: ", $numeradorInfo);
+        
+                // Obtener punto de venta asociado
+                $puntoDeVenta = $numeradorInfo['punto_venta'];
+                $dependencia_idUser = $numeradorInfo['dependencia_idUser'];
+                $nroSecuencial = $numeradorInfo['proximo_numero'];
+                $nroFacturaSugerido = sprintf("%04d-%08d", $puntoDeVenta, $nroSecuencial); // formato tipo AFIP
+        
+                $this->logger->info("Número de factura sugerido para el formulario: {$nroFacturaSugerido}");
+            } catch (Exception $e) {
+                $this->logger->error("Error al obtener nro_factura: " . $e->getMessage());
+                $nroFacturaSugerido = 'Error';
+            }
+        
+            $datosFactura = [
+                'fecha_factura' => date('d/m/Y'),
+                'nro_factura' => $nroFacturaSugerido
+            ];
+        
+            $this->logger->debug("Renderizando formulario con datos: ", [$datosFactura, $numeradorInfo]);
+        
             return view('facturacion/factura_new', array_merge(
-                $datosFactura, 
-                $this->configFacturacion, 
-                ["dependencias" => $this->model->getDependencias()], 
+                $datosFactura,
+                $this->configFacturacion,
+                [ 
+                    "dependencias" => $this->model->getDependencias(), 
+                    'punto_venta' => $puntoDeVenta,
+                    'dependencia_id_user' => $dependencia_idUser
+                ],
                 ['monto_minimo_cuota' => 10000],
                 $this->menu
             ));
+        }
+        
+        
+    }
+
+    public function listarNumerador()
+    {
+        $this->logger->info('listarNumerador() - Inicio');
+    
+        try {
+            $datos = $this->model->getUltimasSolicitudesPorDependencia();
+            $this->logger->debug('Datos obtenidos del modelo:', [$datos]);
+    
+            $esAjax = (
+                $this->request->isAjax() ||
+                strpos($this->request->getHeader('Accept'), 'application/json') !== false
+            );
+            $this->logger->info('¿Es AJAX? ' . ($esAjax ? 'Sí' : 'No'));
+    
+            if ($esAjax) {
+                // Desanidar si viene como [[...]]
+                if (is_array($datos) && count($datos) === 1 && is_array($datos[0])) {
+                    $datos = $datos[0];
+                }
+    
+                $response = [
+                    'success' => true,
+                    'data' => $datos
+                ];
+    
+                $this->logger->debug('Respuesta JSON generada (array):', [$response]);
+    
+                // Devuelve JSON sin codificar dos veces
+                header('Content-Type: application/json');
+                echo json_encode($response);
+                return;
+    
+            } else {
+                return view('facturacion/numeracion_factura', array_merge(
+                    ['listado_numeracion' => $datos],
+                    $this->menu
+                ));
+            }
+    
+        } catch (\Exception $e) {
+            $this->logger->error('Error en listarNumerador(): ' . $e->getMessage());
+    
+            $errorResponse = [
+                'success' => false,
+                'error' => 'No se pudieron cargar los datos.'
+            ];
+    
+            if ($this->request->isAjax()) {
+                header('Content-Type: application/json');
+                echo json_encode($errorResponse);
+                return;
+            }
+    
+            return view('facturacion/numeracion_factura', array_merge(
+                ['listado_numeracion' => [], 'error' => 'Error al cargar la vista.'],
+                $this->menu
+            ));
+        }
+    }
+        
+    
+    public function aceptarSolicitud()
+    {
+        $this->logger->info('aceptarSolicitud() - Inicio de solicitud');
+    
+        try {
+            $datos = json_decode(file_get_contents('php://input'), true);
+            $id = $datos['numerador_id'] ?? null;
+    
+            $this->logger->debug('ID recibido en POST:', [$id]);
+    
+            if (!$id) {
+                $this->logger->warning('ID no proporcionado en la solicitud');
+                throw new Exception('ID no proporcionado.');
+            }
+    
+            $this->model->aceptarSolicitudPorId($id);
+            $this->logger->info("Solicitud de numeración aceptada correctamente para ID: $id");
+    
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit;
+    
+        } catch (\Exception $e) {
+            $this->logger->error('Error en aceptarSolicitud(): ' . $e->getMessage());
+    
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            exit;
+        }
+    }
+    
+    
+    
+    
+    public function rechazarSolicitud()
+    {
+        $this->logger->info('rechazarSolicitud() - Inicio de solicitud');
+    
+        try {
+            $datos = json_decode(file_get_contents('php://input'), true);
+            $id = $datos['numerador_id'] ?? null;
+            $motivo = $datos['motivo_rechazo'] ?? null;
+    
+            $this->logger->debug('Datos recibidos:', ['numerador_id' => $id, 'motivo_rechazo' => $motivo]);
+    
+            if (!$id || !$motivo) {
+                $this->logger->warning('ID o motivo de rechazo no proporcionado');
+                throw new Exception('ID o motivo no proporcionado.');
+            }
+    
+            $this->logger->info("Llamando a rechazarSolicitudPorId($id)");
+            $this->model->rechazarSolicitudPorId($id, $motivo);
+    
+            $this->logger->info("Solicitud de numeración rechazada correctamente para ID: $id");
+    
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true]);
+            exit;
+    
+        } catch (\Exception $e) {
+            $this->logger->error('Error en rechazarSolicitud(): ' . $e->getMessage());
+    
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            exit;
         }
     }
 
