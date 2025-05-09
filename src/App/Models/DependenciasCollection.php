@@ -21,27 +21,33 @@ class DependenciasCollection extends Model
         parent::setQueryBuilder($qb);
     }
 
-    public function getDependencias()
+    public function getDependencias($usuarioDependencia = null)
     {
         $sql = "SELECT id, nombre_dependencia, descripcion FROM dependencia";
+        $params = [];
+    
+        if (!is_null($usuarioDependencia)) {
+            $sql .= " WHERE id = :usuarioDependencia";
+            $params['usuarioDependencia'] = $usuarioDependencia;
+        }
     
         try {
             $this->logger->info("Ejecutando consulta para obtener dependencias: $sql");
-            $registros = $this->queryBuilder->query($sql);
-
-            
+            $this->logger->info("Parámetros: " . json_encode($params));
+    
+            $registros = $this->queryBuilder->query($sql, $params);
+    
             $resultado = [];
             foreach ($registros as $dependencia) {
                 $resultado[] = $dependencia;
             }
     
-
             return $resultado;
         } catch (PDOException $e) {
             $this->logger->error("Error al obtener dependencias: " . $e->getMessage());
             return [];
         }
     }
-    
+        
     
 }

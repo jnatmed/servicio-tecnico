@@ -366,73 +366,70 @@ class QueryBuilder
         }
     }
 
-    public function obtenerProductosConPrecioMasReciente($searchItem = null, $idProducto = null) {
+    public function obtenerProductosConPrecioMasReciente($searchItem = null, $idProducto = null, $usuarioDependencia = null) {
         try {
             $sql = "
-                    SELECT 
-                        p.id AS id_producto,
-                        p.nro_proyecto_productivo,
-                        p.descripcion_proyecto,
-                        pr.precio,
-                        p.stock_inicial,
-                        p.estado,
-                        (
-                            p.stock_inicial
-                            + COALESCE((
-                                SELECT SUM(mi.cantidad)
-                                FROM movimiento_inventario mi
-                                WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'in'
-                            ), 0)
-                            - COALESCE((
-                                SELECT SUM(mi.cantidad)
-                                FROM movimiento_inventario mi
-                                WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'out'
-                            ), 0)
-                        ) AS stock_actual
-                    FROM producto p
-                    INNER JOIN precio pr ON p.id = pr.id_producto
-                    WHERE pr.fecha_precio = (
-                        SELECT MAX(pr2.fecha_precio) 
-                        FROM precio pr2 
-                        WHERE pr2.id_producto = pr.id_producto
-                    )
-                    ";
+                SELECT 
+                    p.id AS id_producto,
+                    p.nro_proyecto_productivo,
+                    p.descripcion_proyecto,
+                    pr.precio,
+                    p.stock_inicial,
+                    p.unidad_medida,
+                    p.estado,
+                    (
+                        p.stock_inicial
+                        + COALESCE((
+                            SELECT SUM(mi.cantidad)
+                            FROM movimiento_inventario mi
+                            WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'in'
+                        ), 0)
+                        - COALESCE((
+                            SELECT SUM(mi.cantidad)
+                            FROM movimiento_inventario mi
+                            WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'out'
+                        ), 0)
+                    ) AS stock_actual
+                FROM producto p
+                INNER JOIN precio pr ON p.id = pr.id_producto
+                WHERE pr.fecha_precio = (
+                    SELECT MAX(pr2.fecha_precio) 
+                    FROM precio pr2 
+                    WHERE pr2.id_producto = pr.id_producto
+                )
+            ";
     
-            // Arreglo de parámetros para bind
             $params = [];
     
-            // Si se envía un idProducto, agregar condición
-            if (!is_null($idProducto)) { // Asegurar que no es NULL
+            if (!is_null($idProducto)) {
                 $sql .= " AND pr.id_producto = :idProducto";
                 $params['idProducto'] = $idProducto;
             }
     
-            // Si se envía un término de búsqueda, agregar condición
-            if (!is_null($searchItem) && $searchItem !== '') { // Evita agregar si está vacío
+            if (!is_null($searchItem) && $searchItem !== '') {
                 $sql .= " AND p.descripcion_proyecto LIKE :searchItem";
                 $params['searchItem'] = "%{$searchItem}%";
             }
     
-            // Agregar ORDER BY para asegurar que se obtienen los datos más recientes
+            if (!is_null($usuarioDependencia)) {
+                $sql .= " AND p.id_unidad_q_fabrica = :usuarioDependencia";
+                $params['usuarioDependencia'] = $usuarioDependencia;
+            }
+    
             $sql .= " ORDER BY pr.fecha_precio DESC";
     
-            // Log de la consulta SQL antes de ejecutarla
             $this->logger->info("Consulta SQL generada: " . $sql);
             $this->logger->info("Parámetros: " . json_encode($params));
     
             $stmt = $this->pdo->prepare($sql);
     
-            // Enlazar parámetros con bindValue() solo si existen
-            if (!empty($params)) {
-                foreach ($params as $key => $value) {
-                    $stmt->bindValue(":$key", $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
-                }
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(":$key", $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
             }
     
             $stmt->execute();
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-            // Log de los resultados obtenidos
             $this->logger->info("Productos con precio más reciente obtenidos.", [$result]);
     
             return $result;
@@ -441,7 +438,7 @@ class QueryBuilder
             throw new Exception('Error al obtener productos con el precio más reciente.');
         }
     }
-    
+        
     public function getPaginatedWithSearch($table, $limit, $offset, $search = '', array $searchFields = [])
     {
         try {
@@ -547,7 +544,7 @@ class QueryBuilder
         }
     }
     
-    public function getFacturasPaginatedQuery($limit, $offset, $search = '', $sinComprobante = false)
+    public function getFacturasPaginatedQuery($limit, $offset, $search = '', $sinComprobante = false, $usuarioDependencia = null)
     {
         try {
             $query = "SELECT f.*, 
@@ -558,53 +555,61 @@ class QueryBuilder
                       FROM factura f
                       LEFT JOIN dependencia d ON f.unidad_que_factura = d.id
                       LEFT JOIN agente a ON f.id_agente = a.id
-                      LEFT JOIN cuota c ON f.id = c.factura_id"; // Relación con cuotas
-
+                      LEFT JOIN cuota c ON f.id = c.factura_id";
+    
             $whereClauses = [];
             $params = [];
     
-            // Agregar filtro de búsqueda si se proporciona un término
+            // Búsqueda
             if (!empty($search)) {
-                $query .= " WHERE f.nro_factura LIKE :search 
-                            OR a.nombre LIKE :search 
-                            OR a.apellido LIKE :search";
+                $whereClauses[] = "(f.nro_factura LIKE :search OR a.nombre LIKE :search OR a.apellido LIKE :search)";
                 $params['search'] = "%{$search}%";
             }
-
+    
+            // Filtro por comprobante
             if ($sinComprobante) {
                 $whereClauses[] = "f.path_comprobante IS NULL";
             }
-            
+    
+            // Filtro por dependencia
+            if (!is_null($usuarioDependencia)) {
+                $whereClauses[] = "f.unidad_que_factura = :usuarioDependencia";
+                $params['usuarioDependencia'] = $usuarioDependencia;
+            }
+    
+            // Unificar cláusulas WHERE
             if (count($whereClauses) > 0) {
                 $query .= " WHERE " . implode(" AND ", $whereClauses);
             }
-
-            $query .= " GROUP BY f.id, d.descripcion, a.nombre, a.apellido"; // Agrupar por factura
+    
+            // Agrupamiento y paginación
+            $query .= " GROUP BY f.id, d.descripcion, a.nombre, a.apellido";
             $query .= " ORDER BY f.fecha_factura DESC LIMIT :limit OFFSET :offset";
     
-            // Preparar la consulta
             $stmt = $this->pdo->prepare($query);
     
-            // Enlazar parámetros
+            // Bind de parámetros
             if (!empty($search)) {
                 $stmt->bindValue(':search', $params['search'], PDO::PARAM_STR);
+            }
+            if (!is_null($usuarioDependencia)) {
+                $stmt->bindValue(':usuarioDependencia', $params['usuarioDependencia'], PDO::PARAM_INT);
             }
             $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
             $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
     
-            // Ejecutar la consulta
             $stmt->execute();
-            
+    
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             $this->logger->error("Error en getFacturasPaginatedQuery: " . $e->getMessage());
             throw new Exception("Error al obtener las facturas.");
         }
     }
+        
     
     
-    
-    public function countFacturasQuery($search = '', $sinComprobante = false)
+    public function countFacturasQuery($search = '', $sinComprobante = false, $dependenciaId = null)
     {
         try {
             $query = "SELECT COUNT(*) as total FROM factura";
@@ -612,26 +617,33 @@ class QueryBuilder
             $whereClauses = [];
             $params = [];
     
+            // Filtro por búsqueda
             if (!empty($search)) {
-                $query .= " WHERE nro_factura LIKE :search OR id_agente LIKE :search";
+                $whereClauses[] = "(nro_factura LIKE :search OR id_agente LIKE :search)";
                 $params['search'] = "%{$search}%";
             }
     
-
+            // Filtro por comprobante
             if ($sinComprobante) {
                 $whereClauses[] = "path_comprobante IS NULL";
             }
-            
+    
+            // Filtro por dependencia
+            if (!is_null($dependenciaId)) {
+                $whereClauses[] = "unidad_que_factura = :dependenciaId";
+                $params['dependenciaId'] = $dependenciaId;
+            }
+    
+            // Armar cláusula WHERE si hay condiciones
             if (count($whereClauses) > 0) {
                 $query .= " WHERE " . implode(" AND ", $whereClauses);
             }
-
-            // Preparar la consulta manualmente en lugar de usar select()
+    
+            // Preparar y ejecutar
             $stmt = $this->pdo->prepare($query);
     
-            // Enlazar parámetros de búsqueda si existen
-            if (!empty($search)) {
-                $stmt->bindValue(':search', $params['search'], PDO::PARAM_STR);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue(":$key", $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
             }
     
             $stmt->execute();
@@ -643,7 +655,7 @@ class QueryBuilder
             throw new Exception("Error al contar las facturas.");
         }
     }
-    
+        
     
     public function getFacturaById($id)
     {

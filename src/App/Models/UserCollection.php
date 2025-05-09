@@ -65,7 +65,7 @@ class UserCollection extends Model
             if (!empty($result)) {
                 // Registrar el resultado para depuración
                 $this->logger->info("(metodo - Existe) Usuario encontrado: ", [$username]);
-                return [true, $result[0]['id']];
+                return [true, $result[0]['id'], $result[0]];
             } else {
                 // Registrar un mensaje de error si no se obtuvo ningún resultado
                 $this->logger->error("No se encontró un usuario con el nombre proporcionado: {$username}");

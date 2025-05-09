@@ -368,8 +368,18 @@ class FacturacionController extends Controller
     
         try {
             // Obtener facturas paginadas
-            $facturas = $this->model->getFacturasPaginated($limit, $offset, $searchItem, $filtrarSinComprobante);
-            $totalFacturas = $this->model->countFacturas($searchItem, $filtrarSinComprobante);
+            $facturas = $this->model->getFacturasPaginated(
+                 $limit, 
+                 $offset, 
+                 $searchItem, 
+                 $filtrarSinComprobante,
+                 $this->usuario->getDependenciaId()
+                );
+            $totalFacturas = $this->model->countFacturas(
+                  $searchItem, 
+                  $filtrarSinComprobante, 
+                  $this->usuario->getDependenciaId()
+                );
     
             // Si es AJAX, devolver JSON
             if ($this->request->isAjax()) {
@@ -391,7 +401,9 @@ class FacturacionController extends Controller
                 'total' => $totalFacturas,
                 'limit' => $limit,
                 'currentPage' => $page,
-                'search' => $searchItem], 
+                'search' => $searchItem,
+                'nombre_dependencia' => $this->usuario->getDescripcionDependencia()
+            ], 
                 $this->menu)
             );
     

@@ -17,13 +17,18 @@
 
     <section class="container_facturacion">
         <div class="container mt-5">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h1 class="mb-0">Listado de Productos</h1>
-                <button class="btn btn-outline-secondary" id="toggleView">
-                    <i class="bi bi-grid-fill"></i> Cambiar vista
-                </button>
+            <div class="d-flex flex-column mb-3">
+                <div class="text-center">
+                    <h1 class="mb-0">Listado de Productos</h1>
+                    <h2 class="mb-0">{{ nombre_dependencia }}</h2>
+                </div>
+                <div class="mt-2 align-self-end">
+                    <button class="btn btn-outline-secondary" id="toggleView">
+                        <i class="bi bi-grid-fill"></i> Cambiar vista
+                    </button>
+                </div>
             </div>
-
+            
             <!-- Barra de búsqueda -->
             <div class="mb-3">
                 <input type="text" id="searchProducto" class="form-control" placeholder="Buscar por nombre, descripción o código...">
@@ -195,8 +200,31 @@
                     if (data.success && data.productos.length) {
                         data.productos.forEach((producto, index) => {
                             // Fila para tabla
+                            console.log(producto);
                             const row = document.createElement('tr');
                             console.log(producto)
+                            const stock = Number(producto.stock_actual);
+                            let badgeStock = '';
+
+                            if (stock <= 2) {
+                                badgeStock = `
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> 
+                                        ${stock.toFixed(2)} ${producto.unidad_medida}
+                                    </span>`;
+                            } else if (stock <= 5) {
+                                badgeStock = `
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i> 
+                                        ${stock.toFixed(2)} ${producto.unidad_medida}
+                                    </span>`;
+                            } else {
+                                badgeStock = `
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle-fill me-1"></i> 
+                                        ${stock.toFixed(2)} ${producto.unidad_medida}
+                                    </span>`;
+                            }
                             row.innerHTML = `
                                 <td>${index + 1}</td>
                                 <td>${producto.descripcion_proyecto}</td>
@@ -206,8 +234,11 @@
                                         '<i class="bi bi-cart-check-fill text-success"></i> A la venta'}
                                 </td>
                                 <td>${producto.nro_proyecto_productivo}</td>
-                                <td>${producto.precio}</td>
-                                <td>${producto.stock_inicial}</td>
+                                <td>$${producto.precio}</td>
+                                <td>
+                                    <i class="bi bi-box text-secondary"></i>${producto.stock_inicial} ${producto.unidad_medida}
+                                </td>
+                                <td>${badgeStock}</td>
                                 <td>
                                     <a href="/facturacion/productos/ver?id_producto=${producto.id_producto}" class="btn btn-sm btn-info">Ver</a>
                                     <a href="/facturacion/productos/editar?id_producto=${producto.id_producto}" class="btn btn-sm btn-warning">Editar</a>

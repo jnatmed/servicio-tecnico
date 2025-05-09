@@ -243,19 +243,29 @@ class ProductosCollection extends Model
     
 
 
-    public function getDependencias(){
+    public function getDependencias($dependendiaId = null)
+    {
         try {
-            $dependencias = $this->queryBuilder->select('dependencia', '*');
+
+            $this->logger->info("input getDependencia: ", [$dependendiaId]);
+
+            if (!is_null($dependendiaId)) {
+                // Filtra por ID si se especifica
+                $dependencias = $this->queryBuilder->select('dependencia', '*', ['id' => $dependendiaId]);
+            } else {
+                // Devuelve todas si no se especifica
+                $dependencias = $this->queryBuilder->select('dependencia', '*');
+            }
+    
+            $this->logger->info("getDependencias: ", [$dependencias]);
+
             return $dependencias;
         } catch (Exception $e) {
-            // Registrar el error (puedes usar un logger en lugar de echo)
             error_log('Error en getDependencias: ' . $e->getMessage());
-    
-            // Retornar un valor por defecto o manejar el error según la lógica de tu aplicación
             return [];
         }
     }
-
+    
     public function getById($id)
     {
         try {
@@ -333,9 +343,12 @@ class ProductosCollection extends Model
         try {
             $result = $this->queryBuilder->select('producto', '*', ['id' => $id]);
 
+            $datosDependencia = $this->getDependencias($result[0]['id_unidad_q_fabrica']);
+
             if (!empty($result)) {
-                $this->logger->info("Datos de producto recuperados con éxito: ", $result);
+                $this->logger->info("Datos de producto recuperados con éxito: ", [$result, $result[0]['id'], $datosDependencia]);
                 $result[0]['exito'] = true;
+                $result[0]['descripcion_dependencia'] = $datosDependencia[0]['descripcion'];
                 return $result[0]; // Suponiendo que select devuelve un array de resultados
             } else {
                 $this->logger->error("No se encontró detalle del producto");
@@ -363,7 +376,7 @@ class ProductosCollection extends Model
         }
     }
 
-    public function getProductosConUltimoPrecio()
+    public function getProductosConUltimoPrecio($usuarioDependencia = null)
     {
         try {
             $sql = "
@@ -383,18 +396,24 @@ class ProductosCollection extends Model
                     ) pr2 ON pr1.id_producto = pr2.id_producto AND pr1.fecha_precio = pr2.ultima_fecha
                 ) pr ON p.id = pr.id_producto
                 WHERE p.estado = 'a_la_venta'
-                ORDER BY p.created_at DESC
             ";
     
-            $productos = $this->queryBuilder->query($sql);
+            $params = [];
+    
+            if (!is_null($usuarioDependencia)) {
+                $sql .= " AND p.id_unidad_q_fabrica = :dependencia";
+                $params['dependencia'] = $usuarioDependencia;
+            }
+    
+            $sql .= " ORDER BY p.created_at DESC";
+    
+            $productos = $this->queryBuilder->query($sql, $params);
             $productosConStock = [];
     
             foreach ($productos as $producto) {
                 $stock = $this->getStockActual($producto['id']);
-                // if ($stock > 0) {
-                    $producto['stock_actual'] = $stock;
-                    $productosConStock[] = $producto;
-                // }
+                $producto['stock_actual'] = $stock;
+                $productosConStock[] = $producto;
             }
     
             return $productosConStock;
@@ -403,6 +422,7 @@ class ProductosCollection extends Model
             return [];
         }
     }
+    
     
     
     public function insertarPrecio(array $data)
@@ -435,11 +455,16 @@ class ProductosCollection extends Model
     }
     
 
-    public function getProductosYPrecios($searchItem=null)
+    public function getProductosYPrecios($searchItem=null, $usuarioDependencia=null)
     {
         try {
 
-            $productos = $this->queryBuilder->obtenerProductosConPrecioMasReciente($searchItem, null);
+            $this->logger->info("getProductosYPrecios() llamado con:", [
+                'searchItem' => $searchItem,
+                'usuarioDependencia' => $usuarioDependencia
+            ]);
+
+            $productos = $this->queryBuilder->obtenerProductosConPrecioMasReciente($searchItem, null, $usuarioDependencia);
 
             return $productos;
 

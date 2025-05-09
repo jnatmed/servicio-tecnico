@@ -9,6 +9,8 @@ use Paw\App\Models\GoogleClient;
 use Paw\App\Models\LDAP;
 use Paw\Core\Traits\Loggable;
 
+use Paw\App\Models\DependenciasCollection;
+
 use Exception;
 
 class UserController extends Controller
@@ -107,14 +109,24 @@ class UserController extends Controller
 
                 $existeUsuario =  $this->model->existe($username);
                 if (not($existeUsuario[0])) {
-                    $this->logger->debug("No existe usuario en la BD");
+                    $this->logger->debug("No existe usuario en la BD", [$existeUsuario]);
                     $nuevoIdUser = $this->model->guardarNuevoAcceso($username, $userInfo);
                 }else{
-                    $this->logger->debug("Existe usuario en la BD");
+                    $this->logger->debug("Existe usuario en la BD", [$existeUsuario]);
                     $nuevoIdUser = $existeUsuario[1];
                 };
 
                 $userInfo['id_user'] = $nuevoIdUser;
+
+                $this->setDependenciaId($existeUsuario[2]['dependencia_id']);
+
+                $this->logger->info("Dependencia Id: ", [$this->getDependenciaId()]);
+
+                $dependencias = new DependenciasCollection($this->logger, $this->qb);
+
+                $DatosDependencia = $dependencias->getDependencias($this->getDependenciaId());
+        
+                $this->setDescripcionDependencia($DatosDependencia[0]['descripcion']);
 
                 $this->setIdUser($nuevoIdUser);
 
@@ -224,6 +236,16 @@ class UserController extends Controller
     public function getDependenciaId()
     {
         return $_SESSION['dependencia_id'];
+    }
+
+    public function setDescripcionDependencia($descripcion)
+    {
+        $_SESSION['descripcion_dependencia'] = $descripcion;
+    }
+
+    public function getDescripcionDependencia()
+    {
+        return $_SESSION['descripcion_dependencia'];
     }
 
     public function getUserType()

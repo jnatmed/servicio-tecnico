@@ -36,6 +36,7 @@
                                 {% endif %}
                             </p>
                             <p class="card-text"><strong>Expediente:</strong> {{ producto.nro_proyecto_productivo }}</p>
+                            <p class="card-text"><strong>Dependencia:</strong> {{ producto.descripcion_dependencia }}</p>
                             <p class="card-text"><strong>Stock Inicial:</strong> {{ producto.stock_inicial|number_format(2, '.', ',') }} {{ producto.unidad_medida }}</p>
                             <p class="card-text">
                                 <strong>Stock Actual:</strong> 

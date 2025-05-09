@@ -12,6 +12,7 @@ use Paw\App\Models\Producto;
 use Exception;
 
 use Paw\App\Models\ProductosCollection;
+use Paw\App\Models\DependenciasCollection;
 
 class ProductoController extends Controller
 {   
@@ -293,7 +294,7 @@ class ProductoController extends Controller
         $jsonList = $this->request->get('jsonList');
         $searchItem = $this->request->get('search');
 
-        $usuarioDependencia = $this->usuario->getIdUser();
+        $usuarioDependencia = $this->usuario->getDependenciaId();
 
         $this->logger->info("📡 Entrando al método listar()", [
             'jsonList' => $jsonList,
@@ -305,7 +306,7 @@ class ProductoController extends Controller
                 try {
                     $this->logger->info("📥 Solicitud AJAX con búsqueda", ['searchItem' => $searchItem]);
                     
-                    $listaProductos = $this->model->getProductosYPrecios($searchItem);
+                    $listaProductos = $this->model->getProductosYPrecios($searchItem, $usuarioDependencia);
                     $this->logger->info("consulta json, id_producto: ", $listaProductos[0]);
 
                     header('Content-Type: application/json');
@@ -322,7 +323,7 @@ class ProductoController extends Controller
                 try {
                     $this->logger->info("📥 Solicitud AJAX sin búsqueda (cargar todos los productos)");
     
-                    $listaProductos = $this->model->getProductosYPrecios();
+                    $listaProductos = $this->model->getProductosYPrecios(null, $usuarioDependencia);
     
                     header('Content-Type: application/json');
                     echo json_encode(['success' => true, 'productos' => $listaProductos]);
@@ -339,11 +340,14 @@ class ProductoController extends Controller
             try {
                 $this->logger->info("🖥️ Solicitud de vista completa (no JSON)");
     
-                $listaProductos = $this->model->getProductosConUltimoPrecio();
+                $listaProductos = $this->model->getProductosConUltimoPrecio($usuarioDependencia);
                 $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos)]);
     
                 view('facturacion/productos/listado', array_merge(
-                    ['listaProductos' => $listaProductos],
+                    [
+                        'listaProductos' => $listaProductos, 
+                        'nombre_dependencia' => $this->usuario->getDescripcionDependencia()
+                    ],
                     $this->menu
                 ));
             } catch (Exception $e) {

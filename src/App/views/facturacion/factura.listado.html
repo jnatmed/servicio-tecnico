@@ -7,12 +7,15 @@
 <body>
     {% include "parts/modulos.view.html" %}
 
-
-  
-
     <section class="container_facturacion">
         <div class="container mt-5">
-            <h1 class="mb-4">Listado de Facturas</h1>
+            <div class="d-flex flex-column mb-3">
+                <div class="text-center">
+                    <h1 class="mb-4">Listado de Facturas</h1>
+                    <h2 class="mb-0">{{ nombre_dependencia }}</h2>
+                </div>
+            </div>
+
 
             <!-- Barra de búsqueda -->
             <div class="mb-3">
