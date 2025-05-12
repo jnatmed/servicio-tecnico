@@ -231,7 +231,7 @@ class QueryBuilder
         $executionResult = $statement->execute();
     
         // Registrar en la auditoría
-        $this->registrarAuditoria($table, 'UPDATE', $_SESSION['usuario'] ?? null, $datosPrevios, $data, $conditions['id'] ?? null);
+        $this->registrarAuditoria($table, 'UPDATE', $_SESSION['account'] ?? null, $datosPrevios, $data, $conditions['id'] ?? null);
     
         return $executionResult;
     }
@@ -280,7 +280,7 @@ class QueryBuilder
     
         // Registrar auditoría por cada fila eliminada
         foreach ($datosPrevios as $row) {
-            $this->registrarAuditoria($table, 'DELETE', $_SESSION['usuario'] ?? null, $row, null, $row['id'] ?? null);
+            $this->registrarAuditoria($table, 'DELETE', $_SESSION['account'] ?? null, $row, null, $row['id'] ?? null);
         }
     
         return $affectedRows;
@@ -696,29 +696,31 @@ class QueryBuilder
     {
         try {
             $this->logger->info("Ejecutando query:", ['sql' => $sql, 'params' => $params]);
-    
+
             $stmt = $this->pdo->prepare($sql);
-    
+
             foreach ($params as $key => $value) {
                 $stmt->bindValue($key, $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
             }
-    
+
             // AUDITORÍA - antes del execute
             $tipo = strtoupper(strtok(trim($sql), " "));
             $datosPrevios = null;
             $tabla = null;
             $idRegistro = null;
-    
+
+            // Log del tipo de operación
+            $this->logger->info("🛠 OPERACIÓN {$tipo} detectada");
+
             if ($tipo === 'UPDATE') {
-                // Detectar tabla
                 preg_match('/UPDATE\s+([^\s]+)/i', $sql, $matches);
                 $tabla = $matches[1] ?? null;
-    
-                // Intentar extraer el ID si se está usando :id
-                if (isset($params[':id']) && $tabla) {
-                    $idRegistro = $params[':id'];
-    
-                    // Obtener estado actual del registro
+
+                if (isset($params['id']) && $tabla) {
+                    $idRegistro = $params['id'];
+
+                    $this->logger->info("🔍 Buscando estado previo de registro con ID $idRegistro en tabla $tabla");
+
                     $selectPrevio = "SELECT * FROM {$tabla} WHERE id = :id";
                     $stmtPrevio = $this->pdo->prepare($selectPrevio);
                     $stmtPrevio->bindValue(':id', $idRegistro, PDO::PARAM_INT);
@@ -726,31 +728,33 @@ class QueryBuilder
                     $datosPrevios = $stmtPrevio->fetch(PDO::FETCH_ASSOC);
                 }
             }
-    
-            // Ejecutar consulta original
+
+
             $stmt->execute();
-    
-            // AUDITORÍA post-ejecución
+            $this->logger->info("✅ Consulta ejecutada correctamente");
+
             if (in_array($tipo, ['INSERT', 'UPDATE', 'DELETE'])) {
                 if (!$tabla) {
-                    // Detectar tabla para INSERT o DELETE
                     preg_match('/(INTO|FROM)\s+([^\s]+)/i', $sql, $matches);
                     $tabla = $matches[2] ?? 'desconocida';
                 }
-    
+
+                $this->logger->info("🧾 Registrando auditoría para operación $tipo en tabla $tabla");
+
                 $this->registrarAuditoria(
                     $tabla,
                     $tipo,
-                    $_SESSION['usuario'] ?? null,
+                    $_SESSION['account'] ?? null,
                     $datosPrevios,
                     $params,
                     $idRegistro
                 );
             }
-    
+
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
         } catch (PDOException $e) {
-            $this->logger->error("Error en query(): " . $e->getMessage(), ['sql' => $sql, 'params' => $params]);
+            $this->logger->error("❌ Error en query(): " . $e->getMessage(), ['sql' => $sql, 'params' => $params]);
             throw new Exception("Error al ejecutar la consulta en la base de datos.");
         }
     }

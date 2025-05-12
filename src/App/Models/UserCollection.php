@@ -53,6 +53,139 @@ class UserCollection extends Model
             return null;
         }
     }
+
+    public function listarUsuariosConRolesYDependencia()
+    {
+        $this->logger->info('📥 listarUsuariosConRolesYDependencia() - Inicio del método');
+
+        try {
+            $sql = "
+                SELECT 
+                    u.id,
+                    u.usuario,
+                    u.email,
+                    u.tipo_usuario,
+                    u.created_at,
+                    u.updated_at,
+                    r.nombre AS rol,
+                    d.nombre_dependencia AS dependencia,
+                    u.ordenativa_funcion
+                FROM usuarios u
+                LEFT JOIN roles r ON u.rol_id = r.id
+                LEFT JOIN dependencia d ON u.dependencia_id = d.id
+                ORDER BY u.id DESC
+            ";
+
+            $resultado = $this->queryBuilder->query($sql);
+            $this->logger->info('✅ listarUsuariosConRolesYDependencia() - Consulta ejecutada correctamente', ['total_resultados' => count($resultado)]);
+            return $resultado;
+
+        } catch (\Exception $e) {
+            $this->logger->error('❌ listarUsuariosConRolesYDependencia() - Error al obtener usuarios', [
+                'mensaje' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [];
+        }
+    }
+
+
+    public function buscarUsuarios(string $search = '', int $limit = 10, int $offset = 0): array
+    {
+        $this->logger->info('📄 buscarUsuarios() - Iniciando consulta de usuarios');
+
+        try {
+            $sql = "
+                SELECT 
+                    u.id,
+                    u.usuario,
+                    u.email,
+                    u.tipo_usuario,
+                    u.created_at,
+                    u.updated_at,
+                    r.nombre AS rol,
+                    d.descripcion AS dependencia,
+                    sad.estado AS estado_dependencia
+                FROM usuarios u
+                LEFT JOIN roles r ON u.rol_id = r.id
+                LEFT JOIN dependencia d ON u.dependencia_id = d.id
+                LEFT JOIN (
+                    SELECT s1.*
+                    FROM solicitud_asignacion_dependencia s1
+                    INNER JOIN (
+                        SELECT usuario_id, MAX(fecha_solicitud) AS ultima
+                        FROM solicitud_asignacion_dependencia
+                        GROUP BY usuario_id
+                    ) s2 ON s1.usuario_id = s2.usuario_id AND s1.fecha_solicitud = s2.ultima
+                ) sad ON sad.usuario_id = u.id
+            ";
+
+            $params = [];
+            if ($search !== '') {
+                $sql .= " WHERE u.usuario LIKE :search OR u.email LIKE :search";
+                $params['search'] = "%{$search}%";
+            }
+
+            $sql .= " ORDER BY u.id DESC LIMIT :limit OFFSET :offset";
+            $params['limit'] = $limit;
+            $params['offset'] = $offset;
+
+            return $this->queryBuilder->query($sql, $params);
+
+        } catch (\Exception $e) {
+            $this->logger->error('❌ buscarUsuarios() - Error al consultar usuarios', [
+                'mensaje' => $e->getMessage()
+            ]);
+            return [];
+        }
+    }
+
+
+    public function actualizarRolDeUsuario(int $usuarioId, int $nuevoRolId): void
+    {
+        $this->logger->info("🔧 Actualizando rol del usuario ID $usuarioId a rol ID $nuevoRolId");
+
+        try {
+            $sql = "UPDATE usuarios SET rol_id = :nuevoRol WHERE id = :id";
+            $params = [
+                'nuevoRol' => $nuevoRolId,
+                'id' => $usuarioId
+            ];
+
+            $this->queryBuilder->query($sql, $params);
+            $this->logger->info("✅ Rol actualizado en la base de datos");
+
+        } catch (\Exception $e) {
+            $this->logger->error("❌ Error al actualizar el rol en la base: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    public function contarUsuarios(string $search = ''): int
+    {
+        $this->logger->info('🔢 contarUsuarios() - Contando registros');
+
+        try {
+            $sql = "SELECT COUNT(*) as total FROM usuarios u";
+            $params = [];
+
+            if ($search !== '') {
+                $sql .= " WHERE u.usuario LIKE :search OR u.email LIKE :search";
+                $params['search'] = "%{$search}%";
+            }
+
+            $result = $this->queryBuilder->query($sql, $params);
+            return $result[0]['total'] ?? 0;
+
+        } catch (\Exception $e) {
+            $this->logger->error('❌ contarUsuarios() - Error al contar', [
+                'mensaje' => $e->getMessage()
+            ]);
+            return 0;
+        }
+    }
+
+
     public function existe($username)
     {
         try {
@@ -128,19 +261,47 @@ class UserCollection extends Model
         }
     }
 
-    public function actualizarDependenciaUsuario($usuarioId, $dependenciaId, $ordenativaFunciona)
+    public function solicitarAsignacionDependencia($usuarioId, $dependenciaId, $ordenativaFunciona)
     {
-        $sql = "UPDATE usuarios 
-                SET dependencia_id = :dep, 
-                    ordenativa_funcion = :ordFun 
-                WHERE id = :id";
-    
-        $this->queryBuilder->query($sql, [
-            ':dep' => $dependenciaId ?: null,
-            ':ordFun' => $ordenativaFunciona,
-            ':id' => $usuarioId
-        ]);
+        try {
+            $this->logger->info("📝 solicitando asignación de dependencia", [
+                'usuario_id' => $usuarioId,
+                'dependencia_id' => $dependenciaId,
+                'ordenativa_funcion' => $ordenativaFunciona
+            ]);
+
+            $sql = "
+                INSERT INTO solicitud_asignacion_dependencia (
+                    usuario_id,
+                    dependencia_id,
+                    estado,
+                    fecha_solicitud,
+                    observaciones
+                ) VALUES (
+                    :usuario_id,
+                    :dependencia_id,
+                    'solicitado',
+                    CURRENT_TIMESTAMP,
+                    :observaciones
+                )
+            ";
+
+            $observaciones = "Ordenativa: {$ordenativaFunciona}";
+
+            $this->queryBuilder->query($sql, [
+                'usuario_id' => $usuarioId,
+                'dependencia_id' => $dependenciaId,
+                'observaciones' => $observaciones
+            ]);
+
+            $this->logger->info("✅ Solicitud registrada correctamente");
+
+        } catch (\Exception $e) {
+            $this->logger->error("❌ Error al registrar solicitud: " . $e->getMessage());
+            throw $e;
+        }
     }
+
     
 
     public function getNombrePorId($id)

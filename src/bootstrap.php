@@ -150,6 +150,11 @@ $router->post('/user/login', 'UserController@login');
 $router->get('/user/logout', 'UserController@logout');
 $router->get('/user/register', 'UserController@register');
 $router->post('/user/register', 'UserController@register');
+
+$router->get('/user/get_listado', 'UserController@getListado');
+$router->get('/user/get_listado', 'UserController@getListado');
+$router->post('/user/actualizar_rol', 'UserController@actualizarRol');
+
 $router->get('/user/ver-perfil', 'UserController@verPerfil');
 $router->post('/user/asignar-dependencia', 'UserController@asignarDestino');
 $router->get('/auth/google/callback', 'UserController@callback');

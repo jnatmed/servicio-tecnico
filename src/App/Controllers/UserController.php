@@ -10,6 +10,7 @@ use Paw\App\Models\LDAP;
 use Paw\Core\Traits\Loggable;
 
 use Paw\App\Models\DependenciasCollection;
+use Paw\App\Models\RolesCollection;
 
 use Exception;
 
@@ -78,6 +79,91 @@ class UserController extends Controller
         return (session_status() == PHP_SESSION_ACTIVE) && isset($_SESSION['nombre_usuario']); 
     }
 
+
+    public function getListado()
+    {
+        $this->logger->info('📥 UsuariosController::getListado() - Inicio');
+
+        try {
+            $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = 10;
+            $offset = ($page - 1) * $limit;
+            $search = trim($_GET['search'] ?? '');
+
+            $this->logger->debug("🔎 Filtros recibidos", ['page' => $page, 'search' => $search]);
+
+            $usuarios = $this->model->buscarUsuarios($search, $limit, $offset);
+            $total = $this->model->contarUsuarios($search);
+
+            $listadoRoles = new RolesCollection($this->logger, $this->qb);
+
+            $roles = $listadoRoles->getRoles();
+
+            if ($isAjax) {
+                $this->logger->info('✅ UsuariosController::getListado() - Respuesta AJAX enviada', ['total' => $total]);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => true,
+                    'usuarios' => $usuarios,
+                    'total' => $total,
+                    'limit' => $limit,
+                    'roles' => $roles,
+                    'currentPage' => $page
+                ]);
+                return;
+            }
+
+            // Vista completa (no AJAX)
+            return view('usuarios.listado', array_merge(
+                ['usuarios' => $usuarios],
+                $this->menu
+            ));
+
+        } catch (\Exception $e) {
+            $this->logger->error('❌ UsuariosController::getListado() - Error en listado', [
+                'mensaje' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            if ($isAjax) {
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'error' => 'Error interno del servidor.'
+                ]);
+                return;
+            }
+
+            return view('error', ['mensaje' => 'Ocurrió un error al cargar los usuarios.']);
+        }
+    }
+
+    public function actualizarRol()
+    {
+        $this->logger->info('📤 UsuariosController::actualizarRol() - Inicio');
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $usuarioId = $data['usuario_id'] ?? null;
+            $nuevoRolId = $data['nuevo_rol'] ?? null;
+
+            if (!$usuarioId || !$nuevoRolId) {
+                throw new Exception('Faltan datos obligatorios.');
+            }
+
+            $this->model->actualizarRolDeUsuario($usuarioId, $nuevoRolId);
+
+            $this->logger->info("✅ Rol actualizado correctamente para usuario ID $usuarioId");
+            echo json_encode(['success' => true]);
+        } catch (\Exception $e) {
+            $this->logger->error("❌ Error al actualizar rol de usuario: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+    
     public function login()
     {
         if (session_status() == PHP_SESSION_NONE) {
@@ -191,6 +277,8 @@ class UserController extends Controller
                 $this->logger->notice("No existe clave en userInfo");
             }
         }
+        $this->logger->debug('🧾 Estado actual de $_SESSION:', $_SESSION);
+
     }
 
     public function callback()
@@ -358,7 +446,7 @@ class UserController extends Controller
     
         try {
             // Actualiza la dependencia del usuario
-            $this->model->actualizarDependenciaUsuario($usuario_id, $dependencia_id, $ordenativa_funcion);
+            $this->model->solicitarAsignacionDependencia($usuario_id, $dependencia_id, $ordenativa_funcion);
 
             // Obtener nombre de la dependencia asignada
             $dependencia = $this->model->getNombrePorId($dependencia_id);

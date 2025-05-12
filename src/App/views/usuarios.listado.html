@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+    <style>
+    @keyframes zoomRol {
+        0% {
+            font-size: 1em;
+            font-weight: normal;
+            color: inherit;
+        }
+        25% {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        50% {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        75% {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #0d6efd;
+        }
+        100% {
+            font-size: 1em;
+            font-weight: normal;
+            color: inherit;
+        }
+    }
+
+    .rol-zoom-efecto {
+        animation: zoomRol 2s ease-in-out;
+    }
+    </style>
+
+
+
+</head>
+
+{% include "parts/modulos.view.html" %}
+
+<div class="usuarios-container">
+    <h1>Lista de Usuarios</h1>
+
+    <!-- Formulario de Búsqueda -->
+    <input type="text" id="search-input" placeholder="Buscar usuarios..." value="{{ search is defined ? search : '' }}">
+    <button id="search-btn">Buscar</button>
+    <br>
+    <label id="search-error" class="text-danger" style="display: none; font-size: 0.9em;">
+        Por favor, ingrese un valor para buscar.
+    </label>
+
+    <table class="usuarios-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Rol</th>
+                <th>Dependencia</th>
+                <th>Ordenativa / Función</th>
+                <th>Fecha Alta</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody id="usuarios-list">
+            <!-- Filas generadas por JS -->
+        </tbody>
+    </table>
+
+    {% if usuarios is empty %}
+        <p class="usuarios-message">No hay usuarios para mostrar.</p>
+    {% endif %}
+
+    <div id="paginacion-container">
+        <span id="pagination-numbers"></span>
+    </div>
+</div>
+
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const searchInput = document.getElementById("search-input");
+    const searchBtn = document.getElementById("search-btn");
+    const paginationContainer = document.getElementById("pagination-numbers");
+
+    let currentPage = 1;
+    let limit = 10;
+    let totalPages = 1;
+
+    searchBtn?.addEventListener("click", () => {
+        currentPage = 1;
+        fetchUsuarios(currentPage, searchInput.value, true);
+    });
+
+    const formEditarRol = document.getElementById("formEditarRol");
+
+    formEditarRol.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const userId = document.getElementById("modal-rol-user-id").value;
+        const nuevoRolId = document.getElementById("nuevo_rol").value;
+
+        if (!nuevoRolId) {
+            alert("Seleccioná un nuevo rol.");
+            return;
+        }
+
+        fetch("/user/actualizar_rol", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                usuario_id: userId,
+                nuevo_rol: nuevoRolId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Actualizar solo la celda del rol en la fila correspondiente
+                const row = document.querySelector(`.editable-rol[data-id="${userId}"]`);
+                const nuevoRolTexto = document.querySelector(`#nuevo_rol option[value="${nuevoRolId}"]`)?.textContent;
+
+                if (row) {
+                    row.innerHTML = `
+                        ${nuevoRolTexto}
+                        <i class="fa-solid fa-pen-to-square text-primary rol-edit-icon" title="Editar rol" style="cursor:pointer; margin-left:5px;"></i>
+                    `;
+                    row.dataset.rol = nuevoRolTexto;
+
+                    // Efecto de actualización más vistoso (zoom + bold)
+                    row.classList.add("rol-zoom-efecto");
+                    setTimeout(() => row.classList.remove("rol-zoom-efecto"), 2000);
+
+                }
+
+                // Cerrar el modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById("modalEditarRol"));
+                modal.hide();
+            } else {
+                alert("Error al actualizar el rol: " + (data.error || "Desconocido"));
+            }
+        })
+
+        .catch(error => {
+            console.error("Error al actualizar rol:", error);
+            alert("Ocurrió un error al intentar actualizar el rol.");
+        });
+    });
+
+
+    searchInput?.addEventListener("keypress", event => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            realizarBusqueda();
+        }
+    });
+
+    function fetchUsuarios(page, search, clearTable) {
+        fetch(`/user/get_listado?page=${page}&search=${encodeURIComponent(search)}`, {
+            headers: { 
+                'X-Requested-With': 'XMLHttpRequest'
+             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById("usuarios-list");
+                if (clearTable) tbody.innerHTML = '';
+
+                limit = data.limit;
+                totalPages = Math.ceil(data.total / limit);
+                currentPage = parseInt(data.currentPage);
+
+                data.usuarios.forEach(usuario => {
+                    const row = document.createElement("tr");
+
+                    console.log(usuario)
+
+                    row.innerHTML = `
+                        <td>${usuario.id}</td>
+                        <td>${usuario.usuario}</td>
+                        <td>${usuario.email}</td>
+                        <td>${usuario.tipo_usuario ?? '-'}</td>
+                        <td>
+                            ${usuario.rol ? `
+                                <span class="editable-rol" data-id="${usuario.id}" data-rol="${usuario.rol}">
+                                    ${usuario.rol}
+                                    <i class="fa-solid fa-pen-to-square text-primary rol-edit-icon" title="Editar rol" style="cursor:pointer; margin-left:5px;"></i>
+                                </span>
+                            ` : '<i class="fa-solid fa-shield-halved text-muted" title="Sin rol"></i>'}
+                        </td>
+                        <td>
+                            ${usuario.dependencia && usuario.estado_dependencia ? (() => {
+                                let icono = '';
+                                let color = '';
+                                let editable = false;
+
+                                switch (usuario.estado_dependencia.toLowerCase()) {
+                                    case 'solicitado':
+                                        icono = '<i class="fa-solid fa-hourglass-half text-warning" title="Solicitud pendiente"></i>';
+                                        editable = true;
+                                        break;
+                                    case 'rechazado':
+                                        icono = '<i class="fa-solid fa-circle-xmark text-danger" title="Solicitud rechazada"></i>';
+                                        break;
+                                    case 'confirmado':
+                                        icono = '<i class="fa-solid fa-circle-check text-success" title="Solicitud confirmada"></i>';
+                                        break;
+                                }
+
+                                if (editable) {
+                                    return `
+                                        <span class="editable-dependencia" data-id="${usuario.id}" data-dependencia="${usuario.dependencia}">
+                                            ${usuario.dependencia} ${icono}
+                                            <i class="fa-solid fa-pen-to-square text-primary dependencia-edit-icon" title="Evaluar solicitud" style="margin-left:5px; cursor:pointer;"></i>
+                                        </span>
+                                    `;
+                                } else {
+                                    return `${usuario.dependencia} ${icono}`;
+                                }
+                            })() : '<i class="fa-solid fa-building-circle-xmark text-secondary" title="Sin dependencia"></i>'}
+                        </td>
+
+                        <td>${usuario.ordenativa_funcion ?? '-'}</td>
+                        <td>${new Date(usuario.created_at).toLocaleDateString()}</td>
+                        <td><a href="/usuario/editar?id=${usuario.id}">Editar</a></td>
+                        <td><a href="/usuario/eliminar?id=${usuario.id}" class="eliminar-link">Eliminar</a></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                // Cargar roles en el modal si aún no están cargados
+                const selectRol = document.getElementById("nuevo_rol");
+                if (selectRol && selectRol.options.length <= 1 && data.roles?.length) {
+                    data.roles.forEach(rol => {
+                        const option = document.createElement("option");
+                        option.value = rol.id;
+                        option.textContent = rol.nombre;
+                        selectRol.appendChild(option);
+                    });
+                }
+
+                updatePagination(search);
+            }
+        })
+        .catch(error => console.error("Error cargando usuarios:", error));
+    }
+
+    function updatePagination(search) {
+        paginationContainer.innerHTML = '';
+        const maxVisiblePages = 5;
+        const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+        const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+        if (currentPage > 1) {
+            const prev = document.createElement("button");
+            prev.textContent = "Anterior";
+            prev.onclick = () => fetchUsuarios(currentPage - 1, search, true);
+            paginationContainer.appendChild(prev);
+        }
+
+        if (startPage > 1) {
+            const first = document.createElement("button");
+            first.textContent = "1";
+            first.onclick = () => fetchUsuarios(1, search, true);
+            paginationContainer.appendChild(first);
+            if (startPage > 2) paginationContainer.appendChild(document.createTextNode("..."));
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement("button");
+            btn.textContent = i;
+            if (i === currentPage) btn.classList.add("active");
+            btn.onclick = () => fetchUsuarios(i, search, true);
+            paginationContainer.appendChild(btn);
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) paginationContainer.appendChild(document.createTextNode("..."));
+            const last = document.createElement("button");
+            last.textContent = totalPages;
+            last.onclick = () => fetchUsuarios(totalPages, search, true);
+            paginationContainer.appendChild(last);
+        }
+
+        if (currentPage < totalPages) {
+            const next = document.createElement("button");
+            next.textContent = "Siguiente";
+            next.onclick = () => fetchUsuarios(currentPage + 1, search, true);
+            paginationContainer.appendChild(next);
+        }
+    }
+
+    function realizarBusqueda() {
+        const searchValue = searchInput.value.trim();
+        const errorLabel = document.getElementById("search-error");
+
+        if (searchValue === '') {
+            errorLabel.style.display = 'inline';
+            return;
+        }
+
+        errorLabel.style.display = 'none';
+        currentPage = 1;
+        fetchUsuarios(currentPage, searchValue, true);
+    }
+
+    fetchUsuarios(currentPage, '', true);
+
+    document.addEventListener("click", function (e) {
+        if (e.target.classList.contains("rol-edit-icon")) {
+            const span = e.target.closest(".editable-rol");
+            const userId = span.dataset.id;
+            const currentRol = span.dataset.rol;
+
+            document.getElementById("modal-rol-user-id").value = userId;
+            document.getElementById("modal-rol-actual").textContent = currentRol;
+
+            // Podés cargar opciones dinámicas desde backend o usar un <select> estático
+            const modal = new bootstrap.Modal(document.getElementById("modalEditarRol"));
+            modal.show();
+        }
+    });
+
+
+});
+</script>
+
+<div class="modal fade" id="modalEditarRol" tabindex="-1" aria-labelledby="modalEditarRolLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="formEditarRol" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalEditarRolLabel">Editar Rol de Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-rol-user-id" name="usuario_id">
+        <p><strong>Rol actual:</strong> <span id="modal-rol-actual"></span></p>
+        <div class="mb-3">
+          <label for="nuevo_rol" class="form-label">Nuevo Rol</label>
+          <select id="nuevo_rol" name="nuevo_rol" class="form-select">
+                <option value="">Seleccionar nuevo rol...</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+</html>

@@ -118,12 +118,12 @@ class Controller
                     
                 ],
                 [
-                    'href' => '/user/listado',
+                    'href' => '/user/get_listado',
                     'class' => '.lista',
                     'name' => 'USUARIOS',
                     'submenu' => [
                         [
-                            'href' => '/user/listado',
+                            'href' => '/user/get_listado',
                             'name' => 'LISTADO'
                         ]
                     ]
