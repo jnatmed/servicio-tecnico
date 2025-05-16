@@ -331,7 +331,88 @@ document.addEventListener("DOMContentLoaded", function () {
             const modal = new bootstrap.Modal(document.getElementById("modalEditarRol"));
             modal.show();
         }
+
+        if (e.target.classList.contains("dependencia-edit-icon")) {
+            const span = e.target.closest(".editable-dependencia");
+            const userId = span.dataset.id;
+            const dependenciaTexto = span.dataset.dependencia;
+
+            document.getElementById("modal-solicitud-user-id").value = userId;
+            document.getElementById("modal-dependencia-texto").textContent = dependenciaTexto;
+            document.getElementById("observaciones").value = '';
+
+            const modal = new bootstrap.Modal(document.getElementById("modalGestionarSolicitud"));
+            modal.show();
+        }
+
     });
+
+    const formGestionarSolicitud = document.getElementById("formGestionarSolicitud");
+
+    formGestionarSolicitud.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const userId = document.getElementById("modal-solicitud-user-id").value;
+        const observaciones = document.getElementById("observaciones").value;
+
+        fetch("/user/confirmar_solicitud_dependencia", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                usuario_id: userId,
+                observaciones: observaciones
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fetchUsuarios(currentPage, searchInput.value, true);
+                const modal = bootstrap.Modal.getInstance(document.getElementById("modalGestionarSolicitud"));
+                modal.hide();
+            } else {
+                alert("Error al confirmar solicitud: " + (data.error || "Desconocido"));
+            }
+        })
+        .catch(err => {
+            console.error("Error al confirmar solicitud:", err);
+            alert("Error al procesar la solicitud.");
+        });
+    });
+
+    document.getElementById("btnRechazarSolicitud").addEventListener("click", function () {
+        const userId = document.getElementById("modal-solicitud-user-id").value;
+        const observaciones = document.getElementById("observaciones").value;
+
+        fetch("/user/rechazar_solicitud_dependencia", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                usuario_id: userId,
+                observaciones: observaciones
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                fetchUsuarios(currentPage, searchInput.value, true);
+                const modal = bootstrap.Modal.getInstance(document.getElementById("modalGestionarSolicitud"));
+                modal.hide();
+            } else {
+                alert("Error al rechazar solicitud: " + (data.error || "Desconocido"));
+            }
+        })
+        .catch(err => {
+            console.error("Error al rechazar solicitud:", err);
+            alert("Error al procesar la solicitud.");
+        });
+    });
+
 
 
 });
@@ -357,6 +438,29 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="modalGestionarSolicitud" tabindex="-1" aria-labelledby="modalGestionarSolicitudLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="formGestionarSolicitud" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalGestionarSolicitudLabel">Gestión de Solicitud de Dependencia</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modal-solicitud-user-id" name="usuario_id">
+        <p><strong>Dependencia solicitada:</strong> <span id="modal-dependencia-texto"></span></p>
+        <div class="mb-3">
+          <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+          <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnRechazarSolicitud" class="btn btn-danger">Rechazar</button>
+        <button type="submit" class="btn btn-success">Confirmar Asignación</button>
       </div>
     </form>
   </div>

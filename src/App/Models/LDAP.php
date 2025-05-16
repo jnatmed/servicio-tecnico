@@ -48,14 +48,14 @@ class LDAP extends Model
         $this->ldap_conn = ldap_connect($this->ldap_host, $this->ldap_port);
 
         if (!$this->ldap_conn) {
-            $log->error("No se pudo conectar al servidor LDAP: {$this->ldap_host}:{$this->ldap_port}");
+            $log->error("🔐 No se pudo conectar al servidor LDAP: {$this->ldap_host}:{$this->ldap_port}");
             throw new Exception("No se pudo conectar al servidor LDAP.");
         }
 
         // Configurar opciones LDAP
         ldap_set_option($this->ldap_conn, LDAP_OPT_PROTOCOL_VERSION, 3); // Usar LDAPv3
         ldap_set_option($this->ldap_conn, LDAP_OPT_REFERRALS, 0); // Desactivar referencias
-        $log->info("Conexión exitosa al servidor LDAP: {$this->ldap_host}:{$this->ldap_port}");
+        $log->info("🔐 Conexión exitosa al servidor LDAP: {$this->ldap_host}:{$this->ldap_port}");
     }
 
     public function authenticateAdmin()
@@ -66,11 +66,11 @@ class LDAP extends Model
 
         if (!$bind) {
             $error = ldap_error($this->ldap_conn);
-            $log->error("No se pudo autenticar al servidor LDAP con el usuario: {$this->ldap_user}. Error: $error");
+            $log->error("🔐 No se pudo autenticar al servidor LDAP con el usuario: {$this->ldap_user}. Error: $error");
             throw new Exception("No se pudo autenticar al servidor LDAP.");
         }
 
-        $log->info("Autenticación exitosa con el usuario: {$this->ldap_user}");
+        $log->info("🔐 Autenticación exitosa con el usuario: {$this->ldap_user}");
     }
 
     public function findUserByUsername($username)
@@ -127,7 +127,7 @@ class LDAP extends Model
             }
     
             // Registra la información del usuario encontrado
-            $log->info("Usuario encontrado. DN: $user_dn", $entries[0]);
+            $log->info("🔐 Usuario encontrado. DN: $user_dn", $entries[0]);
     
             // Devuelve la información relevante del usuario como un array
             return [
@@ -139,7 +139,7 @@ class LDAP extends Model
             ];
         } else {
             // Si no se encuentra al usuario, se registra una advertencia
-            $log->warning("No se encontró al usuario '$username' en el directorio LDAP.");
+            $log->warning("🔐 No se encontró al usuario '$username' en el directorio LDAP.");
             
             // Retorna null si no se encontró el usuario
             return null;

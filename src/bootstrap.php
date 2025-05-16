@@ -155,7 +155,14 @@ $router->get('/user/get_listado', 'UserController@getListado');
 $router->get('/user/get_listado', 'UserController@getListado');
 $router->post('/user/actualizar_rol', 'UserController@actualizarRol');
 
-$router->get('/user/ver-perfil', 'UserController@verPerfil');
+$router->post('/user/confirmar_solicitud_dependencia', 'UserController@confirmarSolicitudDependencia');
+$router->post('/user/rechazar_solicitud_dependencia', 'UserController@rechazarSolicitudDependencia');
+
+$router->get('/user/ver-perfil', 'UserController@verPerfil', [
+    'auth' => true,
+    'roles' => ['administrador', 'jefatura_ventas']    
+]);
+
 $router->post('/user/asignar-dependencia', 'UserController@asignarDestino');
 $router->get('/auth/google/callback', 'UserController@callback');
 

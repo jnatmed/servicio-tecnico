@@ -27,5 +27,11 @@ class ErrorController extends Controller
         view('errors/internal-error.view');
     }
 
-    
+    public function forbidden()
+    {
+        http_response_code(403);
+        $titulo = 'Acceso Denegado';
+        $main = 'No tenés permisos para acceder a esta sección.';
+        view('errors/forbidden.view');
+    }    
 }

@@ -35,7 +35,7 @@ class UserController extends Controller
 
     public function adjustMenuForSession($menu) {
 
-        $this->logger->info("dentro de adjustMenuForSession: ", [$menu]);
+        // $this->logger->info("dentro de adjustMenuForSession: ", [$menu]);
 
         // Iniciar la sesión si no está ya iniciada
         if (session_status() == PHP_SESSION_NONE) {
@@ -59,7 +59,7 @@ class UserController extends Controller
             });
         }
 
-        $this->logger->debug("menu: ", [$menu]);
+        // $this->logger->debug("menu: ", [$menu]);
         return $menu;
     }    
 
@@ -139,6 +139,53 @@ class UserController extends Controller
         }
     }
 
+
+    public function confirmarSolicitudDependencia()
+    {
+        $this->logger->info('📥 UsuariosController::confirmarSolicitudDependencia() - Inicio');
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $usuarioId = $data['usuario_id'] ?? null;
+            $obs = $data['observaciones'] ?? '';
+
+            if (!$usuarioId) {
+                throw new Exception("Falta el ID del usuario.");
+            }
+
+            $this->model->confirmarAsignacionDeDependencia($usuarioId, $obs);
+
+            echo json_encode(['success' => true]);
+
+        } catch (\Exception $e) {
+            $this->logger->error("❌ Error al confirmar asignación: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
+    public function rechazarSolicitudDependencia()
+    {
+        $this->logger->info('📥 UsuariosController::rechazarSolicitudDependencia() - Inicio');
+
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $usuarioId = $data['usuario_id'] ?? null;
+            $obs = $data['observaciones'] ?? '';
+
+            if (!$usuarioId) {
+                throw new Exception("Falta el ID del usuario.");
+            }
+
+            $this->model->rechazarAsignacionDeDependencia($usuarioId, $obs);
+
+            echo json_encode(['success' => true]);
+
+        } catch (\Exception $e) {
+            $this->logger->error("❌ Error al rechazar asignación: " . $e->getMessage());
+            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+        }
+    }
+
     public function actualizarRol()
     {
         $this->logger->info('📤 UsuariosController::actualizarRol() - Inicio');
@@ -168,102 +215,91 @@ class UserController extends Controller
     {
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
-        }     
+        }
 
-        if($this->request->method() == 'POST')
-        {
+        if ($this->request->method() == 'POST') {
             $this->logger->debug("Entrando al POST Login..");
 
             $username = htmlspecialchars($this->request->get('username'));
             $password = htmlspecialchars($this->request->get('password'));
-            /**
-             * autentico con la base de datos de Windows Server
-             */
-            $userInfo =  $this->ldap->authenticateUser($username, $password);   
 
-
-             $this->logger->debug("UserInfo: ",[$userInfo]);
+            // 1. Autenticación contra LDAP
+            $userInfo = $this->ldap->authenticateUser($username, $password);
+            $this->logger->debug("UserInfo LDAP: ", [$userInfo]);
 
             if ($userInfo) {
+                // 2. Verificar o insertar usuario en la base local
+                $existeUsuario = $this->model->existe($username);
 
-                /**
-                 * si el usuario existe en el servidor de windows
-                 * lo busco en la tabla interna USUARIOS,
-                 * sino existe inserto uno nuevo sino traigo su id
-                 * y lo guardo en la sesion
-                 */
-
-                $existeUsuario =  $this->model->existe($username);
                 if (not($existeUsuario[0])) {
                     $this->logger->debug("No existe usuario en la BD", [$existeUsuario]);
                     $nuevoIdUser = $this->model->guardarNuevoAcceso($username, $userInfo);
-                }else{
+                } else {
                     $this->logger->debug("Existe usuario en la BD", [$existeUsuario]);
                     $nuevoIdUser = $existeUsuario[1];
-                };
+                }
 
+                // 3. Preparar info para sesión
+                $usuarioDb = $existeUsuario[2];
                 $userInfo['id_user'] = $nuevoIdUser;
+                $userInfo['rol'] = $usuarioDb['rol'] ?? null;
 
-                $this->setDependenciaId($existeUsuario[2]['dependencia_id']);
-
-                $this->logger->info("Dependencia Id: ", [$this->getDependenciaId()]);
-
-                $dependencias = new DependenciasCollection($this->logger, $this->qb);
-
-                $DatosDependencia = $dependencias->getDependencias($this->getDependenciaId());
-        
-                $this->setDescripcionDependencia($DatosDependencia[0]['descripcion']);
-
+                // Guardar datos adicionales
+                $this->setDependenciaId($usuarioDb['dependencia_id']);
                 $this->setIdUser($nuevoIdUser);
 
+                $dependencias = new DependenciasCollection($this->logger, $this->qb);
+                $DatosDependencia = $dependencias->getDependencias($this->getDependenciaId());
+                $this->setDescripcionDependencia($DatosDependencia[0]['descripcion'] ?? '');
+
+                // 4. Cargar sesión
                 $parametros = [
                     'id_user' => 'id_user',
                     'nombre_usuario' => 'name',
                     'tipo_usuario' => 'group',
                     'email' => 'email',
-                    'account' => 'account'
+                    'account' => 'account',
+                    'usuario_rol' => 'rol' // 👈 nuevo campo
                 ];
-                
                 $this->cargarSesion($userInfo, $parametros);
 
-                $this->logger->debug("UserInfo: ",[$userInfo]);
+                $this->logger->info("🟢 Sesión iniciada correctamente", $_SESSION);
 
-                if(isset($_SESSION['redirect_url'])){
-                    $this->logger->debug("Hay redirect_url");
+                // 5. Redireccionar
+                if (isset($_SESSION['redirect_url'])) {
                     $redirectUrl = $_SESSION['redirect_url'];
                     unset($_SESSION['redirect_url']);
                     redirect($redirectUrl);
-                }else{
-                    $this->logger->debug("No Hay redirect_url");
+                } else {
                     redirect('');
                 }
+
             } else {
+                // Credenciales incorrectas
+                $this->logger->warning("🔴 Falló autenticación para usuario: $username");
 
                 $datos = [
                     'error' => 'Usuario o contraseña incorrectos'
                 ];
 
                 view('login.view', array_merge(
-                    $datos, $this->menu));
+                    $datos, $this->menu
+                ));
             }
-        }else{                       
+
+        } else {
+            // GET → Mostrar vista login
             $this->logger->debug("Entrando al Login..");
 
-            if (!is_null($this->request->getKeySession('redirect_to'))){
+            if (!is_null($this->request->getKeySession('redirect_to'))) {
                 $_SESSION['redirect_url'] = $this->request->getKeySession('redirect_to');
-
-                $this->logger->debug("Hay Redirect_url: ",[$_SESSION['redirect_url']]);
+                $this->logger->debug("Hay redirect_url: ", [$_SESSION['redirect_url']]);
             }
 
-            // $client = new GoogleClient();
-            // $authUrl = $client->createAuthUrl();
-
-            // $this->logger->debug("authUrl: ",[$authUrl]);
-
             view('login.view', [
-                // 'authUrl' => $authUrl,
                 'authUrl' => "",
-                ...$this->menu]);
+                ...$this->menu
+            ]);
         }
     }
 
@@ -399,30 +435,38 @@ class UserController extends Controller
             session_start();
         }
 
+        // Obtener todos los datos del usuario (incluye datos extendidos)
         $user = $this->model->getUserById($this->getIdUser());
 
-
+        // Armar estructura para la vista
         $datos = [
             'usuario' => [
-                'usuario' => $this->getUserName(),
-                'email' => $this->getUserEmail(),
-                'tipo_usuario' => $this->getUserType(),
+                'id' => $user['id'],
+                'usuario' => $user['usuario'],
+                'email' => $user['email'],
+                'tipo_usuario' => $user['tipo_usuario'],
                 'account' => $this->getAccount(),
-                'account' => $this->getAccount(),
-                'dependencia' => $this->model->getNombrePorId($user['dependencia_id'])
+                'dependencia_descripcion' => $user['dependencia_descripcion'],
+                'estado_solicitud' => $user['estado_solicitud'],
+                'fecha_solicitud' => $user['fecha_solicitud'],
+                'fecha_resolucion' => $user['fecha_resolucion'],
+                'observaciones' => $user['observaciones'],
+                'imagen' => $user['imagen'] ?? null
             ]
         ];
 
+        // Obtener listado completo de dependencias para el <select>
         $dependenciaCollection = new \Paw\App\Models\DependenciasCollection($this->logger, $this->qb);
         $dependencias = $dependenciaCollection->getDependencias();
 
-        $this->logger->info("datos: ",[$datos]);
+        $this->logger->info("👤 Datos de usuario para perfil:", [$datos]);
 
         view('perfil.view', array_merge(
             $datos + ['dependencias' => $dependencias],
             $this->menu
         ));
     }
+
 
 
     public function asignarDestino()

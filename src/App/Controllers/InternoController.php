@@ -24,10 +24,10 @@ class InternoController extends Controller
         $this->usuario = new UserController();
         $this->usuario->setLogger($log);
 
-        $log->info("info __construct: this->menu",  [$this->menu]);
+        // $log->info("info __construct: this->menu",  [$this->menu]);
         $this->menu = $this->usuario->adjustMenuForSession($this->menu);        
 
-        $log->info("this->menu: ", [$this->menu]);
+        // $log->info("this->menu: ", [$this->menu]);
     }
 
 

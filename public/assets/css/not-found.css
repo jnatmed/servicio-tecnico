@@ -11,3 +11,17 @@
     justify-content: center; /* Alinea el contenido al centro horizontal */
     align-items: center; /* Alinea el contenido al centro vertical */
 }
+
+.main-forbidden {
+    background-image: url('/assets/imgs/error-403-access-denied.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

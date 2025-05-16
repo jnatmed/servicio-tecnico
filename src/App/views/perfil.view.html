@@ -17,16 +17,41 @@
                     <p>
                       <label>Dependencia:</label>
                       <span class="user-info user-info-dependencia">
-                          {% if usuario.dependencia %}
-                              {{ usuario.dependencia }}
+                          {% if usuario.dependencia_descripcion %}
+                              {{ usuario.dependencia_descripcion }}
+                              {% if usuario.estado_solicitud == 'solicitado' %}
+                                  <span class="badge bg-warning text-dark ms-2">Pendiente</span>
+                              {% elseif usuario.estado_solicitud == 'confirmado' %}
+                                  <span class="badge bg-success ms-2">Confirmada</span>
+                              {% elseif usuario.estado_solicitud == 'rechazado' %}
+                                  <span class="badge bg-danger ms-2">Rechazada</span>
+                              {% endif %}
+                              {% if usuario.estado_solicitud == 'rechazado' and usuario.observaciones %}
+                                  <div class="mt-1 text-danger small">
+                                      <strong>Motivo:</strong> {{ usuario.observaciones }}
+                                  </div>
+                              {% endif %}
+
                           {% else %}
                               <span class="text-muted">Sin asignar</span>
                           {% endif %}
                       </span>
-                      <button class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#modalAsignarDependencia">
-                          Solicitar asignacion de Dependencia
-                      </button>
-                  </p>
+                    <button class="btn btn-sm btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#modalAsignarDependencia">
+                        {% if usuario.estado_solicitud == 'confirmado' %}
+                            Solicitar cambio de Dependencia
+                        {% else %}
+                            Solicitar asignación de Dependencia
+                        {% endif %}
+                    </button>
+                    <p class="mt-3 text-muted small">
+                        <i class="fa-solid fa-circle-info text-primary me-1"></i>
+                        Ante cualquier duda, comuníquese con el área de sistemas al correo 
+                        <a href="mailto:informatica@encope.gob.ar">informatica@encope.gob.ar</a>.
+                    </p>
+
+
+                    </p>
+
                   
                 </div>
 
@@ -100,14 +125,19 @@
                     // Actualiza el texto en el perfil
                     const spanDependencia = document.querySelector('.user-info-dependencia');
                     if (spanDependencia) {
-                        spanDependencia.textContent = resultado.nombre_dependencia;
+                        spanDependencia.innerHTML = `
+                            ${resultado.nombre_dependencia}
+                            <span class="badge bg-warning text-dark ms-2">Pendiente</span>
+                        `;
                         spanDependencia.classList.remove('text-muted');
                     }
+
                 }
             });
             </script>
             
                       
     </body>
+
 </html>
     

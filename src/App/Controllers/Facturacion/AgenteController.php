@@ -31,10 +31,10 @@ class AgenteController extends Controller
 
         $log->debug("Datos modelo: " , [$this->model]);
 
-        $log->info("info __construct: this->menu",  [$this->menu]);
+        // $log->info("info __construct: this->menu",  [$this->menu]);
         $this->menu = $this->usuario->adjustMenuForSession($this->menu);        
 
-        $log->info("this->menu: ", [$this->menu]);
+        // $log->info("this->menu: ", [$this->menu]);
     }
 
     public function new()
