@@ -145,18 +145,21 @@ class UserCollection extends Model
         try {
             $this->logger->info("✅ Confirmando asignación para usuario $usuarioId");
 
-            // 1. Obtener ID de la última solicitud
-            $sql = "SELECT id FROM solicitud_asignacion_dependencia
+            // 1. Obtener ID y dependencia de la última solicitud
+            $sql = "SELECT id, dependencia_id FROM solicitud_asignacion_dependencia
                     WHERE usuario_id = :usuario_id
                     ORDER BY fecha_solicitud DESC
                     LIMIT 1";
 
             $resultado = $this->queryBuilder->query($sql, ['usuario_id' => $usuarioId]);
-            $solicitudId = $resultado[0]['id'] ?? null;
+            $solicitud = $resultado[0] ?? null;
 
-            if (!$solicitudId) {
+            if (!$solicitud) {
                 throw new Exception("No se encontró solicitud activa para el usuario.");
             }
+
+            $solicitudId = $solicitud['id'];
+            $dependenciaId = $solicitud['dependencia_id'];
 
             // 2. Confirmar solicitud
             $sqlUpdate = "
@@ -172,13 +175,17 @@ class UserCollection extends Model
                 'obs' => $observaciones
             ]);
 
-            $this->logger->info("✅ Solicitud confirmada correctamente para usuario $usuarioId");
+            $this->logger->info("✅ Solicitud confirmada correctamente para usuario $usuarioId, dependencia $dependenciaId");
+
+            // 3. Devolver ID de dependencia
+            return $dependenciaId;
 
         } catch (\Exception $e) {
             $this->logger->error("❌ Error al confirmar solicitud: " . $e->getMessage());
             throw $e;
         }
     }
+
 
 
     public function rechazarAsignacionDeDependencia(int $usuarioId, string $observaciones = '')

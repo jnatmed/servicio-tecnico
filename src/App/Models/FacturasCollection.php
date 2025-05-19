@@ -214,33 +214,44 @@ class FacturasCollection extends Model
         
     public function getProximoNumeroFacturaPorUsuario($usuarioId) {
         $sql = "
-            SELECT nf.id, nf.ultimo_utilizado, nf.hasta, d.punto_venta, u.dependencia_id
-            FROM usuarios u
-            JOIN numerador_factura nf ON u.dependencia_id = nf.dependencia_id
-            JOIN dependencia d ON nf.dependencia_id = d.id
-            WHERE u.id = :usuarioId
+            SELECT 
+                nf.id AS id_numerador,
+                nf.ultimo_utilizado,
+                nf.hasta,
+                d.punto_venta,
+                d.id AS dependencia_idUser,
+                s.estado AS estado_dependencia
+            FROM solicitud_asignacion_dependencia s
+            JOIN dependencia d ON s.dependencia_id = d.id
+            JOIN numerador_factura nf ON nf.dependencia_id = d.id
+            WHERE s.usuario_id = :usuarioId
+            ORDER BY s.fecha_solicitud DESC
             LIMIT 1
         ";
-    
+
         $result = $this->queryBuilder->query($sql, ['usuarioId' => $usuarioId]);
-    
+
         if (count($result) === 0) {
-            throw new Exception("No se encontró numerador de factura para este usuario.");
+            throw new Exception("No se encontró solicitud de dependencia para este usuario.");
         }
-    
+
         $numerador = $result[0];
-    
-        if ($numerador['ultimo_utilizado'] >= $numerador['hasta']) {
-            throw new Exception("Se alcanzó el límite de numeración para este punto de venta.");
+
+        if ($numerador['estado_dependencia'] === 'confirmado') {
+            if ($numerador['ultimo_utilizado'] >= $numerador['hasta']) {
+                throw new Exception("Se alcanzó el límite de numeración para este punto de venta.");
+            }
         }
-    
+
         return [
-            'id_numerador' => $numerador['id'],
+            'id_numerador' => $numerador['id_numerador'],
             'proximo_numero' => $numerador['ultimo_utilizado'] + 1,
             'punto_venta' => $numerador['punto_venta'],
-            'dependencia_idUser' => $numerador['dependencia_id']           
+            'dependencia_idUser' => $numerador['dependencia_idUser'],
+            'estado_dependencia' => $numerador['estado_dependencia']
         ];
     }
+
     
     public function actualizarNumeradorFactura($idNumerador, $nuevoValor) {
         $sql = "UPDATE numerador_factura SET ultimo_utilizado = :nuevoValor WHERE id = :idNumerador";

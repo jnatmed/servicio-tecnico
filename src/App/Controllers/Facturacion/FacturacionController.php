@@ -179,7 +179,8 @@ class FacturacionController extends Controller
                 [ 
                     "dependencias" => $this->model->getDependencias(), 
                     'punto_venta' => $puntoDeVenta,
-                    'dependencia_id_user' => $dependencia_idUser
+                    'dependencia_id_user' => $dependencia_idUser,
+                    'estado_dependencia' => $numeradorInfo['estado_dependencia'] ?? 'desconocido'
                 ],
                 ['monto_minimo_cuota' => 10000],
                 $this->menu

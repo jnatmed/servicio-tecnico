@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const nuevoRolId = document.getElementById("nuevo_rol").value;
 
         if (!nuevoRolId) {
-            alert("Seleccioná un nuevo rol.");
+            mostrarErrorEnModal("Seleccioná un nuevo rol.", "modal-error-msg-rol");
             return;
         }
 
@@ -148,13 +148,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 const modal = bootstrap.Modal.getInstance(document.getElementById("modalEditarRol"));
                 modal.hide();
             } else {
-                alert("Error al actualizar el rol: " + (data.error || "Desconocido"));
+                mostrarErrorEnModal("Error al actualizar el rol: " + (data.error || "Desconocido"), "modal-error-msg-rol");
             }
         })
 
         .catch(error => {
             console.error("Error al actualizar rol:", error);
-            alert("Ocurrió un error al intentar actualizar el rol.");
+            mostrarErrorEnModal("Ocurrió un error al intentar actualizar el rol.", "modal-error-msg-rol");
         });
     });
 
@@ -316,6 +316,32 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchUsuarios(currentPage, searchValue, true);
     }
 
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('hidden.bs.modal', function () {
+            const errorDiv = modal.querySelector('.alert');
+            if (errorDiv) {
+                errorDiv.classList.add('d-none');
+                errorDiv.textContent = '';
+            }
+        });
+    });
+    
+    function mostrarErrorEnModal(mensaje, modalId) {
+        console.log("📣 Entrando a mostrarErrorEnModal()");
+        console.log("📩 Mensaje recibido:", mensaje);
+        console.log("🔎 Buscando div con id:", modalId);
+
+        const errorDiv = document.getElementById(modalId);
+
+        if (errorDiv) {
+            console.log("✅ Elemento encontrado, mostrando mensaje");
+            errorDiv.textContent = mensaje;
+            errorDiv.classList.remove("d-none");
+        } else {
+            console.warn("⚠️ No se encontró el elemento con id:", modalId);
+        }
+    }
+
     fetchUsuarios(currentPage, '', true);
 
     document.addEventListener("click", function (e) {
@@ -366,20 +392,34 @@ document.addEventListener("DOMContentLoaded", function () {
                 observaciones: observaciones
             })
         })
-        .then(res => res.json())
-        .then(data => {
+        .then(async res => {
+            let data = {};
+
+            try {
+                data = await res.json();
+            } catch (jsonError) {
+                console.error("No se pudo parsear JSON:", jsonError);
+            }
+
+            if (!res.ok) {
+                console.warn("Respuesta con error HTTP:", res.status);
+                mostrarErrorEnModal(data.error || "Error " + res.status + " al procesar la solicitud.", "modal-error-msg-solicitud");
+                return;
+            }
+
             if (data.success) {
                 fetchUsuarios(currentPage, searchInput.value, true);
-                const modal = bootstrap.Modal.getInstance(document.getElementById("modalGestionarSolicitud"));
+                const modal = bootstrap.Modal.getInstance(document.getElementById("modalGestionarSolicitud"), "modal-error-msg-solicitud");
                 modal.hide();
             } else {
-                alert("Error al confirmar solicitud: " + (data.error || "Desconocido"));
+                mostrarErrorEnModal(data.error || "Error inesperado.", "modal-error-msg-solicitud");
             }
         })
         .catch(err => {
             console.error("Error al confirmar solicitud:", err);
-            alert("Error al procesar la solicitud.");
+            mostrarErrorEnModal("Error al procesar la solicitud.", "modal-error-msg-solicitud");
         });
+
     });
 
     document.getElementById("btnRechazarSolicitud").addEventListener("click", function () {
@@ -404,14 +444,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 const modal = bootstrap.Modal.getInstance(document.getElementById("modalGestionarSolicitud"));
                 modal.hide();
             } else {
-                alert("Error al rechazar solicitud: " + (data.error || "Desconocido"));
+                mostrarErrorEnModal("Error al rechazar solicitud: " + (data.error || "Desconocido"), "modal-error-msg-solicitud");
             }
         })
         .catch(err => {
             console.error("Error al rechazar solicitud:", err);
-            alert("Error al procesar la solicitud.");
+            mostrarErrorEnModal("Error al procesar la solicitud.", "modal-error-msg-solicitud");
         });
     });
+
 
 
 
@@ -435,6 +476,8 @@ document.addEventListener("DOMContentLoaded", function () {
           </select>
         </div>
       </div>
+     <div id="modal-error-msg-rol" class="alert alert-danger d-none" role="alert"></div>
+
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
         <button type="submit" class="btn btn-primary">Guardar cambios</button>
@@ -458,6 +501,7 @@ document.addEventListener("DOMContentLoaded", function () {
           <textarea id="observaciones" name="observaciones" class="form-control" rows="3"></textarea>
         </div>
       </div>
+      <div id="modal-error-msg-solicitud" class="alert alert-danger d-none" role="alert"></div>
       <div class="modal-footer">
         <button type="button" id="btnRechazarSolicitud" class="btn btn-danger">Rechazar</button>
         <button type="submit" class="btn btn-success">Confirmar Asignación</button>

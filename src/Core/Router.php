@@ -94,94 +94,147 @@ Class Router
         $alreadyCalled = false; 
 
         try {
-                list($path, $http_method) = $request->route();
+            list($path, $http_method) = $request->route();
 
-                $session = new Session();
+            $session = new Session();
 
-                $this->logger->info("protectedRoutes: ", [$this->protectedRoutes]);
-                $this->logger->info("path: ", [$path]);
-                $this->logger->info("session: ", [$_SESSION]);
-                
+            $this->logger->info("protectedRoutes: ", [$this->protectedRoutes]);
+            $this->logger->info("path: ", [$path]);
+            $this->logger->info("session: ", [$_SESSION]);
 
-                if (isset($this->protectedRoutes[$path])) {
-                    if (!$session->isLoggedIn()) {
-                        $this->logger->warning("🔐 Acceso no autenticado bloqueado", [
-                            "Path" => $path,
-                            "Method" => $http_method
+            if (isset($this->protectedRoutes[$path])) {
+                if (!$session->isLoggedIn()) {
+                    $this->logger->warning("🔐 Acceso no autenticado bloqueado", [
+                        "Path" => $path,
+                        "Method" => $http_method
+                    ]);
+
+                    if ($request->isAjax()) {
+                        $this->logger->info("🔐 Acceso no autenticado bloqueado por AJAX");
+
+                        header('Content-Type: application/json', true, 401);
+                        echo json_encode([
+                            'success' => false,
+                            'error' => '401 - No autenticado',
+                            'message' => 'Debes iniciar sesión para acceder a este recurso.'
                         ]);
-                        // header('Location: /user/login');
-                        // exit;
+                        exit;
                     }
 
-                    $allowedRoles = $this->protectedRoutes[$path]['roles'] ?? [];
+                    header('Location: /user/login');
+                    exit;
+                }
 
-                    if (!empty($allowedRoles)) {
-                        $userRole = $session->get('usuario_rol');
-                        
-                        if (!in_array($userRole, $allowedRoles)) {
-                            $this->logger->warning("🚫 Acceso denegado por rol", [
-                                "Path" => $path,
-                                "RolUsuario" => $userRole,
-                                "RolesPermitidos" => $allowedRoles
+                $allowedRoles = $this->protectedRoutes[$path]['roles'] ?? [];
+
+                if (!empty($allowedRoles)) {
+                    $userRole = $session->get('usuario_rol');
+
+                    if (!in_array('*', $allowedRoles) && !in_array($userRole, $allowedRoles)) {
+                        $this->logger->warning("🚫 Acceso denegado por rol", [
+                            "Path" => $path,
+                            "RolUsuario" => $userRole,
+                            "RolesPermitidos" => $allowedRoles
+                        ]);
+
+                        if ($request->isAjax()) {
+                            $this->logger->warning("🚫 Acceso denegado por rol mediante AJAX");
+                            header('Content-Type: application/json');
+                            http_response_code(403);
+                            echo json_encode([
+                                'success' => false, 
+                                'error' => '403 - Acceso denegado para el rol ' . $userRole
                             ]);
-                            // throw new ForbiddenException("403 - Acceso denegado al recurso", 403);
+                            exit;
+                        } else {
+                            throw new ForbiddenException("403 - Acceso denegado al recurso", 403);
                         }
-
-                        $this->logger->info("✅ Acceso permitido", [
-                            "Path" => $path,
-                            "Usuario" => $session->get('usuario'),
-                            "Rol" => $userRole
-                        ]);
-                    } else {
-                        $this->logger->info("🔐 Ruta protegida sin restricción de roles", [
-                            "Path" => $path
-                        ]);
                     }
+
+                    $this->logger->info("✅ Acceso permitido", [
+                        "Path" => $path,
+                        "Usuario" => $session->get('usuario'),
+                        "Rol" => $userRole
+                    ]);
+                } else {
+                    $this->logger->info("🔐 Ruta protegida sin restricción de roles", [
+                        "Path" => $path
+                    ]);
                 }
+            }
 
+            list($controller, $method) = $this->getController($path, $http_method);
 
-                list($controller, $method) = $this->getController($path, $http_method);
-                $this->logger->info("Status Code: 200", [
-                    "Path" => $path,
-                    "Controller" => $controller,
-                    "Method" => $method
+            $this->logger->info("Status Code: 200", [
+                "Path" => $path,
+                "Controller" => $controller,
+                "Method" => $method
+            ]);
+
+            $this->call($controller, $method);
+            $alreadyCalled = true;
+
+        } catch (ForbiddenException $e) {
+            $this->logger->error("Status Code: 403 - Forbidden", [
+                "ERROR" => $e->getMessage()
+            ]);
+
+            if ($request->isAjax()) {
+                header('Content-Type: application/json', true, 403);
+                echo json_encode([
+                    'success' => false,
+                    'error' => '403 - Acceso denegado',
+                    'message' => $e->getMessage()
                 ]);
+                exit;
+            }
+
+            list($controller, $method) = $this->getController($this->forbidden, "GET");
+            $this->call($controller, $method);
+            $alreadyCalled = true;
+
+        } catch (RouteNotFoundException $e) {
+            $this->logger->error("Status Code: 404 - Route Not Found", [
+                "ERROR" => [$path, $http_method]
+            ]);
+
+            if ($request->isAjax()) {
+                header('Content-Type: application/json', true, 404);
+                echo json_encode([
+                    'success' => false,
+                    'error' => '404 - Ruta no encontrada',
+                    'message' => 'No se encontró una ruta para este recurso.'
+                ]);
+                exit;
+            }
+
+            list($controller, $method) = $this->getController($this->notFound, "GET");
+            $this->call($controller, $method);
+            $alreadyCalled = true;
+
+        } catch (Exception $e) {
+            $this->logger->error("Status Code: 500 - Internal Server Error", [
+                "ERROR" => $e
+            ]);
+
+            if ($request->isAjax()) {
+                header('Content-Type: application/json', true, 500);
+                echo json_encode([
+                    'success' => false,
+                    'error' => '500 - Error interno del servidor',
+                    'message' => $e->getMessage()
+                ]);
+                exit;
+            }
+
+            list($controller, $method) = $this->getController($this->internalError, "GET");
+            $this->call($controller, $method);
+            $alreadyCalled = true;
+        } finally {
+            if (!$alreadyCalled) {
                 $this->call($controller, $method);
-                $alreadyCalled = true;
-            } catch (ForbiddenException $e) {
-                list($controller, $method) = $this->getController($this->forbidden, "GET");
-                $this->logger->error("Status Code: 403 - Forbidden", [
-                    "ERROR" => $e->getMessage()
-                ]);
-                $this->call($controller, $method);   
-                $alreadyCalled = true;
-
-            } catch (RouteNotFoundException $e) {
-                list($controller, $method) = $this->getController($this->notFound, "GET");
-                $this->logger
-                    ->error(
-                        "Status Code: 404 - Route Not Found",
-                        [
-                            "ERROR" => [$path, $http_method]
-                        ]
-                    );
-                $this->call($controller, $method);   
-                $alreadyCalled = true;                    
-            } catch (Exception $e) {
-                list($controller, $method) = $this->getController($this->internalError, "GET");
-                $this->logger
-                ->error(
-                    "Status Code: 500 - Internal Server Error",
-                    [
-                        "ERROR" => $e
-                        ]
-                    );
-                $this->call($controller, $method);   
-                $alreadyCalled = true;                    
-            } finally {                    
-                if (!$alreadyCalled) {
-                    $this->call($controller, $method);
-                }
-            } 
+            }
+        }
     }
+
 }

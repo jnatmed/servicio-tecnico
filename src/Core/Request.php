@@ -1,9 +1,19 @@
 <?php
 
 namespace Paw\Core;
+use Paw\Core\Traits\Loggable;
 
 class Request 
 {
+    use Loggable;
+
+    public function __construct($logger = null)
+    {
+        if(!is_null($logger)){
+            $this->setLogger($logger);
+        }
+    }
+
     private $segments = [];
 
     public function uri() 
@@ -27,14 +37,25 @@ class Request
     }
     public function isAjax()
     {
-        return (
+        $isAjax = (
             isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
             strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'
         ) || (
             isset($_SERVER['HTTP_ACCEPT']) &&
             strpos($_SERVER['HTTP_ACCEPT'], 'application/json') !== false
         );
+
+        if (isset($this->logger)) {
+            $this->logger->info('🔍 Verificación de solicitud AJAX', [
+                'HTTP_X_REQUESTED_WITH' => $_SERVER['HTTP_X_REQUESTED_WITH'] ?? 'no definido',
+                'HTTP_ACCEPT' => $_SERVER['HTTP_ACCEPT'] ?? 'no definido',
+                'Resultado' => $isAjax ? 'Sí (AJAX)' : 'No (común)'
+            ]);
+        }
+
+        return $isAjax;
     }
+
     
     public function getKeySession($key){
         return $_SESSION[$key] ?? null;

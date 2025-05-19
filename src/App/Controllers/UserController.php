@@ -19,6 +19,7 @@ class UserController extends Controller
     use Loggable;
     public $ldap;
     public ?string $modelName = UserCollection::class;    
+    public $dependencia;
 
     public function __construct()
     {
@@ -27,6 +28,9 @@ class UserController extends Controller
         parent::__construct();     
 
         $this->ldap = new LDAP($config);
+
+        $this->dependencia = new DependenciasCollection($log, $this->qb);
+
 
         $this->setLogger($log);
 
@@ -153,7 +157,12 @@ class UserController extends Controller
                 throw new Exception("Falta el ID del usuario.");
             }
 
-            $this->model->confirmarAsignacionDeDependencia($usuarioId, $obs);
+            $dependenciaId = $this->model->confirmarAsignacionDeDependencia($usuarioId, $obs);
+
+            $this->setDependenciaId($dependenciaId);
+
+            $DatosDependencia = $this->dependencia->getDependencias($this->getDependenciaId());
+            $this->setDescripcionDependencia($DatosDependencia[0]['descripcion'] ?? '');
 
             echo json_encode(['success' => true]);
 
@@ -355,12 +364,27 @@ class UserController extends Controller
     public function setDependenciaId($idDep)
     {
         $_SESSION['dependencia_id'] = $idDep;
+
+        if (isset($this->logger)) {
+            $this->logger->info("📌 Dependencia asignada a sesión", [
+                'dependencia_id' => $idDep
+            ]);
+        }
     }
 
     public function getDependenciaId()
     {
-        return $_SESSION['dependencia_id'];
+        $id = $_SESSION['dependencia_id'] ?? null;
+
+        if (isset($this->logger)) {
+            $this->logger->info("📤 Recuperando dependencia de sesión", [
+                'dependencia_id' => $id
+            ]);
+        }
+
+        return $id;
     }
+
 
     public function setDescripcionDependencia($descripcion)
     {

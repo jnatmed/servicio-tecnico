@@ -27,8 +27,8 @@
             </div>                            
 
             <label for="dependencia" class="form-label">Dependencia (Punto de Venta):</label>
-            <select id="dependencia" name="dependencia" class="form-select" required>
-                <option value="" {% if dependencia_id_user is not defined or dependencia_id_user == '' %}selected{% endif %}>Elija un destino</option>
+            <select id="dependencia" name="dependencia_visible" class="form-select" disabled>
+                <option value="">Elija un destino</option>
                 {% for dependencia in dependencias %}
                     {% set valor = dependencia.id %}
                     <option value="{{ valor }}" {% if valor == dependencia_id_user %}selected{% endif %}>
@@ -40,6 +40,9 @@
                     </option>
                 {% endfor %}
             </select>
+
+            <input type="hidden" id="dependencia" name="dependencia" value="{{ dependencia_id_user }}">
+
             
             <div class="mb-3">
                 <label for="condicion_venta" class="form-label">Condición de Venta:</label>
@@ -162,21 +165,51 @@
 
 <!-- Modal flotante para mensajes -->
 <div class="modal fade" id="mensajeModal" tabindex="-1" aria-labelledby="mensajeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content text-center">
-        <div class="modal-header">
-          <h5 class="modal-title" id="mensajeModalLabel">Atención</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body" id="mensajeModalContenido">
-          <!-- Aquí va el mensaje dinámico -->
-        </div>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-center">
+      <div class="modal-header">
+        <h5 class="modal-title" id="mensajeModalLabel">Atención</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="mensajeModalContenido">
+        <!-- Aquí va el mensaje dinámico -->
       </div>
     </div>
-  </div>  
+  </div>
+</div> 
 
 {% include "parts/cierre-modulos.view.html" %}
 {% include 'parts/footer.view.html' %}
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const estadoDependencia = "{{ estado_dependencia|lower }}";
+
+        console.log("🔍 Estado recibido:", estadoDependencia);
+
+        if (!estadoDependencia || estadoDependencia === 'solicitado' || estadoDependencia === 'desconocido') {
+            mostrarModalBloqueante("El usuario no tiene una dependencia confirmada aún. La solicitud de asignación no ha sido autorizada. Por favor, comuníquese con el área correspondiente.");
+        }
+
+        function mostrarModalBloqueante(mensaje) {
+            const modalBody = document.getElementById("mensajeModalContenido");
+            modalBody.innerHTML = mensaje;
+
+            const modal = new bootstrap.Modal(document.getElementById("mensajeModal"), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            modal.show();
+
+            const form = document.getElementById("facturaForm");
+            if (form) {
+                Array.from(form.elements).forEach(el => {
+                    el.disabled = true;
+                });
+            }
+        }
+    });
+</script>
 
 </body>
 </html>

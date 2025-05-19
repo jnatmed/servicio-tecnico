@@ -53,7 +53,14 @@ class ProductoController extends Controller
 
                 // Procesar imagen si se cargó una
                 if ($_FILES['imagen']['tmp_name']) {
-                    $imagen = new Imagen($_FILES['imagen'], $this->logger);
+                    $imagen = new Imagen(
+                        $_FILES['imagen']['name'],
+                        $_FILES['imagen']['type'],
+                        $_FILES['imagen']['tmp_name'],
+                        $_FILES['imagen']['size'],
+                        $_FILES['imagen']['error'],
+                        $this->logger
+                    );
                     $imagen->guardar();
                     $data['path_imagen'] = $imagen->getNombreArchivo();
                 }
@@ -298,7 +305,8 @@ class ProductoController extends Controller
 
         $this->logger->info("📡 Entrando al método listar()", [
             'jsonList' => $jsonList,
-            'search' => $searchItem
+            'search' => $searchItem,
+            'usuarioDependencia' => $usuarioDependencia
         ]);
 
         if ($jsonList) {
@@ -340,8 +348,9 @@ class ProductoController extends Controller
             try {
                 $this->logger->info("🖥️ Solicitud de vista completa (no JSON)");
     
+
                 $listaProductos = $this->model->getProductosConUltimoPrecio($usuarioDependencia);
-                $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos)]);
+                $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos), 'usuarioDependencia' => $usuarioDependencia]);
     
                 view('facturacion/productos/listado', array_merge(
                     [
