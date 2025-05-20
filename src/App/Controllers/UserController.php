@@ -157,8 +157,17 @@ class UserController extends Controller
                 throw new Exception("Falta el ID del usuario.");
             }
 
-            $dependenciaId = $this->model->confirmarAsignacionDeDependencia($usuarioId, $obs);
+            $resultado = $this->model->confirmarAsignacionDeDependencia($usuarioId, $obs);
 
+            if (!$resultado['success']) {
+                echo json_encode([
+                    'success' => false,
+                    'error' => $resultado['motivo'] ?? 'Motivo desconocido'
+                ]);
+                return;
+            }
+
+            $dependenciaId = $resultado['dependencia_id'];
             $this->setDependenciaId($dependenciaId);
 
             $DatosDependencia = $this->dependencia->getDependencias($this->getDependenciaId());
@@ -168,9 +177,13 @@ class UserController extends Controller
 
         } catch (\Exception $e) {
             $this->logger->error("❌ Error al confirmar asignación: " . $e->getMessage());
-            echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            echo json_encode([
+                'success' => false,
+                'error' => "Error inesperado: " . $e->getMessage()
+            ]);
         }
     }
+
 
     public function rechazarSolicitudDependencia()
     {
@@ -268,7 +281,7 @@ class UserController extends Controller
                     'tipo_usuario' => 'group',
                     'email' => 'email',
                     'account' => 'account',
-                    'usuario_rol' => 'rol' // 👈 nuevo campo
+                    'usuario_rol' => 'rol' 
                 ];
                 $this->cargarSesion($userInfo, $parametros);
 
@@ -310,6 +323,11 @@ class UserController extends Controller
                 ...$this->menu
             ]);
         }
+    }
+
+    public function getRolUsuario()
+    {
+        return $_SESSION['usuario_rol']; 
     }
 
     function cargarSesion($userInfo, $parametros) {
@@ -497,28 +515,35 @@ class UserController extends Controller
     {
         $dependencia_id = $this->request->get('dependencia_id');
         $ordenativa_funcion = $this->request->get('ordenativa_funcion');
-        
+
         // Obtener ID del usuario logueado (desde sesión)
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
-    
+
         $usuario_id = $this->getIdUser();
-    
+
         $this->logger->info("usuario id: ", [$usuario_id, $_SESSION]);
 
         if (!$usuario_id) {
             echo json_encode(['ok' => false, 'error' => 'Usuario no autenticado']);
             return;
         }
-    
+
         try {
-            // Actualiza la dependencia del usuario
-            $this->model->solicitarAsignacionDependencia($usuario_id, $dependencia_id, $ordenativa_funcion);
+            $resultado = $this->model->solicitarAsignacionDependencia($usuario_id, $dependencia_id, $ordenativa_funcion);
+
+            if (!$resultado['success']) {
+                echo json_encode([
+                    'ok' => false,
+                    'error' => $resultado['motivo'] ?? 'No se pudo registrar la solicitud'
+                ]);
+                return;
+            }
 
             // Obtener nombre de la dependencia asignada
             $dependencia = $this->model->getNombrePorId($dependencia_id);
-            
+
             echo json_encode([
                 'ok' => true,
                 'nombre_dependencia' => $dependencia
@@ -527,9 +552,10 @@ class UserController extends Controller
             $this->logger->error("Error al asignar dependencia: " . $e->getMessage());
             echo json_encode(['ok' => false, 'error' => 'Error al guardar los datos.']);
         }
-    
+
         exit;
     }
+
     
     public function enviarMail()
     {

@@ -12,18 +12,36 @@ class ProductosCollection extends Model
 {
     use Loggable;
     private $table = 'producto';
+    public $usuariosAdmin = [];
 
-    public function __construct($qb=null, $logger=null) {
+    public function __construct($qb = null, $logger = null, $usuariosAdmin = []) {
         if ($qb !== null) {
             parent::setQueryBuilder($qb);
         }
-    
+
         if ($logger !== null) {
             parent::setLogger($logger);
         }
-
+        if ($usuariosAdmin !== []){
+            $this->setUsuariosAdmin($usuariosAdmin);
+        }
     }
 
+    public function setUsuariosAdmin(array $roles): void
+    {
+        $this->usuariosAdmin = $roles;
+    }
+
+    public function getUsuariosAdmin(): array
+    {
+        return $this->usuariosAdmin;
+    }
+
+    // Método extra útil para verificar si un rol está autorizado
+    public function esAdminPorRol(string $rol): bool
+    {
+        return in_array($rol, $this->usuariosAdmin, true);
+    }
     public function actualizarProducto(array $data)
     {
         try {
@@ -376,7 +394,7 @@ class ProductosCollection extends Model
         }
     }
 
-    public function getProductosConUltimoPrecio($usuarioDependencia = null)
+    public function getProductosConUltimoPrecio($usuarioDependencia = null, $rolDelUsuario = null)
     {
         try {
             $sql = "
@@ -397,25 +415,26 @@ class ProductosCollection extends Model
                 ) pr ON p.id = pr.id_producto
                 WHERE p.estado = 'a_la_venta'
             ";
-    
+
             $params = [];
-    
-            if (!is_null($usuarioDependencia)) {
+
+            // Solo filtra por dependencia si el usuario NO es administrador
+            if (!$this->esAdminPorRol($rolDelUsuario) && !is_null($usuarioDependencia)) {
                 $sql .= " AND p.id_unidad_q_fabrica = :dependencia";
                 $params['dependencia'] = $usuarioDependencia;
             }
-    
+
             $sql .= " ORDER BY p.created_at DESC";
-    
+
             $productos = $this->queryBuilder->query($sql, $params);
             $productosConStock = [];
-    
+
             foreach ($productos as $producto) {
                 $stock = $this->getStockActual($producto['id']);
                 $producto['stock_actual'] = $stock;
                 $productosConStock[] = $producto;
             }
-    
+
             return $productosConStock;
         } catch (Exception $e) {
             $this->logger->error("❌ Error al obtener productos con precio más reciente: " . $e->getMessage());

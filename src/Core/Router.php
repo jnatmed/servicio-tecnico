@@ -67,13 +67,20 @@ Class Router
         return explode('@', $this->routes[$http_method][$path]);
     }
 
-    public function call($controller, $method) {
+    public function call($controller, $method, $allowedRoles = []) {
         $controller = "Paw\\App\\Controllers\\{$controller}";
         if (!class_exists($controller)) {
             throw new Exception("Controller '{$controller}' no encontrado.");
         }
-    
-        $objController = new $controller;
+        
+        if ($allowedRoles !== []){
+            $this->logger->info("📤✅📤✅ Seteando Controller con rolesPermitidos", [$controller, $allowedRoles]);
+            $objController = new $controller($allowedRoles);
+        }else{
+            $this->logger->info("📤 Seteando Controller SIN rolesPermitidos", [$controller]);
+            $objController = new $controller;
+        }
+        
 
         // $this->logger->info("Calling objController objController, model ", [$objController->modelName, $objController]);
         if (method_exists($objController, 'setLogger')) {
@@ -170,8 +177,12 @@ Class Router
                 "Controller" => $controller,
                 "Method" => $method
             ]);
-
-            $this->call($controller, $method);
+            
+            if (isset($allowedRoles) && $allowedRoles !== null) {
+                $this->call($controller, $method, $allowedRoles);
+            } else {
+                $this->call($controller, $method);
+            }
             $alreadyCalled = true;
 
         } catch (ForbiddenException $e) {
@@ -190,7 +201,11 @@ Class Router
             }
 
             list($controller, $method) = $this->getController($this->forbidden, "GET");
-            $this->call($controller, $method);
+            if (isset($allowedRoles) && $allowedRoles !== null) {
+                $this->call($controller, $method, $allowedRoles);
+            } else {
+                $this->call($controller, $method);
+            }
             $alreadyCalled = true;
 
         } catch (RouteNotFoundException $e) {
@@ -209,7 +224,11 @@ Class Router
             }
 
             list($controller, $method) = $this->getController($this->notFound, "GET");
-            $this->call($controller, $method);
+            if (isset($allowedRoles) && $allowedRoles !== null) {
+                $this->call($controller, $method, $allowedRoles);
+            } else {
+                $this->call($controller, $method);
+            }
             $alreadyCalled = true;
 
         } catch (Exception $e) {
@@ -228,11 +247,19 @@ Class Router
             }
 
             list($controller, $method) = $this->getController($this->internalError, "GET");
-            $this->call($controller, $method);
+            if (isset($allowedRoles) && $allowedRoles !== null) {
+                $this->call($controller, $method, $allowedRoles);
+            } else {
+                $this->call($controller, $method);
+            }
             $alreadyCalled = true;
         } finally {
             if (!$alreadyCalled) {
-                $this->call($controller, $method);
+                if (isset($allowedRoles) && $allowedRoles !== null) {
+                    $this->call($controller, $method, $allowedRoles);
+                } else {
+                    $this->call($controller, $method);
+                }
             }
         }
     }

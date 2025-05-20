@@ -94,6 +94,8 @@
                            value="{{ usuario.ordenativa_funcion ?? '' }}">
                   </div>
           
+                    <!-- Mensaje de error -->
+                    <div id="errorMensajeAsignacion" class="alert alert-danger d-none" role="alert"></div>
                 </div>
                 <div class="modal-footer">
                   <button type="submit" class="btn btn-primary">Guardar</button>
@@ -118,11 +120,9 @@
                 const resultado = await response.json();
             
                 if (resultado.ok && resultado.nombre_dependencia) {
-                    // Cierra el modal
                     const modal = bootstrap.Modal.getInstance(document.getElementById('modalAsignarDependencia'));
                     modal.hide();
-            
-                    // Actualiza el texto en el perfil
+
                     const spanDependencia = document.querySelector('.user-info-dependencia');
                     if (spanDependencia) {
                         spanDependencia.innerHTML = `
@@ -132,7 +132,16 @@
                         spanDependencia.classList.remove('text-muted');
                     }
 
+                    // Limpia el mensaje de error si hubiera
+                    document.getElementById('errorMensajeAsignacion').classList.add('d-none');
+                    document.getElementById('errorMensajeAsignacion').innerText = '';
+
+                } else {
+                    const errorBox = document.getElementById('errorMensajeAsignacion');
+                    errorBox.innerText = resultado.error || 'Ocurrió un error al procesar la solicitud.';
+                    errorBox.classList.remove('d-none');
                 }
+
             });
             </script>
             

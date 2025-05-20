@@ -22,11 +22,11 @@ class ProductoController extends Controller
     public $producto;
     public $configFacturacion;
 
-    public function __construct()
+    public function __construct($usuariosAdmin=null)
     {
         global $log;
         
-        parent::__construct();     
+        parent::__construct($usuariosAdmin);     
 
         $this->usuario = new UserController();
         $this->usuario->setLogger($log);
@@ -349,7 +349,7 @@ class ProductoController extends Controller
                 $this->logger->info("🖥️ Solicitud de vista completa (no JSON)");
     
 
-                $listaProductos = $this->model->getProductosConUltimoPrecio($usuarioDependencia);
+                $listaProductos = $this->model->getProductosConUltimoPrecio($usuarioDependencia, $this->usuario->getRolUsuario());
                 $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos), 'usuarioDependencia' => $usuarioDependencia]);
     
                 view('facturacion/productos/listado', array_merge(

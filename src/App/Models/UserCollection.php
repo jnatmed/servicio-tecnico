@@ -145,8 +145,8 @@ class UserCollection extends Model
         try {
             $this->logger->info("✅ Confirmando asignación para usuario $usuarioId");
 
-            // 1. Obtener ID y dependencia de la última solicitud
-            $sql = "SELECT id, dependencia_id FROM solicitud_asignacion_dependencia
+            // 1. Obtener la última solicitud de asignación
+            $sql = "SELECT id, dependencia_id, estado FROM solicitud_asignacion_dependencia
                     WHERE usuario_id = :usuario_id
                     ORDER BY fecha_solicitud DESC
                     LIMIT 1";
@@ -155,11 +155,23 @@ class UserCollection extends Model
             $solicitud = $resultado[0] ?? null;
 
             if (!$solicitud) {
-                throw new Exception("No se encontró solicitud activa para el usuario.");
+                return [
+                    'success' => false,
+                    'motivo' => "No se encontró solicitud activa para el usuario."
+                ];
             }
 
             $solicitudId = $solicitud['id'];
             $dependenciaId = $solicitud['dependencia_id'];
+            $estado = $solicitud['estado'];
+
+            if ($estado !== 'solicitado') {
+                $this->logger->warning("❌ Última solicitud no está en estado 'solicitado', sino '$estado'");
+                return [
+                    'success' => false,
+                    'motivo' => "La última solicitud no se encuentra en estado 'solicitado' (actual: '$estado')"
+                ];
+            }
 
             // 2. Confirmar solicitud
             $sqlUpdate = "
@@ -177,14 +189,20 @@ class UserCollection extends Model
 
             $this->logger->info("✅ Solicitud confirmada correctamente para usuario $usuarioId, dependencia $dependenciaId");
 
-            // 3. Devolver ID de dependencia
-            return $dependenciaId;
+            return [
+                'success' => true,
+                'dependencia_id' => $dependenciaId
+            ];
 
         } catch (\Exception $e) {
             $this->logger->error("❌ Error al confirmar solicitud: " . $e->getMessage());
-            throw $e;
+            return [
+                'success' => false,
+                'motivo' => "Error inesperado: " . $e->getMessage()
+            ];
         }
     }
+
 
 
 
@@ -411,7 +429,27 @@ class UserCollection extends Model
                 'ordenativa_funcion' => $ordenativaFunciona
             ]);
 
+            // Verificar si ya existe una solicitud pendiente
             $sql = "
+                SELECT estado
+                FROM solicitud_asignacion_dependencia
+                WHERE usuario_id = :usuario_id
+                ORDER BY fecha_solicitud DESC
+                LIMIT 1
+            ";
+
+            $resultado = $this->queryBuilder->query($sql, ['usuario_id' => $usuarioId]);
+            $ultima = $resultado[0] ?? null;
+
+            if ($ultima && $ultima['estado'] === 'solicitado') {
+                return [
+                    'success' => false,
+                    'motivo' => "Ya existe una solicitud pendiente para este usuario."
+                ];
+            }
+
+            // Registrar nueva solicitud
+            $sqlInsert = "
                 INSERT INTO solicitud_asignacion_dependencia (
                     usuario_id,
                     dependencia_id,
@@ -429,7 +467,7 @@ class UserCollection extends Model
 
             $observaciones = "Ordenativa: {$ordenativaFunciona}";
 
-            $this->queryBuilder->query($sql, [
+            $this->queryBuilder->query($sqlInsert, [
                 'usuario_id' => $usuarioId,
                 'dependencia_id' => $dependenciaId,
                 'observaciones' => $observaciones
@@ -437,11 +475,19 @@ class UserCollection extends Model
 
             $this->logger->info("✅ Solicitud registrada correctamente");
 
+            return [
+                'success' => true
+            ];
+
         } catch (\Exception $e) {
             $this->logger->error("❌ Error al registrar solicitud: " . $e->getMessage());
-            throw $e;
+            return [
+                'success' => false,
+                'motivo' => "Error inesperado: " . $e->getMessage()
+            ];
         }
     }
+
 
     
 

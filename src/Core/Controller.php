@@ -18,7 +18,7 @@ class Controller
     public $qb;
     public $request;
 
-    public function __construct(){
+    public function __construct($usuariosAdmin = []){
         
         global $connection, $log;        
 
@@ -27,21 +27,7 @@ class Controller
 
         $this->menu = [
             'menu' => [
-                // [
-                //     'href' => '/orden-de-trabajo/listar',
-                //     'class' => '.archivo',
-                //     'name' => 'ORDENES DE TRABAJO',                    
-                //     'submenu' => [
-                //         [
-                //             'href' => '/orden-de-trabajo/nuevo',
-                //             'name' => 'NUEVA ORDEN DE TRABAJO'
-                //         ],
-                //         [
-                //             'href' => '/orden-de-trabajo/listado_pcs',
-                //             'name' => 'LISTADO PCS'
-                //         ],
-                //     ]
-                // ],
+
                 [
                     'href' => '/minutas/listar',
                     'class' => '.edicion',
@@ -57,18 +43,7 @@ class Controller
                         ],
                     ]                    
                 ],
-                // [
-                //     'href' => '/talleres/ver_talleres',
-                //     'class' => '.lista',
-                //     'name' => 'TALLERES',
-                //     'submenu' => [
-                //         [
-                //             'href' => '/internos/ver_internos',
-                //             'name' => 'LISTADO INTERNOS'
-                //         ]
-                //     ]
-                    
-                // ],
+
                 [
                     'href' => '/facturacion/listar',
                     'class' => '.documento',
@@ -155,7 +130,15 @@ class Controller
         $this->request = new Request();
 
         if(!is_null($this->modelName)){
-            $model = new $this->modelName;
+
+            if($usuariosAdmin !== []){
+                $log->info("🖥️✅🖥️✅📦 Seteando Modelo con rolesPermitidos", [$this->modelName, $usuariosAdmin]);
+                $model = new $this->modelName(null, null, $usuariosAdmin);
+            }else{
+                $log->info("🖥️📦 Seteando Modelo SIN rolesPermitidos", [$this->modelName, $usuariosAdmin]);
+                $model = new $this->modelName; 
+            }
+            // $model = new $this->modelName;
             $model->setQueryBuilder($this->qb);
             $model->setLogger($log); // todos los modelos tienen q ser logeables
             $this->setModel($model);
@@ -175,6 +158,5 @@ class Controller
         return $this->qb;
     }
 
-    // 🔥 Método genérico para sanitizar inputs de formularios
 
 }

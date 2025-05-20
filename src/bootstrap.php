@@ -170,19 +170,20 @@ $router->get('/user/login', 'UserController@login');
 $router->post('/user/login', 'UserController@login');
 $router->get('/user/logout', 'UserController@logout', [
     'auth' => true,
-    'roles' => ['administrador']    
+    'roles' => ['*']    
 ]);
 $router->get('/user/register', 'UserController@register');
 $router->post('/user/register', 'UserController@register');
 
 $router->get('/user/get_listado', 'UserController@getListado', ['auth' => true, 'roles' => ['administrador']]);
 $router->post('/user/actualizar_rol', 'UserController@actualizarRol', ['auth' => true, 'roles' => ['administrador']]);
-$router->post('/user/confirmar_solicitud_dependencia', 'UserController@confirmarSolicitudDependencia', ['auth' => true, 'roles' => ['administrador']]);
+$router->post('/user/confirmar_solicitud_dependencia', 'UserController@confirmarSolicitudDependencia', ['auth' => true, 'roles' => ['administrador', 'punto_venta']]);
 $router->post('/user/rechazar_solicitud_dependencia', 'UserController@rechazarSolicitudDependencia', ['auth' => true, 'roles' => ['administrador']]);
 
 $router->get('/user/ver-perfil', 'UserController@verPerfil', ['auth' => true, 'roles' => ['*']]); 
 
 $router->post('/user/asignar-dependencia', 'UserController@asignarDestino', ['auth' => true, 'roles' => ['administrador']]);
+
 $router->get('/auth/google/callback', 'UserController@callback', ['auth' => true, 'roles' => ['administrador']]);
 
 $router->get('/enviar-mail', 'UserController@enviarMail');
