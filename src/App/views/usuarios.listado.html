@@ -193,13 +193,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${usuario.email}</td>
                         <td>${usuario.tipo_usuario ?? '-'}</td>
                         <td>
-                            ${usuario.rol ? `
-                                <span class="editable-rol" data-id="${usuario.id}" data-rol="${usuario.rol}">
-                                    ${usuario.rol}
-                                    <i class="fa-solid fa-pen-to-square text-primary rol-edit-icon" title="Editar rol" style="cursor:pointer; margin-left:5px;"></i>
-                                </span>
-                            ` : '<i class="fa-solid fa-shield-halved text-muted" title="Sin rol"></i>'}
+                            <span class="editable-rol" data-id="${usuario.id}" data-rol="${usuario.rol ?? ''}">
+                                ${usuario.rol ?? '<i class="fa-solid fa-shield-halved text-muted" title="Sin rol"></i>'}
+                                <i class="fa-solid fa-pen-to-square text-primary rol-edit-icon" title="Editar rol" style="cursor:pointer; margin-left:5px;"></i>
+                            </span>
                         </td>
+
                         <td>
                             ${usuario.dependencia && usuario.estado_dependencia ? (() => {
                                 let icono = '';

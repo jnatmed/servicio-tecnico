@@ -297,7 +297,7 @@ class UserCollection extends Model
         try {
             // 1. Buscar al usuario junto con su rol
             $sql = "
-                SELECT u.*, r.nombre AS rol
+                SELECT u.*, r.nombre AS rol, r.icono AS icono
                 FROM usuarios u
                 LEFT JOIN roles r ON u.rol_id = r.id
                 WHERE u.usuario = :username
@@ -384,6 +384,8 @@ class UserCollection extends Model
             $sql = "
                 SELECT 
                     u.*,
+                    r.nombre AS rol,
+                    r.icono AS icono,
                     d.descripcion AS dependencia_descripcion,
                     s.dependencia_id,
                     s.estado AS estado_solicitud,
@@ -391,6 +393,7 @@ class UserCollection extends Model
                     s.fecha_resolucion,
                     s.observaciones
                 FROM usuarios u
+                INNER JOIN roles r ON r.id = u.rol_id
                 LEFT JOIN (
                     SELECT *
                     FROM solicitud_asignacion_dependencia
@@ -399,7 +402,8 @@ class UserCollection extends Model
                     LIMIT 1
                 ) s ON s.usuario_id = u.id
                 LEFT JOIN dependencia d ON d.id = s.dependencia_id
-                WHERE u.id = :id
+                WHERE u.id = :id;
+
             ";
 
             $resultado = $this->queryBuilder->query($sql, ['id' => $id]);

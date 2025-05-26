@@ -161,7 +161,10 @@ $router->post('/minuta/new', 'MinutaController@new');
 $router->get('/minuta/ver', 'MinutaController@ver');
 $router->get('/minutas/listar', 'MinutaController@listar');
 
-$router->get('/','PageController@home');
+$router->get('/','PageController@home', [
+    'auth' => true,
+    'roles' => ['*']        
+]);
 
 /**
  * 9.1) Logueo de usuario
@@ -172,8 +175,14 @@ $router->get('/user/logout', 'UserController@logout', [
     'auth' => true,
     'roles' => ['*']    
 ]);
-$router->get('/user/register', 'UserController@register');
-$router->post('/user/register', 'UserController@register');
+$router->get('/user/register', 'UserController@register', [
+    'auth' => false,
+    'roles' => ['*']    
+]);
+$router->post('/user/register', 'UserController@register', [
+    'auth' => false,
+    'roles' => ['*']    
+]);
 
 $router->get('/user/get_listado', 'UserController@getListado', ['auth' => true, 'roles' => ['administrador']]);
 $router->post('/user/actualizar_rol', 'UserController@actualizarRol', ['auth' => true, 'roles' => ['administrador']]);
@@ -182,7 +191,7 @@ $router->post('/user/rechazar_solicitud_dependencia', 'UserController@rechazarSo
 
 $router->get('/user/ver-perfil', 'UserController@verPerfil', ['auth' => true, 'roles' => ['*']]); 
 
-$router->post('/user/asignar-dependencia', 'UserController@asignarDestino', ['auth' => true, 'roles' => ['administrador']]);
+$router->post('/user/asignar-dependencia', 'UserController@asignarDestino', ['auth' => true, 'roles' => ['*']]);
 
 $router->get('/auth/google/callback', 'UserController@callback', ['auth' => true, 'roles' => ['administrador']]);
 

@@ -544,7 +544,7 @@ class QueryBuilder
         }
     }
     
-    public function getFacturasPaginatedQuery($limit, $offset, $search = '', $sinComprobante = false, $usuarioDependencia = null)
+    public function getFacturasPaginatedQuery($limit, $offset, $search = '', $sinComprobante = false, $usuarioDependencia = null, $rolUsuario=null)
     {
         try {
             $query = "SELECT f.*, 

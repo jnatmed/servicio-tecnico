@@ -52,6 +52,8 @@ class UserController extends Controller
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
                 return !in_array($item['href'], ['/user/login', '/user/register' ]);
             });
+            $menu['rol_usuario'] = $this->getRolUsuario();
+            $menu['icono_rol'] = $this->getIconoRol();
         } else {
             // Si no hay sesion entonces saco del menu las opciones para usuarios logueados
             $menu['menu'] = array_filter($menu['menu'], function ($item) {
@@ -63,8 +65,19 @@ class UserController extends Controller
             });
         }
 
-        // $this->logger->debug("menu: ", [$menu]);
+        $this->logger->debug("menu: ", [$menu]);
+
         return $menu;
+    }    
+
+    public function getRolUsuario()
+    {
+        return $_SESSION['usuario_rol'];
+    }
+
+    public function getIconoRol()
+    {
+        return $_SESSION['icono_rol'];
     }    
 
     public function verificarSesion() {
@@ -265,6 +278,9 @@ class UserController extends Controller
                 $usuarioDb = $existeUsuario[2];
                 $userInfo['id_user'] = $nuevoIdUser;
                 $userInfo['rol'] = $usuarioDb['rol'] ?? null;
+                $userInfo['icono'] = $usuarioDb['icono'] ?? null;
+
+                
 
                 // Guardar datos adicionales
                 $this->setDependenciaId($usuarioDb['dependencia_id']);
@@ -281,10 +297,16 @@ class UserController extends Controller
                     'tipo_usuario' => 'group',
                     'email' => 'email',
                     'account' => 'account',
-                    'usuario_rol' => 'rol' 
+                    'usuario_rol' => 'rol',
+                    'icono_rol' => 'icono'
                 ];
                 $this->cargarSesion($userInfo, $parametros);
 
+                $this->menu2 = $this->claseMenu->getMenuFiltrado($userInfo['rol'], $this->haySession());
+                $this->menu2['rol_usuario'] = $this->getRolUsuario();
+                $this->menu2['icono_rol'] = $this->getIconoRol();
+
+                $this->logger->info("🟢 datos menu2 getMenuFiltrado: ", [$this->menu2]);
                 $this->logger->info("🟢 Sesión iniciada correctamente", $_SESSION);
 
                 // 5. Redireccionar
@@ -323,11 +345,6 @@ class UserController extends Controller
                 ...$this->menu
             ]);
         }
-    }
-
-    public function getRolUsuario()
-    {
-        return $_SESSION['usuario_rol']; 
     }
 
     function cargarSesion($userInfo, $parametros) {
@@ -487,6 +504,7 @@ class UserController extends Controller
                 'usuario' => $user['usuario'],
                 'email' => $user['email'],
                 'tipo_usuario' => $user['tipo_usuario'],
+                'rol' => $user['rol'],
                 'account' => $this->getAccount(),
                 'dependencia_descripcion' => $user['dependencia_descripcion'],
                 'estado_solicitud' => $user['estado_solicitud'],

@@ -1,0 +1,111 @@
+{
+  "config": {
+    "rol_root": "administrador",
+    "auth": true
+  },
+  "menu": [
+    {
+      "href": "/minutas/listar",
+      "class": ".edicion",
+      "name": "MINUTAS",
+      "roles": ["oficina", "tecnica"],
+      "submenu": [
+        {
+          "href": "/minuta/new",
+          "name": "NUEVA MINUTA"
+        },
+        {
+          "href": "/minutas/listar",
+          "name": "VER MINUTAS"
+        }
+      ]
+    },
+    {
+      "href": "/facturacion/listar",
+      "class": ".documento",
+      "name": "VENTAS",
+      "roles": ["jefatura_ventas", "codigo608", "punto_venta"],
+      "submenu": [
+        {
+          "href": "/facturacion/listar",
+          "name": "VENTAS",
+          "roles": ["jefatura_ventas", "codigo608", "punto_venta"]
+        },
+        {
+          "href": "/facturacion/numerador/lista",
+          "name": "NUMERADOR FACTURACION",
+          "roles": ["codigo608","jefatura_ventas"]
+        },
+        {
+          "href": "/facturacion/cuotas/listado",
+          "name": "REPORTES",
+          "roles": ["codigo608","jefatura_ventas"]
+        },
+        {
+          "href": "/facturacion/cuotas/solicitudes-pendientes",
+          "name": "SOLICITUDES DESCUENTOS",
+          "roles": ["codigo608","jefatura_ventas"]
+        },
+        {
+          "href": "/facturacion/new",
+          "name": "NUEVA VENTA",
+          "roles": ["punto_venta"]
+        },
+        {
+          "href": "/facturacion/productos/listado",
+          "name": "PRODUCTOS",
+          "roles": ["punto_venta","planificacion_comercial"]
+        }
+      ]
+    },
+    {
+      "href": "/facturacion/agentes/listado",
+      "class": ".lista",
+      "name": "AGENTES",
+      "roles" : ["all_less:oficina,tecnica,planificacion_comercial"],
+      "submenu": [
+        {
+          "href": "/facturacion/agentes/listado",
+          "name": "LISTADO"
+        },
+        {
+          "href": "/facturacion/agentes/nuevo",
+          "name": "NUEVO AGENTE"
+        }
+      ]
+    },
+    {
+      "href": "/user/get_listado",
+      "class": ".lista",
+      "name": "USUARIOS",
+      "submenu": [
+        {
+          "href": "/user/get_listado",
+          "name": "LISTADO"
+        }
+      ]
+    },
+    {
+      "href": "/user/login",
+      "name": "LOGIN",
+      "auth" : false
+    },
+    {
+      "href": "/user/logout",
+      "class": ".salir",
+      "name": "SALIR",
+      "roles": ["all"]
+    },
+    {
+      "href": "/user/register",
+      "class": ".archivo",
+      "name": "REGISTRO"
+    },
+    {
+      "href": "/user/ver-perfil",
+      "class": ".perfil",
+      "name": "PERFIL",
+      "roles": ["all"]
+    }
+  ]
+}

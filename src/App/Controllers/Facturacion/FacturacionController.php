@@ -374,7 +374,8 @@ class FacturacionController extends Controller
                  $offset, 
                  $searchItem, 
                  $filtrarSinComprobante,
-                 $this->usuario->getDependenciaId()
+                 $this->usuario->getDependenciaId(),
+                 $this->usuario->getRolUsuario()
                 );
             $totalFacturas = $this->model->countFacturas(
                   $searchItem, 

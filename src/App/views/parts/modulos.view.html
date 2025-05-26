@@ -3,18 +3,22 @@
 
     <section class="main-container">
         
-        {% if menu|length > 0 %}
+        {% if menu2.menu is defined and menu2.menu|length > 0 %}
         <nav class="side-nav">
-            <a href="/"><article class="header_icon"></article></a>
+            <a href="/"><article class="header_icon">
+                <i class="fas {{ menu2.icono_rol }} "></i> {{ menu2.rol_usuario|capitalize }}
+            </article>
+            </a>
             <ul>
-                {% for item in menu %}
-                    <li> <!-- Clase dinámica -->
+                {% for item in menu2.menu %}
+                    <li>
                         <a href="{{ item.submenu ? '#' : item.href }}" class="menu-toggle">
                             {{ item.name }}
                             {% if item.submenu %}
                                 <span class="arrow">▶</span>
                             {% endif %}
-                        </a>                        {% if item.submenu %}
+                        </a>
+                        {% if item.submenu %}
                             <ul class="sub-menu">
                                 {% for subitem in item.submenu %}
                                     <li><a href="{{ subitem.href }}">{{ subitem.name }}</a></li>
@@ -25,6 +29,7 @@
                 {% endfor %}
             </ul>
         </nav>
-        {% endif %}
-    
+        {% endif %}    
     <section class="dynamic-content">  
+
+

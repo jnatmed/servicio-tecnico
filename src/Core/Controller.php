@@ -5,12 +5,14 @@ namespace Paw\Core;
 use Paw\Core\Model; 
 use Paw\Core\Database\QueryBuilder;
 use Paw\Core\Traits\Loggable;
+use Paw\Core\Menu;
 
 class Controller 
 {
     public string $viewsDir;
 
-    public array $menu;
+    public array $menu, $menu2;
+    public $claseMenu;
 
     public ?string $modelName = null;   
     protected $model;
@@ -24,7 +26,8 @@ class Controller
 
         $this->viewsDir = __DIR__ . '/../App/views/';
 
-
+        $this->claseMenu = new Menu();
+        
         $this->menu = [
             'menu' => [
 
@@ -109,17 +112,17 @@ class Controller
                     'name' => 'LOGIN'
                 ],
                 [
-                    'href' => '/user/logout',
+                    'href' => '/user/logout', // 
                     'class' => '.salir',
                     'name' => 'SALIR'
                 ],
                 [
-                    'href' => '/user/register',
+                    'href' => '/user/register', // cualquiera
                     'class' => '.archivo',
                     'name' => 'REGISTRO'
                 ],
                 [
-                    'href' => '/user/ver-perfil',
+                    'href' => '/user/ver-perfil', // logueados > todos
                     'class' => '.perfil',
                     'name' => 'PERFIL'
                 ]
