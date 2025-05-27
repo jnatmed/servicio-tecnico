@@ -34,7 +34,7 @@ class CuotasController extends Controller
         $this->usuario->setLogger($log);
 
         // $log->info("info __construct: this->menu",  [$this->menu]);
-        $this->menu = $this->usuario->adjustMenuForSession($this->menu);        
+        $this->menu = $this->claseMenu->getMenuFiltrado($this->usuario->getRolUsuario(), $this->usuario->haySession());       
 
         // $log->info("this->menu: ", [$this->menu]);
     }     

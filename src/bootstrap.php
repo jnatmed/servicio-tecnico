@@ -113,44 +113,35 @@ $twig->addFilter(new \Twig\TwigFilter('format_estado', function ($estado) {
  */
 $router = new Router;
 $router->setLogger($log);
+ $rutaJson = __DIR__ . '/permisos_routes_boostrap.json';
+ $permisos_routes = json_decode(file_get_contents($rutaJson), true);
 
 /**
  * 9) RUTAS
  * Aca van los enrutadores
  */
-$router->get('/orden-de-trabajo/nuevo', 'OrdenController@new', [
-    'auth' => true,
-    'roles' => ['administrador', 'oficina']    
-]);
-$router->post('/orden-de-trabajo/nuevo', 'OrdenController@new', [
-    'auth' => true,
-    'roles' => ['administrador', 'oficina']    
-]);
-$router->get('/orden-de-trabajo/ver', 'OrdenController@show', [
-    'auth' => true,
-    'roles' => ['administrador', 'oficina']    
-]);
-$router->get('/orden-de-trabajo/listar', 'OrdenController@listar', [
-    'auth' => true,
-    'roles' => ['administrador', 'tecnica']    
-]);
-$router->get('/ordenes', 'OrdenController@listar', [
-    'auth' => true,
-    'roles' => ['administrador', 'tecnica']    
-]);
-
-$router->get('/', 'OrdenController@listar', [
-    'auth' => true,
-    'roles' => ['administrador', 'tecnica', 'oficina']    
-]);
-$router->get('/orden-de-trabajo/editar', 'OrdenController@edit', [
-    'auth' => true,
-    'roles' => ['administrador', 'tecnica']    
-]);
-$router->post('/orden-de-trabajo/editar', 'OrdenController@edit');
-$router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete');
-$router->get('/orden-de-trabajo/descargar', 'OrdenController@download');
-$router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarEstado');
+$router->get('/orden-de-trabajo/nuevo', 'OrdenController@new', 
+    $permisos_routes['/orden-de-trabajo/nuevo']);
+$router->post('/orden-de-trabajo/nuevo', 'OrdenController@new', 
+    $permisos_routes['/orden-de-trabajo/nuevo']);
+$router->get('/orden-de-trabajo/ver', 'OrdenController@show', 
+    $permisos_routes['/orden-de-trabajo/ver']);
+$router->get('/orden-de-trabajo/listar', 'OrdenController@listar', 
+    $permisos_routes['/orden-de-trabajo/listar']);
+$router->get('/ordenes', 'OrdenController@listar', 
+    $permisos_routes['/ordenes']);
+$router->get('/ordenes/home', 'OrdenController@listar', 
+    $permisos_routes['/ordenes/home']);
+$router->get('/orden-de-trabajo/editar', 'OrdenController@edit', 
+    $permisos_routes['/orden-de-trabajo/editar']);
+$router->post('/orden-de-trabajo/editar', 'OrdenController@edit',
+    $permisos_routes['/orden-de-trabajo/editar']);
+$router->get('/orden-de-trabajo/eliminar', 'OrdenController@delete',
+    $permisos_routes['/orden-de-trabajo/eliminar']);
+$router->get('/orden-de-trabajo/descargar', 'OrdenController@download',
+    $permisos_routes['/orden-de-trabajo/descargar']);
+$router->get('/orden-de-trabajo/actualizar_estado', 'OrdenController@actualizarEstado',
+    $permisos_routes['/orden-de-trabajo/actualizar_estado']);
 
 /**
  *  MINUTAS DE REUNION
@@ -169,33 +160,33 @@ $router->get('/','PageController@home', [
 /**
  * 9.1) Logueo de usuario
  */
-$router->get('/user/login', 'UserController@login');
-$router->post('/user/login', 'UserController@login');
-$router->get('/user/logout', 'UserController@logout', [
-    'auth' => true,
-    'roles' => ['*']    
-]);
-$router->get('/user/register', 'UserController@register', [
-    'auth' => false,
-    'roles' => ['*']    
-]);
-$router->post('/user/register', 'UserController@register', [
-    'auth' => false,
-    'roles' => ['*']    
-]);
+$router->get('/user/login', 'UserController@login',
+    $permisos_routes['/user/login']);
+$router->post('/user/login', 'UserController@login',
+    $permisos_routes['/user/login']);
+$router->get('/user/logout', 'UserController@logout', 
+    $permisos_routes['/user/logout']);
+$router->get('/user/register', 'UserController@register', 
+    $permisos_routes['/user/register']);
+$router->post('/user/register', 'UserController@register',     
+    $permisos_routes['/user/register']);
+$router->get('/user/get_listado', 'UserController@getListado', 
+    $permisos_routes['/user/get_listado']);
+$router->post('/user/actualizar_rol', 'UserController@actualizarRol', 
+    $permisos_routes['/user/actualizar_rol']);
+$router->post('/user/confirmar_solicitud_dependencia', 'UserController@confirmarSolicitudDependencia', 
+    $permisos_routes['/user/confirmar_solicitud_dependencia']);
+$router->post('/user/rechazar_solicitud_dependencia', 'UserController@rechazarSolicitudDependencia', 
+    $permisos_routes['/user/rechazar_solicitud_dependencia']);
+$router->get('/user/ver-perfil', 'UserController@verPerfil', 
+    $permisos_routes['/user/ver-perfil']);
+$router->post('/user/asignar-dependencia', 'UserController@asignarDestino', 
+    $permisos_routes['/user/asignar-dependencia']);
 
-$router->get('/user/get_listado', 'UserController@getListado', ['auth' => true, 'roles' => ['administrador']]);
-$router->post('/user/actualizar_rol', 'UserController@actualizarRol', ['auth' => true, 'roles' => ['administrador']]);
-$router->post('/user/confirmar_solicitud_dependencia', 'UserController@confirmarSolicitudDependencia', ['auth' => true, 'roles' => ['administrador', 'punto_venta']]);
-$router->post('/user/rechazar_solicitud_dependencia', 'UserController@rechazarSolicitudDependencia', ['auth' => true, 'roles' => ['administrador']]);
+// $router->get('/auth/google/callback', 'UserController@callback', 
+// ['auth' => true, 'roles' => ['administrador']]);
 
-$router->get('/user/ver-perfil', 'UserController@verPerfil', ['auth' => true, 'roles' => ['*']]); 
-
-$router->post('/user/asignar-dependencia', 'UserController@asignarDestino', ['auth' => true, 'roles' => ['*']]);
-
-$router->get('/auth/google/callback', 'UserController@callback', ['auth' => true, 'roles' => ['administrador']]);
-
-$router->get('/enviar-mail', 'UserController@enviarMail');
+// $router->get('/enviar-mail', 'UserController@enviarMail');
 
 /**
  * 10) Datos de los internos trabajadores
@@ -206,128 +197,107 @@ $router->get('/enviar-mail', 'UserController@enviarMail');
 //  $router->get('/talleres/ver_talleres', 'TalleresController@verTalleres');
  // /interno?id=1
 
+ $log->info("permisos_routes: ", [$permisos_routes['/facturacion/listar']]);
+
  /**
   * 11) Facturacion
   */
-  $router->get('/facturacion/new', 'Facturacion\\FacturacionController@alta', ['auth' => true, 'roles' => ['administrador', 'punto_venta']]);
-  $router->post('/facturacion/new', 'Facturacion\\FacturacionController@alta', ['auth' => true, 'roles' => ['administrador', 'punto_venta']]);
-  $router->post('/facturacion/listar', 'Facturacion\\FacturacionController@listar', ['auth' => true, 'roles' => ['administrador', 'punto_venta', 'codigo_608', 'planificacion']]);
-  $router->get('/facturacion/ver', 'Facturacion\\FacturacionController@ver', ['auth' => true, 'roles' => ['administrador', 'punto_venta', 'codigo_608', 'planificacion']]);
-  $router->delete('/facturacion/eliminar', 'Facturacion\\FacturacionController@eliminarFactura', ['auth' => true, 'roles' => ['administrador', 'jefatura_ventas']]);
+  $router->get('/facturacion/new', 'Facturacion\\FacturacionController@alta', 
+               $permisos_routes['/facturacion/new']);
+  $router->post('/facturacion/new', 'Facturacion\\FacturacionController@alta', 
+               $permisos_routes['/facturacion/new']);
+  $router->get('/facturacion/listar', 'Facturacion\\FacturacionController@listar', 
+               $permisos_routes['/facturacion/listar']); 
+  $router->post('/facturacion/listar', 'Facturacion\\FacturacionController@listar', 
+               $permisos_routes['/facturacion/listar']);
+
+  $router->get('/facturacion/ver', 'Facturacion\\FacturacionController@ver', 
+               $permisos_routes['/facturacion/ver']);
+
+  $router->delete('/facturacion/eliminar', 'Facturacion\\FacturacionController@eliminarFactura', 
+               $permisos_routes['/facturacion/eliminar']);
 // Ver Numeracion Facturas 
-  $router->get('/facturacion/numerador/lista', 'Facturacion\\FacturacionController@listarNumerador', [
-        'auth' => true, 'roles' => ['administrador', 'jefatura_ventas']
-    ]); 
+  $router->get('/facturacion/numerador/lista', 'Facturacion\\FacturacionController@listarNumerador', 
+               $permisos_routes['/facturacion/numerador/lista']);
 // Ver Numeracion de facturas peticion JSON
-  $router->get('/facturacion/numerador/solicitudes/pendientes/json', 'Facturacion\\FacturacionController@listarNumerador', [
-        'auth' => true, 'roles' => ['administrador', 'jefatura_ventas']
-    ]); 
+  $router->get('/facturacion/numerador/solicitudes/pendientes/json', 'Facturacion\\FacturacionController@listarNumerador', 
+               $permisos_routes['/facturacion/numerador/solicitudes/pendientes/json']);
 // Aceptar Solicitud de facturacion 
-  $router->post('/facturacion/numerador/solicitudes/aceptar', 'Facturacion\\FacturacionController@aceptarSolicitud', [
-        'auth' => true, 'roles' => ['administrador', 'jefatura_ventas']
-    ]); 
+  $router->post('/facturacion/numerador/solicitudes/aceptar', 'Facturacion\\FacturacionController@aceptarSolicitud', 
+               $permisos_routes['/facturacion/numerador/solicitudes/aceptar']);
 // Rechazar Solicitud de facturacion 
-  $router->post('/facturacion/numerador/solicitudes/rechazar', 'Facturacion\\FacturacionController@rechazarSolicitud', [
-        'auth' => true, 'roles' => ['administrador', 'jefatura_ventas']
-    ]); 
-  $router->get('/facturacion/listar', 'Facturacion\\FacturacionController@listar', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta']
-    ]); 
-  $router->get('/facturacion/api_get_agentes', 'Facturacion\\AgenteController@getAgentes', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta']
-    ]); 
-  $router->get('/facturacion/api_get_productos', 'Facturacion\\FacturacionController@getProductos', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta']
-    ]);
-  $router->get('/facturacion/api_get_precio_producto', 'Facturacion\\FacturacionController@getPreciosProductos', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta']
-    ]);
-  $router->post('/facturacion/subir-comprobante', 'Facturacion\\FacturacionController@subirComprobante', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta']
-    ]);
-  $router->get('/facturacion/ver-comprobante', 'Facturacion\\FacturacionController@verComprobante', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta']
-    ]);
+  $router->post('/facturacion/numerador/solicitudes/rechazar', 'Facturacion\\FacturacionController@rechazarSolicitud', 
+               $permisos_routes['/facturacion/numerador/solicitudes/rechazar']); 
+
+  $router->get('/facturacion/api_get_agentes', 'Facturacion\\AgenteController@getAgentes', 
+               $permisos_routes['/facturacion/api_get_agentes']);
+  $router->get('/facturacion/api_get_productos', 'Facturacion\\FacturacionController@getProductos', 
+               $permisos_routes['/facturacion/api_get_productos']);
+  $router->get('/facturacion/api_get_precio_producto', 'Facturacion\\FacturacionController@getPreciosProductos', 
+               $permisos_routes['/facturacion/api_get_precio_producto']);
+  $router->post('/facturacion/subir-comprobante', 'Facturacion\\FacturacionController@subirComprobante', 
+               $permisos_routes['/facturacion/subir-comprobante']);
+  $router->get('/facturacion/ver-comprobante', 'Facturacion\\FacturacionController@verComprobante', 
+               $permisos_routes['/facturacion/ver-comprobante']);
 
   /**
    * 12) Productos
    */
-  $router->get('/facturacion/productos/listado', 'Facturacion\\ProductoController@listar', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta', 'planificacion_comercial']
-    ]);
-  $router->get('/facturacion/productos/ver', 'Facturacion\\ProductoController@ver', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta', 'planificacion_comercial']
-    ]);
-  $router->get('/facturacion/productos/ver_imagen', 'Facturacion\\ProductoController@verImgProducto', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas', 'punto_venta', 'planificacion_comercial']
-    ]);
-  $router->get('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio', [
-        'auth' => true, 'roles' => ['administrador', 'planificacion_comercial']
-    ]);
-  $router->post('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio', [
-        'auth' => true, 'roles' => ['administrador', 'planificacion_comercial']
-    ]);
-  $router->get('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto', [
-        'auth' => true, 'roles' => ['administrador', 'planificacion_comercial']
-    ]);
-  $router->post('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto', [
-        'auth' => true, 'roles' => ['administrador', 'planificacion_comercial']
-    ]);
-  $router->get('/facturacion/productos/eliminar', 'Facturacion\\ProductoController@eliminarProducto', [
-        'auth' => true, 'roles' => ['administrador', 'planificacion_comercial']
-    ]);
-  $router->post('/facturacion/productos/informar-decomiso', 'Facturacion\\ProductoController@registrarDecomiso', [
-        'auth' => true, 'roles' => ['administrador', 'punto_venta']
-    ]);
-  $router->get('/facturacion/productos/ver-comprobante', 'Facturacion\\ProductoController@verComprobanteDecomiso', [
-        'auth' => true, 'roles' => ['administrador', 'punto_venta']
-    ]);
+  $router->get('/facturacion/productos/listado', 'Facturacion\\ProductoController@listar', 
+              $permisos_routes['/facturacion/productos/listado']);
+  $router->get('/facturacion/productos/ver', 'Facturacion\\ProductoController@ver', 
+              $permisos_routes['/facturacion/productos/ver']);
+  $router->get('/facturacion/productos/ver_imagen', 'Facturacion\\ProductoController@verImgProducto', 
+              $permisos_routes['/facturacion/productos/ver_imagen']);
+  $router->get('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio', 
+              $permisos_routes['/facturacion/productos/agregar-precio']);
+  $router->post('/facturacion/productos/agregar-precio', 'Facturacion\\ProductoController@agregarPrecio', 
+              $permisos_routes['/facturacion/productos/agregar-precio']);
+  $router->get('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto', 
+              $permisos_routes['/facturacion/productos/editar']);
+  $router->post('/facturacion/productos/editar', 'Facturacion\\ProductoController@editarProducto', 
+              $permisos_routes['/facturacion/productos/editar']);
+  $router->get('/facturacion/productos/eliminar', 'Facturacion\\ProductoController@eliminarProducto', 
+              $permisos_routes['/facturacion/productos/eliminar']);
+  $router->post('/facturacion/productos/informar-decomiso', 'Facturacion\\ProductoController@registrarDecomiso',    
+              $permisos_routes['/facturacion/productos/informar-decomiso']);
+  $router->get('/facturacion/productos/ver-comprobante', 'Facturacion\\ProductoController@verComprobanteDecomiso', 
+              $permisos_routes['/facturacion/productos/ver-comprobante']);
 
 /**
  * 13) Agentes
  *  */  
 
-  $router->get('/facturacion/agentes/listado', 'Facturacion\\AgenteController@getAgentes', [
-        'auth' => true, 'roles' => ['*']
-    ]);
-  $router->get('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new', [
-        'auth' => true, 'roles' => ['administrador']
-    ]);
-  $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new', [
-        'auth' => true, 'roles' => ['administrador']
-    ]);
-  $router->get('/facturacion/agente/ver', 'Facturacion\\CuentaCorrienteController@verCuentaCorrienteAgente', [
-        'auth' => true, 'roles' => ['*']
-    ]);
+  $router->get('/facturacion/agentes/listado', 'Facturacion\\AgenteController@getAgentes', 
+        $permisos_routes['/facturacion/agentes/listado']);
+  $router->get('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new', 
+        $permisos_routes['/facturacion/agentes/nuevo']);
+  $router->post('/facturacion/agentes/nuevo', 'Facturacion\\AgenteController@new', 
+        $permisos_routes['/facturacion/agentes/nuevo']);
+  $router->get('/facturacion/agente/ver', 'Facturacion\\CuentaCorrienteController@verCuentaCorrienteAgente', 
+        $permisos_routes['/facturacion/agente/ver']);
 
 /**
  *  14) Cuotas
  */
 // http://localhost:8080/facturacion/listar?con_comprobante=1
 
- $router->get('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas']
-    ]);
- $router->post('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@reporteAgrupado', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas']
-    ]);
- $router->post('/facturacion/cuotas/aplicar-descuento-masivo', 'Facturacion\\CuotasController@aplicarDescuentoMasivo', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas']
-    ]);
- $router->get('/facturacion/cuotas/exportar-txt', 'Facturacion\\CuotasController@exportarTxt', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas']
-    ]);
- $router->get('/facturacion/cuotas/solicitudes-pendientes', 'Facturacion\\CuotasController@verSolicitudesPendientes', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas']
-    ]);
- $router->post('/facturacion/cuotas/confirmar-descuentos', 'Facturacion\\CuotasController@confirmarDescuentos', [
-        'auth' => true, 'roles' => ['administrador', 'codigo_608', 'jefatura_ventas']
-    ]);
+ $router->get('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@listar', 
+        $permisos_routes['/facturacion/cuotas/listado']);
+ $router->post('/facturacion/cuotas/listado', 'Facturacion\\CuotasController@reporteAgrupado', 
+        $permisos_routes['/facturacion/cuotas/listado']);
+ $router->post('/facturacion/cuotas/aplicar-descuento-masivo', 'Facturacion\\CuotasController@aplicarDescuentoMasivo', 
+        $permisos_routes['/facturacion/cuotas/aplicar-descuento-masivo']);
+ $router->get('/facturacion/cuotas/exportar-txt', 'Facturacion\\CuotasController@exportarTxt', 
+        $permisos_routes['/facturacion/cuotas/exportar-txt']);
+ $router->get('/facturacion/cuotas/solicitudes-pendientes', 'Facturacion\\CuotasController@verSolicitudesPendientes', 
+        $permisos_routes['/facturacion/cuotas/solicitudes-pendientes']);
+ $router->post('/facturacion/cuotas/confirmar-descuentos', 'Facturacion\\CuotasController@confirmarDescuentos', 
+        $permisos_routes['/facturacion/cuotas/confirmar-descuentos']);
 
  /**
   * 15) Facturacion
   */
-  $router->get('/cuenta-corriente/exportar-pdf', 'Facturacion\\CuentaCorrienteController@exportarPdf', [
-        'auth' => true, 'roles' => ['*']
-    ]);
+  $router->get('/cuenta-corriente/exportar-pdf', 'Facturacion\\CuentaCorrienteController@exportarPdf', 
+        $permisos_routes['/cuenta-corriente/exportar-pdf']);
  

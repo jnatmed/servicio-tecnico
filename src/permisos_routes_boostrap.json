@@ -1,0 +1,203 @@
+{
+    "__doc_facturacion" : {
+        "title" : "SISTEMA DE FACTURACION",
+        "description" : "Rutas validas para el sistema de facturacion  de acuerdo a sus roles"
+    },
+    "/facturacion/new": {
+        "auth": true,
+        "roles" : ["administrador", "punto_venta", "codigo608"]
+    },
+    "/facturacion/listar": {
+        "auth": true,
+        "roles" : ["administrador", "punto_venta", "codigo608"]
+    },
+    "/facturacion/ver": {
+        "auth": true,
+        "roles" : ["administrador", "punto_venta", "codigo608", "planificacion"]
+    },
+    "/facturacion/eliminar": {
+        "auth": true,
+        "roles" : ["administrador", "jefatura_ventas"]
+    },
+    "/facturacion/numerador/lista": {
+        "auth": true,
+        "roles" : ["administrador", "jefatura_ventas","codigo608"]
+    },
+    "/facturacion/numerador/solicitudes/pendientes/json": {
+        "auth": true,
+        "roles" : ["administrador", "jefatura_ventas"]
+    },
+    "/facturacion/numerador/solicitudes/aceptar": {
+        "auth": true,
+        "roles" : ["administrador", "jefatura_ventas"]
+    },
+    "/facturacion/numerador/solicitudes/rechazar": {
+        "auth": true,
+        "roles" : ["administrador", "jefatura_ventas"]
+    },
+    "/facturacion/api_get_agentes": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta"]
+    },
+    "/facturacion/api_get_productos": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta"]
+    },
+    "/facturacion/api_get_precio_producto": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta"]
+    },
+    "/facturacion/subir-comprobante": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta"]
+    },
+    "/facturacion/ver-comprobante": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta"]
+    },
+    "/facturacion/productos/listado": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta", "planificacion_comercial"]
+    },
+    "/facturacion/productos/ver": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta", "planificacion_comercial"]
+    },
+    "/facturacion/productos/ver_imagen": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas", "punto_venta", "planificacion_comercial"]
+    },
+    "/facturacion/productos/agregar-precio": {
+        "auth": true,
+        "roles" : ["administrador", "planificacion_comercial"]
+    },
+    "/facturacion/productos/editar": {
+        "auth": true,
+        "roles" : ["administrador", "planificacion_comercial"]
+    },
+    "/facturacion/productos/eliminar": {
+        "auth": true,
+        "roles" : ["administrador", "planificacion_comercial"]
+    },
+    "/facturacion/productos/informar-decomiso": {
+        "auth": true,
+        "roles" : ["administrador", "planificacion_comercial"]
+    },
+    "/facturacion/productos/ver-comprobante": {
+        "auth": true,
+        "roles" : ["administrador", "planificacion_comercial", "punto_venta"]
+    },
+    "/facturacion/agentes/listado": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "/facturacion/agentes/nuevo": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "/facturacion/agente/ver": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "/facturacion/cuotas/listado": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas"]
+    },
+    "/facturacion/cuotas/aplicar-descuento-masivo": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas"]
+    },
+    "/facturacion/cuotas/exportar-txt": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas"]
+    },
+    "/facturacion/cuotas/solicitudes-pendientes": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas"]
+    },
+    "/facturacion/cuotas/confirmar-descuentos": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas"]
+    },
+    "/cuenta-corriente/exportar-pdf": {
+        "auth": true,
+        "roles" : ["administrador", "codigo608", "jefatura_ventas"]
+    },
+    "/user/login": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "/user/logout": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "/user/register": {
+        "auth": true,
+        "roles" : ["administrador"]
+    },
+    "/user/get_listado": {
+        "auth": true,
+        "roles" : ["administrador"]
+    },
+    "/user/actualizar_rol": {
+        "auth": true,
+        "roles" : ["administrador"]
+    },
+    "/user/confirmar_solicitud_dependencia": {
+        "auth": true,
+        "roles" : ["administrador", "punto_venta"]
+    },
+    "/user/rechazar_solicitud_dependencia": {
+        "auth": true,
+        "roles" : ["administrador", "punto_venta"]
+    },
+    "/user/ver-perfil": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "/user/asignar-dependencia": {
+        "auth": true,
+        "roles" : ["*"]
+    },
+    "__doc_ordenes" : {
+        "title" : "ORDENDES DE TRABAJO",
+        "description" : "Rutas validas para el sistema de ordendes de trabajo de acuerdo a sus roles"
+    },
+    "/orden-de-trabajo/nuevo": {
+        "auth": true,
+        "roles" : ["administrador", "oficina"]
+    },            
+    "/orden-de-trabajo/listar": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica"]
+    },
+    "/ordenes": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica", "oficina"]
+    },
+    "/ordenes/home": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica", "oficina"]
+    },
+    "/orden-de-trabajo/editar": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica", "oficina"]
+    },
+    "/orden-de-trabajo/ver": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica", "oficina"]
+    },
+    "/orden-de-trabajo/eliminar": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica"]
+    },
+    "/orden-de-trabajo/descargar": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica"]
+    },
+    "/orden-de-trabajo/actualizar_estado": {
+        "auth": true,
+        "roles" : ["administrador", "tecnica"]
+    }
+
+}

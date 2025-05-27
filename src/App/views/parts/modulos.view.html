@@ -3,14 +3,14 @@
 
     <section class="main-container">
         
-        {% if menu2.menu is defined and menu2.menu|length > 0 %}
+        {% if menu is defined and menu|length > 0 %}
         <nav class="side-nav">
             <a href="/"><article class="header_icon">
-                <i class="fas {{ menu2.icono_rol }} "></i> {{ menu2.rol_usuario|capitalize }}
+                <i class="fas {{ icono_rol }} "></i> {{ rol_usuario|capitalize }}
             </article>
             </a>
             <ul>
-                {% for item in menu2.menu %}
+                {% for item in menu %}
                     <li>
                         <a href="{{ item.submenu ? '#' : item.href }}" class="menu-toggle">
                             {{ item.name }}

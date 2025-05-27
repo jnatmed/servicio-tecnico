@@ -70,7 +70,8 @@
         },
         {
           "href": "/facturacion/agentes/nuevo",
-          "name": "NUEVO AGENTE"
+          "name": "NUEVO AGENTE",
+          "roles": ["administrador"]
         }
       ]
     },

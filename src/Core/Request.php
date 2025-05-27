@@ -58,6 +58,10 @@ class Request
 
     
     public function getKeySession($key){
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start(); // asegura que la sesión esté activa
+        }        
+        
         return $_SESSION[$key] ?? null;
     }
 

@@ -26,13 +26,10 @@ class PageController extends Controller
         $this->uploader = new Uploader;
         $this->usuario = new UserController();
         $this->usuario->setLogger($log);
+       
+        $this->menu = $this->claseMenu->getMenuFiltrado($this->usuario->getRolUsuario(), $this->usuario->haySession());
 
-        // $log->info("info __construct: this->menu",  [$this->menu]);
-        $this->menu = $this->usuario->adjustMenuForSession($this->menu);        
-        $this->menu2 = $this->claseMenu->getMenuFiltrado($this->usuario->getRolUsuario(), $this->usuario->haySession());
-        $this->menu2['rol_usuario'] = $this->usuario->getRolUsuario();
-        $this->menu2['icono_rol'] = $this->usuario->getIconoRol();        
-        $log->info("this->menu2 en PageController: ", $this->menu2);
+        $log->info("this->menu en PageController: ", $this->menu);
     }
 
     public function home()
@@ -46,7 +43,7 @@ class PageController extends Controller
 
         // Obtener datos de productos
         $this->logger->info("logger: ", [$this->logger]);
-        $this->logger->info("menu2: ", [$this->menu2]);
+        
         $productosModel = new ProductosCollection($this->qb, $this->logger);
         
         $productosSinPrecio = $productosModel->contarSinPrecio();
@@ -77,8 +74,7 @@ class PageController extends Controller
             "total_productos" => $totalProductos,
             "productos_unidad_labels" => $productosUnidadLabels,
             "productos_unidad_data" => $productosUnidadData,
-            ...['menu2' => $this->menu2],
-            // ...$this->menu
+            ...$this->menu
         ]);
     }
 }

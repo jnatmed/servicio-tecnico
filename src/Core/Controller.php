@@ -11,7 +11,8 @@ class Controller
 {
     public string $viewsDir;
 
-    public array $menu, $menu2;
+    public array $menu;
+    
     public $claseMenu;
 
     public ?string $modelName = null;   

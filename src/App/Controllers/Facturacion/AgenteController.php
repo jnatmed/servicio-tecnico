@@ -32,7 +32,7 @@ class AgenteController extends Controller
         $log->debug("Datos modelo: " , [$this->model]);
 
         // $log->info("info __construct: this->menu",  [$this->menu]);
-        $this->menu = $this->usuario->adjustMenuForSession($this->menu);        
+        $this->menu = $this->claseMenu->getMenuFiltrado($this->usuario->getRolUsuario(), $this->usuario->haySession());        
 
         // $log->info("this->menu: ", [$this->menu]);
     }

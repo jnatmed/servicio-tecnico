@@ -2,6 +2,8 @@
 
 namespace Paw\Core;
 
+use Paw\Core\Request;
+
 class Menu
 {
     // Estructura del menú cargada desde el JSON
@@ -18,6 +20,8 @@ class Menu
 
     // Estado de sesión (true si el usuario está logueado)
     protected bool $estaLogueado = false;
+
+    protected Request $request;
 
     /**
      * Constructor de la clase.
@@ -38,6 +42,8 @@ class Menu
         $this->estructura = ['menu' => $datos['menu']];
 
         $this->aplicarHerencia();
+
+        $this->request = new Request();
     }
 
     /**
@@ -141,6 +147,13 @@ class Menu
             }
         }
 
-        return ['menu' => $filtrado];
+        // Armar respuesta
+        $menuReturn = [
+            'menu' => $filtrado,
+            'rol_usuario' => $this->request->getKeySession('usuario_rol'),
+            'icono_rol' => $this->request->getKeySession('icono_rol')
+        ];
+
+        return $menuReturn;
     }
 }

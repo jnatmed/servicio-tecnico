@@ -34,7 +34,7 @@ class UserController extends Controller
 
         $this->setLogger($log);
 
-        $this->menu = $this->adjustMenuForSession($this->menu);  
+        $this->menu = $this->claseMenu->getMenuFiltrado($this->getRolUsuario(), $this->haySession());  
     }
 
     public function adjustMenuForSession($menu) {
@@ -72,12 +72,12 @@ class UserController extends Controller
 
     public function getRolUsuario()
     {
-        return $_SESSION['usuario_rol'];
+        return $this->request->getKeySession('usuario_rol');
     }
 
     public function getIconoRol()
     {
-        return $_SESSION['icono_rol'];
+        return $this->request->getKeySession('icono_rol');        
     }    
 
     public function verificarSesion() {
@@ -302,11 +302,9 @@ class UserController extends Controller
                 ];
                 $this->cargarSesion($userInfo, $parametros);
 
-                $this->menu2 = $this->claseMenu->getMenuFiltrado($userInfo['rol'], $this->haySession());
-                $this->menu2['rol_usuario'] = $this->getRolUsuario();
-                $this->menu2['icono_rol'] = $this->getIconoRol();
+                $this->menu = $this->claseMenu->getMenuFiltrado($userInfo['rol'], $this->haySession());
 
-                $this->logger->info("🟢 datos menu2 getMenuFiltrado: ", [$this->menu2]);
+                $this->logger->info("🟢 datos menu getMenuFiltrado: ", [$this->menu]);
                 $this->logger->info("🟢 Sesión iniciada correctamente", $_SESSION);
 
                 // 5. Redireccionar
