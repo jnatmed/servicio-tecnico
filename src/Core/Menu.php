@@ -28,11 +28,15 @@ class Menu
      * Carga el archivo menu.json, valida que tenga la config necesaria,
      * y aplica herencia de roles y autenticación.
      */
-    public function __construct(string $rutaJson = __DIR__ . '/menu.json')
+    public function __construct(string $rutaPhp = __DIR__ . '/menu_definido.php')
     {
-        $datos = json_decode(file_get_contents($rutaJson), true);
+        global $log;
+        // Cargar archivo PHP en vez de JSON
+        $datos = require $rutaPhp;
 
-        // Validar que el JSON contenga rol_root en su config
+        $log->info("menu_definido: ", [$datos]);
+
+        // Validar que contenga la configuración necesaria
         if (!isset($datos['config']['rol_root'])) {
             throw new \Exception("Falta 'rol_root' en la sección 'config' del archivo de menú.");
         }
@@ -42,6 +46,8 @@ class Menu
         $this->estructura = ['menu' => $datos['menu']];
 
         $this->aplicarHerencia();
+
+        $log->info("herenciaAplicada: ", []);
 
         $this->request = new Request();
     }

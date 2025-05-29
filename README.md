@@ -33,3 +33,59 @@ Este sistema cubre:
 > 🔔 **Nota**: La documentación se actualiza periódicamente conforme a las mejoras del sistema.
 
 ---
+
+
+## Roles y permisos de usuario
+
+### `administrador`
+- ✅ Tiene acceso **total** a todas las opciones y vistas del sistema.
+
+---
+
+### `jefatura_ventas`
+- 📄 **Facturación**: puede ver ventas/facturas de **todas las dependencias**.
+- 🔢 **Numeración de facturas**: puede **aceptar o rechazar** solicitudes.
+- 👤 **Agentes**: puede buscar agentes.
+- 🔐 **Login**: puede iniciar sesión.
+- 🚪 **Salir**: puede cerrar sesión.
+- 🧑‍💼 **Usuarios**: puede ver usuarios con rol `punto_venta` y **aceptar o rechazar** asignaciones de dependencia.
+- 🪪 **Perfil**: puede ver su perfil.
+
+---
+
+### `punto_venta`
+- 📦 **Productos**: puede buscar productos de **su propia dependencia**.
+- 📄 **Facturación**:
+  - Puede **crear facturas** para **su dependencia**.
+  - Puede ver **solo las facturas de su dependencia**.
+- 👤 **Agentes**: puede buscar agentes.
+- 🔐 **Login**: puede iniciar sesión.
+- 🚪 **Salir**: puede cerrar sesión.
+- 🪪 **Perfil**:
+  - Puede ver su perfil.
+  - Puede solicitar **asignación de dependencia**.
+
+---
+
+### `codigo608`
+- 📄 **Facturación**: puede ver ventas/facturas de **todas las dependencias**.
+- 📊 **Reportes**: puede **armar y confirmar** solicitudes de descuentos de haberes por fechas.
+- 👤 **Agentes**: puede buscar agentes.
+- 🔐 **Login**: puede iniciar sesión.
+- 🚪 **Salir**: puede cerrar sesión.
+- 🪪 **Perfil**: puede ver su perfil.
+
+---
+
+### `planificacion_comercial`
+- 📦 **Productos**:
+  - Puede buscar productos de **todas las dependencias**.
+  - Puede **crear, modificar y eliminar productos**.
+- 📄 **Facturación**: **sin acceso**.
+- 👤 **Agentes**: **sin acceso**.
+- 🔐 **Login**: puede iniciar sesión.
+- 🚪 **Salir**: puede cerrar sesión.
+- 🪪 **Perfil**:
+  - Puede ver su perfil.
+  - **No requiere asignación de dependencia**.
+- 🚫 **Registro de usuario nuevo**: **sin acceso** (gestionado por red interna - Windows Server).

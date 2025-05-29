@@ -29,7 +29,7 @@ class PageController extends Controller
        
         $this->menu = $this->claseMenu->getMenuFiltrado($this->usuario->getRolUsuario(), $this->usuario->haySession());
 
-        $log->info("this->menu en PageController: ", $this->menu);
+        // $log->info("this->menu en PageController: ", $this->menu);
     }
 
     public function home()

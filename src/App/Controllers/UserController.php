@@ -37,39 +37,6 @@ class UserController extends Controller
         $this->menu = $this->claseMenu->getMenuFiltrado($this->getRolUsuario(), $this->haySession());  
     }
 
-    public function adjustMenuForSession($menu) {
-
-        // $this->logger->info("dentro de adjustMenuForSession: ", [$menu]);
-
-        // Iniciar la sesión si no está ya iniciada
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        // Si hay sesion actva elimino path de login y register
-        if (isset($_SESSION['nombre_usuario'])) {
-            // Filtrar los elementos del menú
-            $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return !in_array($item['href'], ['/user/login', '/user/register' ]);
-            });
-            $menu['rol_usuario'] = $this->getRolUsuario();
-            $menu['icono_rol'] = $this->getIconoRol();
-        } else {
-            // Si no hay sesion entonces saco del menu las opciones para usuarios logueados
-            $menu['menu'] = array_filter($menu['menu'], function ($item) {
-                return !in_array($item['href'], ['/user/logout', '/user/ver-perfil', 
-                                                '/orden-de-trabajo/listar', '/orden-de-trabajo/nuevo', 
-                                                '/minuta/new','/user/login', '/user/register', 
-                                                '/minutas/listar', '/talleres/ver_talleres', '/facturacion/listar', '/facturacion/new' ]);
-                // return $item['href'] !== '/user/logout';
-            });
-        }
-
-        $this->logger->debug("menu: ", [$menu]);
-
-        return $menu;
-    }    
-
     public function getRolUsuario()
     {
         return $this->request->getKeySession('usuario_rol');
@@ -280,8 +247,6 @@ class UserController extends Controller
                 $userInfo['rol'] = $usuarioDb['rol'] ?? null;
                 $userInfo['icono'] = $usuarioDb['icono'] ?? null;
 
-                
-
                 // Guardar datos adicionales
                 $this->setDependenciaId($usuarioDb['dependencia_id']);
                 $this->setIdUser($nuevoIdUser);
@@ -475,10 +440,6 @@ class UserController extends Controller
     {
         return $_SESSION['nombre_usuario'];
     }
-    // public function getIdUser()
-    // {
-    //     return $_SESSION['id_user'];
-    // }
 
     public function getUserEmail()
     {

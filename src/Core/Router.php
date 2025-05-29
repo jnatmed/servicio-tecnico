@@ -137,7 +137,7 @@ Class Router
                 if (!empty($allowedRoles)) {
                     $userRole = $session->get('usuario_rol');
 
-                    if (!in_array('*', $allowedRoles) && !in_array($userRole, $allowedRoles)) {
+                    if (!in_array(ALL, $allowedRoles) && !in_array($userRole, $allowedRoles)) {
                         $this->logger->warning("🚫 Acceso denegado por rol", [
                             "Path" => $path,
                             "RolUsuario" => $userRole,
