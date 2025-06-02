@@ -327,7 +327,7 @@ return [
         'roles' => [ADMINISTRADOR]
     ],
     [
-        'method' => ['get'],
+        'method' => ['post'],
         'path' => '/user/actualizar_rol',
         'controller' => 'UserController@actualizarRol',
         'auth' => true,

@@ -83,11 +83,11 @@ $routes_definidas = [
             'name' => 'SALIR',
             'roles' => [ALL],
         ],
-        [
-            'href' => '/user/register',
-            'class' => '.archivo',
-            'name' => 'REGISTRO',
-        ],
+        // [
+        //     'href' => '/user/register',
+        //     'class' => '.archivo',
+        //     'name' => 'REGISTRO',
+        // ],
         [
             'href' => '/user/ver-perfil',
             'class' => '.perfil',

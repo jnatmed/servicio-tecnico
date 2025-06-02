@@ -1,4 +1,7 @@
 /* Estilos generales */
+html, body {
+    overflow: hidden;
+}
 body {
     font-family: Arial, sans-serif;
     background-color: #f0f0f0;
@@ -97,7 +100,8 @@ button:hover {
     border: 1px solid #ccc;
     max-height: 150px;
     overflow-y: auto;
-    
+    scrollbar-width: none;         /* Firefox */
+    -ms-overflow-style: none;      /* IE y Edge antiguos */    
 }
 
 .autocomplete-list {
@@ -155,6 +159,9 @@ input[type="submit"]{
     justify-content: flex-start;
     border-right: 2px solid #ddd;
     font-family: 'Arial', sans-serif; /* Fuente moderna */
+    overflow-y: auto;
+    scrollbar-width: none;         /* Firefox */
+    -ms-overflow-style: none;      /* IE y Edge antiguos */ 
 }
 
 .side-nav ul {
@@ -269,6 +276,8 @@ input[type="submit"]{
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    scrollbar-width: none;         /* Firefox */
+    -ms-overflow-style: none;      /* IE y Edge antiguos */    
     position: relative; /* Necesario para posicionar el pseudo-elemento */
 }
 

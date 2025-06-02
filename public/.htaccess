@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Establece la carpeta raíz (solo si el proyecto está en subcarpeta, ajustar según el caso)
+    # RewriteBase /miproyecto/
+
+    # Ignora archivos y carpetas existentes
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirige todo a index.php
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Seguridad básica: proteger archivos sensibles
+<FilesMatch "\.(env|log|sql|ini|bak|sh)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
