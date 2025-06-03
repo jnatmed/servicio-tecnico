@@ -10,7 +10,7 @@ $routes_definidas = [
             'href' => '/facturacion/listar',
             'class' => '.documento',
             'name' => 'VENTAS',
-            'roles' => [JEFATURA_VENTAS, CODIGO608, PUNTO_VENTA],
+            'roles' => [JEFATURA_VENTAS, CODIGO608, PUNTO_VENTA, PLANIFICACION_COMERCIAL],
             'submenu' => [
                 [
                     'href' => '/facturacion/listar',
@@ -20,7 +20,7 @@ $routes_definidas = [
                 [
                     'href' => '/facturacion/numerador/lista',
                     'name' => 'NUMERADOR FACTURACION',
-                    'roles' => [CODIGO608, JEFATURA_VENTAS],
+                    'roles' => [JEFATURA_VENTAS],
                 ],
                 [
                     'href' => '/facturacion/cuotas/listado',
@@ -40,7 +40,7 @@ $routes_definidas = [
                 [
                     'href' => '/facturacion/productos/listado',
                     'name' => 'PRODUCTOS',
-                    'roles' => [PUNTO_VENTA, PLANIFICACION_COMERCIAL],
+                    'roles' => [PUNTO_VENTA, PLANIFICACION_COMERCIAL, JEFATURA_VENTAS],
                 ],
             ],
         ],

@@ -234,13 +234,15 @@ class UserController extends Controller
                 $existeUsuario = $this->model->existe($username);
 
                 if (not($existeUsuario[0])) {
-                    $this->logger->debug("No existe usuario en la BD", [$existeUsuario]);
+                    $this->logger->debug("No existe usuario en la BD", [$existeUsuario, $username]);
                     $nuevoIdUser = $this->model->guardarNuevoAcceso($username, $userInfo);
+                    $existeUsuario = $this->model->existe($username);
                 } else {
                     $this->logger->debug("Existe usuario en la BD", [$existeUsuario]);
                     $nuevoIdUser = $existeUsuario[1];
                 }
 
+                $this->logger->info("exiteUsuario[]", [$existeUsuario]);
                 // 3. Preparar info para sesión
                 $usuarioDb = $existeUsuario[2];
                 $userInfo['id_user'] = $nuevoIdUser;
@@ -455,7 +457,7 @@ class UserController extends Controller
 
         // Obtener todos los datos del usuario (incluye datos extendidos)
         $user = $this->model->getUserById($this->getIdUser());
-
+        $this->logger->info("userVerPerfil : ", [$user, $this->getIdUser()]);
         // Armar estructura para la vista
         $datos = [
             'usuario' => [

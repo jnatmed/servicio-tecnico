@@ -328,9 +328,9 @@ class FacturasCollection extends Model
         return $this->queryBuilder->getFacturasPaginatedQuery($limit, $offset, $search, $sinComprobante, $dependenciaId, $rolUsuario);
     }
     
-    public function countFacturas($search = '', $sinComprobante = false, $dependenciaId=null)
+    public function countFacturas($search = '', $sinComprobante = false, $dependenciaId=null, $rolUsuario=null)
     {
-        return $this->queryBuilder->countFacturasQuery($search, $sinComprobante, $dependenciaId);
+        return $this->queryBuilder->countFacturasQuery($search, $sinComprobante, $dependenciaId, $rolUsuario=null);
     }
     
     public function getFacturaById($id)

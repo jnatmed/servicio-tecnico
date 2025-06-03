@@ -64,8 +64,6 @@
                 <th>Dependencia</th>
                 <th>Ordenativa / Función</th>
                 <th>Fecha Alta</th>
-                <th>Editar</th>
-                <th>Eliminar</th>
             </tr>
         </thead>
         <tbody id="usuarios-list">
@@ -233,8 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         <td>${usuario.ordenativa_funcion ?? '-'}</td>
                         <td>${new Date(usuario.created_at).toLocaleDateString()}</td>
-                        <td><a href="/usuario/editar?id=${usuario.id}">Editar</a></td>
-                        <td><a href="/usuario/eliminar?id=${usuario.id}" class="eliminar-link">Eliminar</a></td>
+
                     `;
                     tbody.appendChild(row);
                 });

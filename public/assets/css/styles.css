@@ -1,6 +1,8 @@
 /* Estilos generales */
 html, body {
-    overflow: hidden;
+    overflow: auto !important;
+    scrollbar-width: none !important;         /* Firefox */
+    -ms-overflow-style: none !important;      /* IE y Edge antiguos */   
 }
 body {
     font-family: Arial, sans-serif;
@@ -8,6 +10,7 @@ body {
     margin: 0;
     padding: 0;
     height: 100vh;
+
 }
 
 h1, h2 {

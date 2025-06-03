@@ -25,6 +25,13 @@
     z-index: -1; /* Envía el fondo detrás del contenido */
     text-align: center;
     font-weight: bold;
+    display: flex;
+    justify-content: center;
+}
+
+.fas {
+    margin-right: 3px;
+    margin-top: 3px;
 }
 
 @media (max-width: 768px) {

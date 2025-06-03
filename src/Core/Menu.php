@@ -97,6 +97,10 @@ class Menu
      */
     protected function tienePermiso(array $item, string $rolUsuario, bool $estaLogueado): bool
     {
+        // Ocultar LOGIN si ya está logueado
+        if (($item['href'] ?? '') === '/user/login' && $estaLogueado) {
+            return false;
+        }
         // Si requiere autenticación y no está logueado, no lo mostramos
         if (($item['auth'] ?? true) && !$estaLogueado) {
             return false;

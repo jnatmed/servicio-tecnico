@@ -368,19 +368,21 @@ class FacturacionController extends Controller
         $offset = ($page - 1) * $limit;
     
         try {
+            $this->logger->info("getDependenciaId // getRolUsuario", [$this->usuario->getDependenciaId(),$this->usuario->getRolUsuario()]);
             // Obtener facturas paginadas
             $facturas = $this->model->getFacturasPaginated(
                  $limit, 
                  $offset, 
                  $searchItem, 
                  $filtrarSinComprobante,
-                 $this->usuario->getDependenciaId(),
-                 $this->usuario->getRolUsuario()
+                 $this->usuario->getDependenciaId() ?? null,
+                 $this->usuario->getRolUsuario() ?? null
                 );
             $totalFacturas = $this->model->countFacturas(
                   $searchItem, 
                   $filtrarSinComprobante, 
-                  $this->usuario->getDependenciaId()
+                  $this->usuario->getDependenciaId() ?? null,
+                  $this->usuario->getRolUsuario() ?? null
                 );
     
             // Si es AJAX, devolver JSON
@@ -397,16 +399,27 @@ class FacturacionController extends Controller
                 exit;
             }
     
-            // Si es una solicitud normal, renderizar la vista
-            return view('facturacion/factura.listado', array_merge([
+            // Armar datos base
+            $data = [
                 'facturas' => $facturas,
                 'total' => $totalFacturas,
                 'limit' => $limit,
                 'currentPage' => $page,
                 'search' => $searchItem,
-                'nombre_dependencia' => $this->usuario->getDescripcionDependencia()
-            ], 
-                $this->menu)
+            ];
+            
+            // Agregar dependencia si corresponde
+            if (
+                $this->usuario->getRolUsuario() === PUNTO_VENTA &&
+                $this->usuario->getDescripcionDependencia() !== null
+            ) {
+                $data['nombre_dependencia'] = $this->usuario->getDescripcionDependencia();
+            }else{
+                $data['nombre_dependencia'] = 'Vista General';
+            }
+            // Renderizar vista
+            return view('facturacion/factura.listado', 
+                        array_merge($data,$this->menu)
             );
     
         } catch (Exception $e) {

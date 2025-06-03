@@ -83,7 +83,7 @@ return [
         'path' => '/facturacion/listar',
         'controller' => 'Facturacion\FacturacionController@listar',
         'auth' => true,
-        'roles' => [ADMINISTRADOR, PUNTO_VENTA, CODIGO608]
+        'roles' => [ADMINISTRADOR, PUNTO_VENTA, CODIGO608, JEFATURA_VENTAS]
     ],
     [
         'method' => ['get'],
@@ -104,7 +104,7 @@ return [
         'path' => '/facturacion/numerador/lista',
         'controller' => 'Facturacion\FacturacionController@listarNumerador',
         'auth' => true,
-        'roles' => [ADMINISTRADOR, JEFATURA_VENTAS, CODIGO608]
+        'roles' => [ADMINISTRADOR, JEFATURA_VENTAS]
     ],
     [
         'method' => ['get'],

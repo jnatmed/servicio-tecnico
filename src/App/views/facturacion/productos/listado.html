@@ -42,6 +42,7 @@
                             <tr>
                                 <th>#</th>
                                 <th>Descripción</th>
+                                <th>Unidad Productora</th>
                                 <th>Estado</th>
                                 <th>Expediente</th>
                                 <th>Precio</th>
@@ -57,6 +58,7 @@
 
                                         <td>{{ loop.index }}</td>
                                         <td>{{ producto.descripcion_proyecto }}</td>
+                                        <td>{{ producto.unidad_productora }}</td>
                                         <td>
                                             {% if producto.estado == 'iniciado' %}
                                                 <i class="bi bi-hourglass-split text-warning" title="Iniciado"></i> Iniciado
@@ -308,7 +310,7 @@
                                         location.reload();
                                     });
                                 } else {
-                                    Swal.fire('Error', 'No se pudo eliminar el producto.', 'error');
+                                    Swal.fire('Error', data.error || 'No se pudo eliminar el producto.', 'error');
                                 }
                             })
                             .catch(err => {

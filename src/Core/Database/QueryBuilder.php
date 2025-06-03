@@ -12,11 +12,14 @@ class QueryBuilder
     public PDO $pdo;
     public Logger $logger;
     private $lastQuery;
+    public $request;
 
     public function __construct(PDO $pdo, ?Logger $logger = null)
     {   
+        global $request;
         $this->pdo = $pdo;
         $this->logger = $logger;
+        $this->request = $request;
     }
 
     public function select($table, $columns = '*', $params = [])
@@ -231,7 +234,7 @@ class QueryBuilder
         $executionResult = $statement->execute();
     
         // Registrar en la auditoría
-        $this->registrarAuditoria($table, 'UPDATE', $_SESSION['account'] ?? null, $datosPrevios, $data, $conditions['id'] ?? null);
+        $this->registrarAuditoria($table, 'UPDATE', $this->request->getKeySession(ID_SESSION) ?? null, $datosPrevios, $data, $conditions['id'] ?? null);
     
         return $executionResult;
     }
@@ -241,50 +244,56 @@ class QueryBuilder
 
     public function delete($table, $conditions)
     {
-        $whereClauses = [];
-        $bindings = [];
-    
-        foreach ($conditions as $key => $value) {
-            if (is_array($value)) {
-                $placeholders = [];
-                foreach ($value as $index => $item) {
-                    $placeholder = ":{$key}_{$index}";
-                    $placeholders[] = $placeholder;
-                    $bindings[$placeholder] = $item;
+        try {
+            $whereClauses = [];
+            $bindings = [];
+
+            foreach ($conditions as $key => $value) {
+                if (is_array($value)) {
+                    $placeholders = [];
+                    foreach ($value as $index => $item) {
+                        $placeholder = ":{$key}_{$index}";
+                        $placeholders[] = $placeholder;
+                        $bindings[$placeholder] = $item;
+                    }
+                    $whereClauses[] = "$key IN (" . implode(', ', $placeholders) . ")";
+                } else {
+                    $whereClauses[] = "$key = :$key";
+                    $bindings[":$key"] = $value;
                 }
-                $whereClauses[] = "$key IN (" . implode(', ', $placeholders) . ")";
-            } else {
-                $whereClauses[] = "$key = :$key";
-                $bindings[":$key"] = $value;
             }
+
+            $where = implode(' AND ', $whereClauses);
+
+            // Obtener datos previos para auditoría
+            $querySelect = "SELECT * FROM $table WHERE $where";
+            $statement = $this->pdo->prepare($querySelect);
+            $statement->execute($bindings);
+            $datosPrevios = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+            // Ejecutar eliminación
+            $queryDelete = "DELETE FROM $table WHERE $where";
+            $sentencia = $this->pdo->prepare($queryDelete);
+
+            foreach ($bindings as $key => $value) {
+                $sentencia->bindValue($key, $value);
+            }
+
+            $sentencia->execute();
+            $affectedRows = $sentencia->rowCount();
+
+            // Registrar auditoría por cada fila eliminada
+            foreach ($datosPrevios as $row) {
+                $this->registrarAuditoria($table, 'DELETE', $this->request->getKeySession(ID_SESSION), $row, null, $row['id'] ?? null);
+            }
+
+            return $affectedRows;
+        } catch (PDOException $e) {
+            $this->logger->error("❌ Error al eliminar de la tabla $table: " . $e->getMessage());
+            throw new Exception("No se pudo eliminar correctamente de $table.");
         }
-    
-        $where = implode(' AND ', $whereClauses);
-    
-        // Obtener datos previos para auditoría
-        $querySelect = "SELECT * FROM $table WHERE $where";
-        $statement = $this->pdo->prepare($querySelect);
-        $statement->execute($bindings);
-        $datosPrevios = $statement->fetchAll(PDO::FETCH_ASSOC);
-    
-        // Ejecutar eliminación
-        $queryDelete = "DELETE FROM $table WHERE $where";
-        $sentencia = $this->pdo->prepare($queryDelete);
-    
-        foreach ($bindings as $key => $value) {
-            $sentencia->bindValue($key, $value);
-        }
-    
-        $sentencia->execute();
-        $affectedRows = $sentencia->rowCount();
-    
-        // Registrar auditoría por cada fila eliminada
-        foreach ($datosPrevios as $row) {
-            $this->registrarAuditoria($table, 'DELETE', $_SESSION['account'] ?? null, $row, null, $row['id'] ?? null);
-        }
-    
-        return $affectedRows;
     }
+
     
     
     private function registrarAuditoria($tabla, $operacion, $usuario, $datosPrevios = null, $datosNuevos = null, $idRegistro = null)
@@ -547,6 +556,7 @@ class QueryBuilder
     public function getFacturasPaginatedQuery($limit, $offset, $search = '', $sinComprobante = false, $usuarioDependencia = null, $rolUsuario=null)
     {
         try {
+            $this->logger->info("usuarioDependencia, rolUsuario", [$usuarioDependencia, $rolUsuario]);
             $query = "SELECT f.*, 
                              d.descripcion AS unidad_facturadora, 
                              a.nombre AS nombre_agente, 
@@ -572,7 +582,7 @@ class QueryBuilder
             }
     
             // Filtro por dependencia
-            if (!is_null($usuarioDependencia)) {
+            if ($rolUsuario === PUNTO_VENTA && !is_null($usuarioDependencia)) {
                 $whereClauses[] = "f.unidad_que_factura = :usuarioDependencia";
                 $params['usuarioDependencia'] = $usuarioDependencia;
             }
@@ -592,7 +602,7 @@ class QueryBuilder
             if (!empty($search)) {
                 $stmt->bindValue(':search', $params['search'], PDO::PARAM_STR);
             }
-            if (!is_null($usuarioDependencia)) {
+            if (isset($params['usuarioDependencia'])) {
                 $stmt->bindValue(':usuarioDependencia', $params['usuarioDependencia'], PDO::PARAM_INT);
             }
             $stmt->bindValue(':limit', (int) $limit, PDO::PARAM_INT);
@@ -609,7 +619,7 @@ class QueryBuilder
         
     
     
-    public function countFacturasQuery($search = '', $sinComprobante = false, $dependenciaId = null)
+    public function countFacturasQuery($search = '', $sinComprobante = false, $dependenciaId = null, $rolUsuario=null)
     {
         try {
             $query = "SELECT COUNT(*) as total FROM factura";
@@ -628,8 +638,8 @@ class QueryBuilder
                 $whereClauses[] = "path_comprobante IS NULL";
             }
     
-            // Filtro por dependencia
-            if (!is_null($dependenciaId)) {
+            // Filtro por dependencia solo si el rol ES PUNTO_VENTA
+            if ($rolUsuario === PUNTO_VENTA && !is_null($dependenciaId)) {
                 $whereClauses[] = "unidad_que_factura = :dependenciaId";
                 $params['dependenciaId'] = $dependenciaId;
             }
@@ -744,7 +754,7 @@ class QueryBuilder
                 $this->registrarAuditoria(
                     $tabla,
                     $tipo,
-                    $_SESSION['account'] ?? null,
+                    $this->request->getKeySession(ID_SESSION),
                     $datosPrevios,
                     $params,
                     $idRegistro

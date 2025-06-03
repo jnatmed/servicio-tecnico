@@ -301,12 +301,21 @@ class ProductoController extends Controller
         $jsonList = $this->request->get('jsonList');
         $searchItem = $this->request->get('search');
 
-        $usuarioDependencia = $this->usuario->getDependenciaId();
+        // $usuarioDependencia = $this->usuario->getDependenciaId();
+        // Agregar dependencia si corresponde
+        if (
+            $this->usuario->getRolUsuario() === PUNTO_VENTA &&
+            $this->usuario->getDependenciaId() !== null
+        ) {
+            $usuarioDependencia = $this->usuario->getDependenciaId();
+        }else{
+            $usuarioDependencia = null;
+        }
 
         $this->logger->info("📡 Entrando al método listar()", [
             'jsonList' => $jsonList,
             'search' => $searchItem,
-            'usuarioDependencia' => $usuarioDependencia
+            'usuarioDependencia' => $usuarioDependencia,
         ]);
 
         if ($jsonList) {
@@ -352,11 +361,21 @@ class ProductoController extends Controller
                 $listaProductos = $this->model->getProductosConUltimoPrecio($usuarioDependencia, $this->usuario->getRolUsuario());
                 $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos), 'usuarioDependencia' => $usuarioDependencia]);
     
+                // Agregar dependencia si corresponde
+                if (
+                    $this->usuario->getRolUsuario() === PUNTO_VENTA &&
+                    $this->usuario->getDescripcionDependencia() !== null
+                ) {
+                    $data['nombre_dependencia'] = $this->usuario->getDescripcionDependencia();
+                }else{
+                    $data['nombre_dependencia'] = 'Vista General';
+                }                
+
                 view('facturacion/productos/listado', array_merge(
                     [
-                        'listaProductos' => $listaProductos, 
-                        'nombre_dependencia' => $this->usuario->getDescripcionDependencia()
+                        'listaProductos' => $listaProductos 
                     ],
+                    $data,
                     $this->menu
                 ));
             } catch (Exception $e) {

@@ -402,7 +402,8 @@ class ProductosCollection extends Model
                     p.*,
                     pr.precio,
                     pr.fecha_precio,
-                    pr.pv_autorizacion_consejo
+                    pr.pv_autorizacion_consejo,
+                    d.descripcion AS unidad_productora
                 FROM producto p
                 LEFT JOIN (
                     SELECT pr1.*
@@ -413,16 +414,18 @@ class ProductosCollection extends Model
                         GROUP BY id_producto
                     ) pr2 ON pr1.id_producto = pr2.id_producto AND pr1.fecha_precio = pr2.ultima_fecha
                 ) pr ON p.id = pr.id_producto
+                LEFT JOIN dependencia d ON p.id_unidad_q_fabrica = d.id
                 WHERE p.estado = 'a_la_venta'
             ";
 
             $params = [];
 
             // Solo filtra por dependencia si el usuario NO es administrador
-            if (!$this->esAdminPorRol($rolDelUsuario) && !is_null($usuarioDependencia)) {
+            if ($rolDelUsuario === PUNTO_VENTA && !is_null($usuarioDependencia)) {
                 $sql .= " AND p.id_unidad_q_fabrica = :dependencia";
                 $params['dependencia'] = $usuarioDependencia;
             }
+
 
             $sql .= " ORDER BY p.created_at DESC";
 

@@ -393,7 +393,7 @@ class UserCollection extends Model
                     s.fecha_resolucion,
                     s.observaciones
                 FROM usuarios u
-                INNER JOIN roles r ON r.id = u.rol_id
+                LEFT JOIN roles r ON r.id = u.rol_id
                 LEFT JOIN (
                     SELECT *
                     FROM solicitud_asignacion_dependencia
@@ -412,7 +412,7 @@ class UserCollection extends Model
                 $this->logger->info("✅ Usuario con solicitud encontrada:", [$resultado[0]]);
                 return $resultado[0];
             } else {
-                $this->logger->info("ℹ️ Usuario no encontrado.");
+                $this->logger->info("ℹ️ Usuario no encontrado.", [$resultado]);
                 return null;
             }
 

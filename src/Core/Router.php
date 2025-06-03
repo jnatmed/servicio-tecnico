@@ -105,7 +105,7 @@ Class Router
 
             $session = new Session();
 
-            $this->logger->info("protectedRoutes: ", [$this->protectedRoutes]);
+            // $this->logger->info("protectedRoutes: ", [$this->protectedRoutes]);
             $this->logger->info("path: ", [$path]);
             $this->logger->info("session: ", [$_SESSION]);
 
