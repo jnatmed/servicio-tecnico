@@ -107,7 +107,7 @@ class FacturasCollection extends Model
             $sql = "
                 SELECT *
                 FROM (
-                    SELECT nf.*, d.nombre_dependencia,
+                    SELECT nf.*, d.descripcion,
                         ROW_NUMBER() OVER (
                             PARTITION BY nf.dependencia_id
                             ORDER BY
@@ -122,7 +122,7 @@ class FacturasCollection extends Model
                     INNER JOIN dependencia d ON d.id = nf.dependencia_id
                 ) t
                 WHERE t.rn = 1
-                ORDER BY t.nombre_dependencia ASC;
+                ORDER BY t.descripcion ASC;
             ";
     
             return $this->queryBuilder->query($sql);
@@ -212,7 +212,8 @@ class FacturasCollection extends Model
         ]);
     }
         
-    public function getProximoNumeroFacturaPorUsuario($usuarioId) {
+    public function getProximoNumeroFacturaPorUsuario($usuarioId)
+    {
         $sql = "
             SELECT 
                 nf.id AS id_numerador,
@@ -232,18 +233,25 @@ class FacturasCollection extends Model
         $result = $this->queryBuilder->query($sql, ['usuarioId' => $usuarioId]);
 
         if (count($result) === 0) {
-            throw new Exception("No se encontró solicitud de dependencia para este usuario.");
+            return [
+                'success' => false,
+                'message' => 'No hay solicitudes realizadas por este usuario.'
+            ];
         }
 
         $numerador = $result[0];
 
         if ($numerador['estado_dependencia'] === 'confirmado') {
             if ($numerador['ultimo_utilizado'] >= $numerador['hasta']) {
-                throw new Exception("Se alcanzó el límite de numeración para este punto de venta.");
+                return [
+                    'success' => false,
+                    'message' => 'Se alcanzó el límite de numeración para este punto de venta.'
+                ];
             }
         }
 
         return [
+            'success' => true,
             'id_numerador' => $numerador['id_numerador'],
             'proximo_numero' => $numerador['ultimo_utilizado'] + 1,
             'punto_venta' => $numerador['punto_venta'],
@@ -251,6 +259,7 @@ class FacturasCollection extends Model
             'estado_dependencia' => $numerador['estado_dependencia']
         ];
     }
+
 
     
     public function actualizarNumeradorFactura($idNumerador, $nuevoValor) {

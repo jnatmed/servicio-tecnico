@@ -128,6 +128,13 @@ return [
         'roles' => [ADMINISTRADOR, JEFATURA_VENTAS]
     ],
     [
+        'method' => ['post'],
+        'path' => '/facturacion/numerador/solicitar_nueva_numeracion',
+        'controller' => 'Facturacion\FacturacionController@solicitarNuevaNumeracion',
+        'auth' => true,
+        'roles' => [ADMINISTRADOR, PUNTO_VENTA]
+    ],
+    [
         'method' => ['get'],
         'path' => '/facturacion/api_get_agentes',
         'controller' => 'Facturacion\AgenteController@getAgentes',

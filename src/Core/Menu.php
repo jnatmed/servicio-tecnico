@@ -34,7 +34,7 @@ class Menu
         // Cargar archivo PHP en vez de JSON
         $datos = require $rutaPhp;
 
-        $log->info("menu_definido: ", [$datos]);
+        // $log->info("menu_definido: ", [$datos]);
 
         // Validar que contenga la configuración necesaria
         if (!isset($datos['config']['rol_root'])) {
