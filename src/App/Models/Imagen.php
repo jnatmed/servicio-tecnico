@@ -7,7 +7,7 @@ use Paw\Core\Model;
 
 class Imagen extends Model
 {
-    const UPLOADDIRECTORY = '../public/assets/imgs/productos/';
+    const UPLOADDIRECTORY = __DIR__ . '/../../../public/assets/imgs/productos/';
     const UPLOADDIRECTORY_COMPROBANTES = __DIR__ . '/../../../comprobantes/';
     const MAX_FILE_SIZE = 1 * 1024 * 1024;
 
@@ -183,13 +183,13 @@ class Imagen extends Model
         }
 
         // Verificar si el directorio de destino tiene permisos de escritura
-        if (!is_writable(self::UPLOADDIRECTORY)) {
-            $log->error("El directorio de destino no tiene permisos de escritura: ", [self::UPLOADDIRECTORY]);
+        if (!is_writable(dirname($uploadPath))) {
+            $log->error("El directorio de destino no tiene permisos de escritura: ", [dirname($uploadPath)]);
             return [
                 'exito' => false,
                 'description' => "El directorio de destino no tiene permisos de escritura."
             ];
-        }
+}
 
         // Intentar mover el archivo subido al directorio de destino
         if (move_uploaded_file($this->fileTmpName, $uploadPath)) {

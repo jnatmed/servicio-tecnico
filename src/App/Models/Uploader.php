@@ -7,7 +7,7 @@ use Paw\Core\Model;
 
 class Uploader extends Model
 {
-    const UPLOADDIRECTORY = '../uploads/';
+    const UPLOADDIRECTORY = __DIR__ . '/../../../uploads/';
     const UPLOAD_COMPLETED = true;
     const ERROR_TIPO_NO_PERMITIDO = 1;
     const ERROR_TAMANIO_NO_PERMITIDO = 2;

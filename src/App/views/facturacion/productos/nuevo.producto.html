@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% include 'parts/head.view.html' %}
+</head>
+
+{% include 'parts/modulos.view.html' %}
+
+<section class="container d-flex justify-content-center mt-5">
+    <div class="col-md-8">
+        <h2 class="text-center mb-4">Nuevo Producto</h2>
+        <hr>
+
+        <form action="/facturacion/productos/nuevo" method="POST" enctype="multipart/form-data" class="row g-3 shadow p-4 rounded bg-white">
+
+            <div class="col-12">
+                <label for="descripcion" class="form-label">Descripción del Proyecto</label>
+                <input type="text" class="form-control" id="descripcion" name="descripcion_proyecto" required>
+            </div>
+
+            <div class="col-12">
+                <label for="estado" class="form-label">Estado</label>
+                <select name="estado" id="estado" class="form-select">
+                    <option value="iniciado">Iniciado</option>
+                    <option value="a_la_venta">A la venta</option>
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label for="stock_inicial" class="form-label">Stock Inicial</label>
+                <input type="number" class="form-control" id="stock_inicial" name="stock_inicial" required>
+            </div>
+
+            <div class="col-md-6">
+                <label for="unidad_medida" class="form-label">Unidad de Medida</label>
+                <input type="text" class="form-control" name="unidad_medida" id="unidad_medida" required>
+            </div>
+
+            <div class="col-md-12">
+                <label for="nro_proyecto" class="form-label">Nro. Proyecto Productivo</label>
+                <input type="text" class="form-control" name="nro_proyecto_productivo" id="nro_proyecto">
+            </div>
+
+            <div class="col-12">
+                <label for="imagen" class="form-label">Imagen del producto</label>
+                <input class="form-control" type="file" id="imagen" name="imagen">
+            </div>
+
+            <div class="col-12 text-end mt-3">
+                <button type="submit" class="btn btn-success">Crear Producto</button>
+                <button type="button" class="btn btn-secondary" onclick="history.back()">Volver</button>
+            </div>
+
+        </form>
+    </div>
+</section>
+
+{% include "parts/cierre-modulos.view.html" %}
+{% include 'parts/footer.view.html' %}
+</body>
+</html>

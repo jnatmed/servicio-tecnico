@@ -144,51 +144,105 @@ class FacturacionController extends Controller
             }
         
         } else {
-            // Si es una solicitud GET, se muestra el formulario con nro_factura
-            try {
-                $this->logger->debug("Intentando obtener ID de usuario desde UserController...");
-                $userId = $this->usuario->getIdUser();
-                $this->logger->debug("ID de usuario obtenido: {$userId}");
-        
-                $this->logger->debug("Llamando a getProximoNumeroFacturaPorUsuario con usuario ID: {$userId}");
-                $numeradorInfo = $this->model->getProximoNumeroFacturaPorUsuario($userId);
-                $this->logger->debug("Datos del numerador: ", $numeradorInfo);
-        
-                // Obtener punto de venta asociado
-                $puntoDeVenta = $numeradorInfo['punto_venta'];
-                $dependencia_idUser = $numeradorInfo['dependencia_idUser'];
-                $nroSecuencial = $numeradorInfo['proximo_numero'];
-                $nroFacturaSugerido = sprintf("%04d-%08d", $puntoDeVenta, $nroSecuencial); // formato tipo AFIP
-        
-                $this->logger->info("Número de factura sugerido para el formulario: {$nroFacturaSugerido}");
-            } catch (Exception $e) {
-                $this->logger->error("Error al obtener nro_factura: " . $e->getMessage());
-                $nroFacturaSugerido = 'Error';
-            }
-        
-            $datosFactura = [
+            
+            $userId = $this->usuario->getIdUser();
+            $this->logger->debug("ID de usuario obtenido: {$userId}");
+
+            $this->logger->debug("Llamando a getProximoNumeroFacturaPorUsuario con usuario ID: {$userId}");
+            $numeradorInfo = $this->model->getProximoNumeroFacturaPorDependencia($this->usuario->getDependenciaId());
+            $this->logger->debug("Datos del numerador: ", $numeradorInfo);
+
+            $data = [
                 'fecha_factura' => date('d/m/Y'),
-                'nro_factura' => $nroFacturaSugerido
+                'monto_minimo_cuota' => 10000,
+                'dependencias' => $this->model->getDependencias(),
+                'version' => time(),
+                'dependencia_id_user' => $this->usuario->getDependenciaId(), // ??
             ];
-        
-            $this->logger->debug("Renderizando formulario con datos: ", [$datosFactura, $numeradorInfo]);
-        
-            return view('facturacion/factura_new', array_merge(
-                $datosFactura,
-                $this->configFacturacion,
-                [ 
-                    "dependencias" => $this->model->getDependencias(), 
-                    'punto_venta' => $puntoDeVenta,
-                    'dependencia_id_user' => $dependencia_idUser,
+
+            /**
+             * Caso 1: No se puede obtener numerador
+             *  */ 
+
+            if (!$numeradorInfo['success']) {
+                $this->logger->warning("No se pudo obtener numerador: {$numeradorInfo['message']}");
+
+                $data = array_merge($data, [
+                    'mostrar_modal' => true,
+                    'mensaje_modal' => $numeradorInfo['message'],
+                    'solicitud_numeracion' => true,
                     'estado_dependencia' => $numeradorInfo['estado_dependencia'] ?? 'desconocido'
-                ],
-                ['monto_minimo_cuota' => 10000],
+                ]);
+            } else {
+                /**
+                 * Caso 2: Se pudo obtener numerador
+                 * cargamos los datos de numeracion de la factura
+                 *  */ 
+                // $this->logger->warning("Se pudo obtener numerador: {$numeradorInfo['message']}");
+                $this->logger->info("numeracionInfo: ", [$numeradorInfo]);
+                $puntoDeVenta = $numeradorInfo['punto_venta'];
+                $nroSecuencial = $numeradorInfo['proximo_numero'];
+                $nroFacturaSugerido = sprintf("%04d-%08d", $puntoDeVenta, $nroSecuencial); 
+
+                $this->logger->info("Número de factura sugerido para el formulario: {$nroFacturaSugerido}");
+
+                $data = array_merge($data, [
+                    'nro_factura' => $nroFacturaSugerido,
+                    'punto_venta' => $puntoDeVenta,
+                    'estado_dependencia' => $numeradorInfo['estado_dependencia'] ?? 'confirmado',
+                    'mostrar_modal' => false,
+                ]);
+            }
+
+            $this->logger->info("Renderizando vista de facturación con datos: ", $data);
+
+            return view('facturacion/factura_new', array_merge(
+                $data,
+                $this->configFacturacion,
                 $this->menu
             ));
         }
-        
-        
+
     }
+    public function solicitudNumeracion()
+    {
+        try {
+            $this->logger->info("Inicio de solicitud de numerador");
+
+            $dependenciaId = $this->usuario->getDependenciaId();
+            $datos = json_decode(file_get_contents('php://input'), true);
+
+            $expediente = $datos['expte_pedido_numeracion'] ?? null;
+            $desde = isset($datos['desde']) ? (int)$datos['desde'] : null;
+            $hasta = isset($datos['hasta']) ? (int)$datos['hasta'] : null;
+
+
+            if (!$dependenciaId || !$expediente || !$desde || !$hasta) {
+                throw new Exception("Datos incompletos para solicitar numerador.");
+            }
+
+            if ($desde > $hasta) {
+                throw new Exception("El rango de numeración no es válido (desde > hasta).");
+            }
+
+            $this->logger->info("Datos recibidos, pasaron el control: ", [$expediente, $desde, $hasta]);
+
+            // Insertar en la tabla numerador_factura
+            $this->model->insertarSolicitudNumerador($dependenciaId, $expediente, $desde, $hasta);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Solicitud enviada correctamente.'
+            ]);
+        } catch (Exception $e) {
+            $this->logger->error("Error en solicitarNumerador: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
 
     public function listarNumerador()
     {

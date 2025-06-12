@@ -118,7 +118,7 @@ $router->setLogger($log);
  * Definicion de constantes que seran usadas en la deficion 
  * de rutas y roles en el metodo Router->direct
  */
-require_once __DIR__ . '/core/roles_constants.php';
+require_once __DIR__ . '/Core/roles_constants.php';
 
 // 9) RUTAS: se cargan desde archivo PHP que retorna el array
 $permisos_definidos = require __DIR__ . '/routes_definicion.php';

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
-    <script src="/assets/js/facturacion.js"></script>
+    <script src="/assets/js/facturacion.js?v={{ version }}"></script>
 </head>
 
 {% include "parts/modulos.view.html" %}
@@ -106,6 +106,8 @@
                 <button type="submit" id="submitFactura" class="btn btn-success">Confirmar Venta</button>
             </div>
         </form>
+        <div id="solicitud-numerador-contenedor"></div>
+      
     </div>
 </section>
 
@@ -178,38 +180,189 @@
   </div>
 </div> 
 
+
+
 {% include "parts/cierre-modulos.view.html" %}
 {% include 'parts/footer.view.html' %}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const estadoDependencia = "{{ estado_dependencia|lower }}";
+document.addEventListener("DOMContentLoaded", function () {
+    const mostrar_modal = "{{ mostrar_modal is defined and mostrar_modal ? 'true' : 'false' }}";
+    console.log(mostrar_modal);
 
-        console.log("🔍 Estado recibido:", estadoDependencia);
+    // CASO 1: Tiene dependencia confirmada, pero necesita solicitar numerador
+    if (mostrar_modal == true) {
+        console.log("CASO 2: Tiene dependencia confirmada, pero necesita solicitar numerador")
+        renderizarModalSolicitudNumerador();
+        mostrarModalSolicitudNumerador();
+    }
 
-        if (!estadoDependencia || estadoDependencia === 'solicitado' || estadoDependencia === 'desconocido') {
-            mostrarModalBloqueante("El usuario no tiene una dependencia confirmada aún. La solicitud de asignación no ha sido autorizada. Por favor, comuníquese con el área correspondiente.");
+    // --- FUNCIONES ---
+    function mostrarModalBloqueante(mensaje, bloquear = true) {
+        console.log("🧱 Ejecutando mostrarModalBloqueante");
+        console.log("📝 Mensaje recibido:", mensaje);
+        console.log("🔒 Bloquear formulario:", bloquear);
+
+        if (!document.getElementById("mensajeModal")) {
+            const modalHTML = `
+                <div class="modal fade" id="mensajeModal" tabindex="-1" aria-labelledby="mensajeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content text-center">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="mensajeModalLabel">Atención</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            </div>
+                            <div class="modal-body" id="mensajeModalContenido"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            const wrapper = document.createElement("div");
+            wrapper.innerHTML = modalHTML.trim();
+            document.body.appendChild(wrapper.firstChild);
         }
 
-        function mostrarModalBloqueante(mensaje) {
-            const modalBody = document.getElementById("mensajeModalContenido");
-            modalBody.innerHTML = mensaje;
+        const modalBody = document.getElementById("mensajeModalContenido");
+        if (modalBody) modalBody.innerHTML = mensaje;
 
-            const modal = new bootstrap.Modal(document.getElementById("mensajeModal"), {
+        const modalElement = document.getElementById("mensajeModal");
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement, {
                 backdrop: 'static',
                 keyboard: false
             });
             modal.show();
+        }
 
+        if (bloquear) {
             const form = document.getElementById("facturaForm");
             if (form) {
-                Array.from(form.elements).forEach(el => {
-                    el.disabled = true;
-                });
+                form.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
             }
         }
-    });
+    }
+
+    function renderizarModalSolicitudNumerador() {
+        const contenedor = document.getElementById("solicitud-numerador-contenedor");
+        if (!contenedor) return;
+
+        contenedor.innerHTML = `
+            <div class="modal fade" id="modalSolicitudNumerador" tabindex="-1" aria-labelledby="modalSolicitudNumeradorLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content text-start">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalSolicitudNumeradorLabel">Solicitud de Numerador</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="bloqueFormularioNumerador">
+                                <div class="mb-3">
+                                    <label for="expteNumerador" class="form-label">Expediente de Solicitud:</label>
+                                    <input type="text" id="expteNumerador" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="desdeNumerador" class="form-label">Número Desde:</label>
+                                    <input type="number" id="desdeNumerador" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="hastaNumerador" class="form-label">Número Hasta:</label>
+                                    <input type="number" id="hastaNumerador" class="form-control" required>
+                                </div>
+                                <div class="text-end">
+                                    <button type="button" id="btnEnviarSolicitudNumerador" class="btn btn-primary">Enviar Solicitud</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+
+
+    function mostrarModalSolicitudNumerador() {
+        const modalElement = document.getElementById("modalSolicitudNumerador");
+        if (!modalElement) return;
+
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false
+        });
+        modal.show();
+
+        const btn = document.getElementById("btnEnviarSolicitudNumerador");
+        if (btn) {
+            btn.addEventListener("click", function () {
+                const expte = document.getElementById("expteNumerador").value;
+                const desde = document.getElementById("desdeNumerador").value;
+                const hasta = document.getElementById("hastaNumerador").value;
+
+                console.log("Enviando por AJAX:", { expte, desde, hasta });
+
+                fetch('/facturacion/numerador/solicitar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        expte_pedido_numeracion: expte,
+                        desde: desde,
+                        hasta: hasta,
+                        usuario: "{{ user_id }}"
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log("✅ Solicitud enviada correctamente");
+                        modal.hide();
+                        location.reload(); // o actualizá un bloque específico
+                    } else {
+                        console.log("❌ Error en el servidor:", data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Error de red:", error);
+                });
+            });
+        }
+    }
+
+
+
+    function enviarSolicitudNumerador() {
+        console.log("📨 Enviando solicitud de numerador...");
+
+        fetch('/facturacion/numerador/solicitar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ usuario: "{{ user_id }}" })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("✅ Respuesta del servidor:", data);
+            if (data.success) { 
+                console.log("Solicitud enviada correctamente.");
+                location.reload(); // O podés actualizar solo partes necesarias
+            } else {
+                console.log("Error al solicitar numerador: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error en la solicitud:", error);
+            console.log("No se pudo enviar la solicitud. Intente nuevamente.");
+        });
+    }    
+});
 </script>
+
+
+
 
 </body>
 </html>

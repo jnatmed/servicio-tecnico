@@ -25,110 +25,110 @@ class Controller
         
         global $connection, $log;        
 
-        $this->viewsDir = __DIR__ . '/../App/views/';
+        $this->viewsDir = __DIR__ . '/../app/views/';
 
         $this->claseMenu = new Menu();
         
-        $this->menu = [
-            'menu' => [
+        // $this->menu = [
+        //     'menu' => [
 
-                [
-                    'href' => '/minutas/listar',
-                    'class' => '.edicion',
-                    'name' => 'MINUTAS',
-                    'submenu' => [
-                        [
-                            'href' => '/minuta/new',
-                            'name' => 'NUEVA MINUTA',
-                        ],
-                        [
-                            'href' => '/minutas/listar',
-                            'name' => 'VER MINUTAS'
-                        ],
-                    ]                    
-                ],
+        //         [
+        //             'href' => '/minutas/listar',
+        //             'class' => '.edicion',
+        //             'name' => 'MINUTAS',
+        //             'submenu' => [
+        //                 [
+        //                     'href' => '/minuta/new',
+        //                     'name' => 'NUEVA MINUTA',
+        //                 ],
+        //                 [
+        //                     'href' => '/minutas/listar',
+        //                     'name' => 'VER MINUTAS'
+        //                 ],
+        //             ]                    
+        //         ],
 
-                [
-                    'href' => '/facturacion/listar',
-                    'class' => '.documento',
-                    'name' => 'VENTAS',
-                    'submenu' => [
-                        [
-                            'href' => '/facturacion/listar',
-                            'name' => 'VENTAS'
-                        ],
-                        [
-                            'href' => '/facturacion/numerador/lista',
-                            'name' => 'NUMERADOR FACTURACION'
-                        ],
-                        [
-                            'href' => '/facturacion/cuotas/listado',
-                            'name' => 'REPORTES'
-                        ],
-                        [
-                            'href' => '/facturacion/cuotas/solicitudes-pendientes',
-                            'name' => 'SOLICITUDES DESCUENTOS'
-                        ],
-                        [
-                            'href' => '/facturacion/new',
-                            'name' => 'NUEVA VENTA'
-                        ],
-                        [
-                            'href' => '/facturacion/productos/listado',
-                            'name' => 'PRODUCTOS'
-                        ],
-                    ]
+        //         [
+        //             'href' => '/facturacion/listar',
+        //             'class' => '.documento',
+        //             'name' => 'VENTAS',
+        //             'submenu' => [
+        //                 [
+        //                     'href' => '/facturacion/listar',
+        //                     'name' => 'VENTAS'
+        //                 ],
+        //                 [
+        //                     'href' => '/facturacion/numerador/lista',
+        //                     'name' => 'NUMERADOR FACTURACION'
+        //                 ],
+        //                 [
+        //                     'href' => '/facturacion/cuotas/listado',
+        //                     'name' => 'REPORTES'
+        //                 ],
+        //                 [
+        //                     'href' => '/facturacion/cuotas/solicitudes-pendientes',
+        //                     'name' => 'SOLICITUDES DESCUENTOS'
+        //                 ],
+        //                 [
+        //                     'href' => '/facturacion/new',
+        //                     'name' => 'NUEVA VENTA'
+        //                 ],
+        //                 [
+        //                     'href' => '/facturacion/productos/listado',
+        //                     'name' => 'PRODUCTOS'
+        //                 ],
+        //             ]
                     
-                ],
-                [
-                    'href' => '/facturacion/agentes/listado',
-                    'class' => '.lista',
-                    'name' => 'AGENTES',
-                    'submenu' => [
-                        [
-                            'href' => '/facturacion/agentes/listado',
-                            'name' => 'LISTADO'
-                        ],
-                        [
-                            'href' => '/facturacion/agentes/nuevo',
-                            'name' => 'NUEVO AGENTE'
-                        ]
-                    ]
+        //         ],
+        //         [
+        //             'href' => '/facturacion/agentes/listado',
+        //             'class' => '.lista',
+        //             'name' => 'AGENTES',
+        //             'submenu' => [
+        //                 [
+        //                     'href' => '/facturacion/agentes/listado',
+        //                     'name' => 'LISTADO'
+        //                 ],
+        //                 [
+        //                     'href' => '/facturacion/agentes/nuevo',
+        //                     'name' => 'NUEVO AGENTE'
+        //                 ]
+        //             ]
                     
-                ],
-                [
-                    'href' => '/user/get_listado',
-                    'class' => '.lista',
-                    'name' => 'USUARIOS',
-                    'submenu' => [
-                        [
-                            'href' => '/user/get_listado',
-                            'name' => 'LISTADO'
-                        ]
-                    ]
+        //         ],
+        //         [
+        //             'href' => '/user/get_listado',
+        //             'class' => '.lista',
+        //             'name' => 'USUARIOS',
+        //             'submenu' => [
+        //                 [
+        //                     'href' => '/user/get_listado',
+        //                     'name' => 'LISTADO'
+        //                 ]
+        //             ]
                     
-                ],
-                [
-                    'href' => '/user/login',
-                    'name' => 'LOGIN'
-                ],
-                [
-                    'href' => '/user/logout', // 
-                    'class' => '.salir',
-                    'name' => 'SALIR'
-                ],
-                [
-                    'href' => '/user/register', // cualquiera
-                    'class' => '.archivo',
-                    'name' => 'REGISTRO'
-                ],
-                [
-                    'href' => '/user/ver-perfil', // logueados > todos
-                    'class' => '.perfil',
-                    'name' => 'PERFIL'
-                ]
-            ]
-        ];
+        //         ],
+        //         [
+        //             'href' => '/user/login',
+        //             'name' => 'LOGIN'
+        //         ],
+        //         [
+        //             'href' => '/user/logout', // 
+        //             'class' => '.salir',
+        //             'name' => 'SALIR'
+        //         ],
+        //         [
+        //             'href' => '/user/register', // cualquiera
+        //             'class' => '.archivo',
+        //             'name' => 'REGISTRO'
+        //         ],
+        //         [
+        //             'href' => '/user/ver-perfil', // logueados > todos
+        //             'class' => '.perfil',
+        //             'name' => 'PERFIL'
+        //         ]
+        //     ]
+        // ];
     
         $this->qb = new QueryBuilder($connection, $log);
         $this->request = new Request();

@@ -96,172 +96,161 @@ Class Router
         $objController->$method();
     }
 
-    public function direct(Request $request)
-    {
-        $alreadyCalled = false; 
+public function direct(Request $request)
+{
+    $controller = null;
+    $method = null;
+    $allowedRoles = null;
+    $alreadyCalled = false;
 
-        try {
-            list($path, $http_method) = $request->route();
+    try {
+        list($path, $http_method) = $request->route();
 
-            $session = new Session();
+        $session = new Session();
 
-            // $this->logger->info("protectedRoutes: ", [$this->protectedRoutes]);
-            $this->logger->info("path: ", [$path]);
-            $this->logger->info("session: ", [$_SESSION]);
+        $this->logger->info("path: ", [$path]);
+        $this->logger->info("session: ", [$_SESSION]);
 
-            if (isset($this->protectedRoutes[$path])) {
-                if (!$session->isLoggedIn()) {
-                    $this->logger->warning("🔐 Acceso no autenticado bloqueado", [
-                        "Path" => $path,
-                        "Method" => $http_method
+        if (isset($this->protectedRoutes[$path])) {
+            if (!$session->isLoggedIn()) {
+                $this->logger->warning("🔐 Acceso no autenticado bloqueado", [
+                    "Path" => $path,
+                    "Method" => $http_method
+                ]);
+
+                if ($request->isAjax()) {
+                    header('Content-Type: application/json', true, 401);
+                    echo json_encode([
+                        'success' => false,
+                        'error' => '401 - No autenticado',
+                        'message' => 'Debes iniciar sesión para acceder a este recurso.'
                     ]);
-
-                    if ($request->isAjax()) {
-                        $this->logger->info("🔐 Acceso no autenticado bloqueado por AJAX");
-
-                        header('Content-Type: application/json', true, 401);
-                        echo json_encode([
-                            'success' => false,
-                            'error' => '401 - No autenticado',
-                            'message' => 'Debes iniciar sesión para acceder a este recurso.'
-                        ]);
-                        exit;
-                    }
-
-                    header('Location: /user/login');
                     exit;
                 }
 
-                $allowedRoles = $this->protectedRoutes[$path]['roles'] ?? [];
+                header('Location: /user/login');
+                exit;
+            }
 
-                if (!empty($allowedRoles)) {
-                    $userRole = $session->get('usuario_rol');
+            $allowedRoles = $this->protectedRoutes[$path]['roles'] ?? [];
 
-                    if (!in_array(ALL, $allowedRoles) && !in_array($userRole, $allowedRoles)) {
-                        $this->logger->warning("🚫 Acceso denegado por rol", [
-                            "Path" => $path,
-                            "RolUsuario" => $userRole,
-                            "RolesPermitidos" => $allowedRoles
-                        ]);
+            if (!empty($allowedRoles)) {
+                $userRole = $session->get('usuario_rol');
 
-                        if ($request->isAjax()) {
-                            $this->logger->warning("🚫 Acceso denegado por rol mediante AJAX");
-                            header('Content-Type: application/json');
-                            http_response_code(403);
-                            echo json_encode([
-                                'success' => false, 
-                                'error' => '403 - Acceso denegado para el rol ' . $userRole
-                            ]);
-                            exit;
-                        } else {
-                            throw new ForbiddenException("403 - Acceso denegado al recurso", 403);
-                        }
-                    }
-
-                    $this->logger->info("✅ Acceso permitido", [
+                if (!in_array(ALL, $allowedRoles) && !in_array($userRole, $allowedRoles)) {
+                    $this->logger->warning("🚫 Acceso denegado por rol", [
                         "Path" => $path,
-                        "Usuario" => $session->get('usuario'),
-                        "Rol" => $userRole
+                        "RolUsuario" => $userRole,
+                        "RolesPermitidos" => $allowedRoles
                     ]);
-                } else {
-                    $this->logger->info("🔐 Ruta protegida sin restricción de roles", [
-                        "Path" => $path
-                    ]);
+
+                    if ($request->isAjax()) {
+                        header('Content-Type: application/json');
+                        http_response_code(403);
+                        echo json_encode([
+                            'success' => false,
+                            'error' => '403 - Acceso denegado para el rol ' . $userRole
+                        ]);
+                        exit;
+                    } else {
+                        throw new ForbiddenException("403 - Acceso denegado al recurso", 403);
+                    }
                 }
-            }
 
-            list($controller, $method) = $this->getController($path, $http_method);
-
-            $this->logger->info("Status Code: 200", [
-                "Path" => $path,
-                "Controller" => $controller,
-                "Method" => $method
-            ]);
-            
-            if (isset($allowedRoles) && $allowedRoles !== null) {
-                $this->call($controller, $method, $allowedRoles);
-            } else {
-                $this->call($controller, $method);
-            }
-            $alreadyCalled = true;
-
-        } catch (ForbiddenException $e) {
-            $this->logger->error("Status Code: 403 - Forbidden", [
-                "ERROR" => $e->getMessage()
-            ]);
-
-            if ($request->isAjax()) {
-                header('Content-Type: application/json', true, 403);
-                echo json_encode([
-                    'success' => false,
-                    'error' => '403 - Acceso denegado',
-                    'message' => $e->getMessage()
+                $this->logger->info("✅ Acceso permitido", [
+                    "Path" => $path,
+                    "Usuario" => $session->get('usuario'),
+                    "Rol" => $userRole
                 ]);
-                exit;
-            }
-
-            list($controller, $method) = $this->getController($this->forbidden, "GET");
-            if (isset($allowedRoles) && $allowedRoles !== null) {
-                $this->call($controller, $method, $allowedRoles);
             } else {
-                $this->call($controller, $method);
-            }
-            $alreadyCalled = true;
-
-        } catch (RouteNotFoundException $e) {
-            $this->logger->error("Status Code: 404 - Route Not Found", [
-                "ERROR" => [$path, $http_method]
-            ]);
-
-            if ($request->isAjax()) {
-                header('Content-Type: application/json', true, 404);
-                echo json_encode([
-                    'success' => false,
-                    'error' => '404 - Ruta no encontrada',
-                    'message' => 'No se encontró una ruta para este recurso.'
+                $this->logger->info("🔐 Ruta protegida sin restricción de roles", [
+                    "Path" => $path
                 ]);
-                exit;
             }
+        }
 
-            list($controller, $method) = $this->getController($this->notFound, "GET");
-            if (isset($allowedRoles) && $allowedRoles !== null) {
-                $this->call($controller, $method, $allowedRoles);
-            } else {
-                $this->call($controller, $method);
-            }
-            $alreadyCalled = true;
+        list($controller, $method) = $this->getController($path, $http_method);
 
-        } catch (Exception $e) {
-            $this->logger->error("Status Code: 500 - Internal Server Error", [
-                "ERROR" => $e
+        $this->logger->info("Status Code: 200", [
+            "Path" => $path,
+            "Controller" => $controller,
+            "Method" => $method
+        ]);
+        
+        if (isset($allowedRoles) && $allowedRoles !== null) {
+            $this->call($controller, $method, $allowedRoles);
+        } else {
+            $this->call($controller, $method);
+        }
+        $alreadyCalled = true;
+
+    } catch (ForbiddenException $e) {
+        $this->logger->error("Status Code: 403 - Forbidden", [
+            "ERROR" => $e->getMessage()
+        ]);
+
+        if ($request->isAjax()) {
+            header('Content-Type: application/json', true, 403);
+            echo json_encode([
+                'success' => false,
+                'error' => '403 - Acceso denegado',
+                'message' => $e->getMessage()
             ]);
+            exit;
+        }
 
-            if ($request->isAjax()) {
-                header('Content-Type: application/json', true, 500);
-                echo json_encode([
-                    'success' => false,
-                    'error' => '500 - Error interno del servidor',
-                    'message' => $e->getMessage()
-                ]);
-                exit;
-            }
+        list($controller, $method) = $this->getController($this->forbidden, "GET");
+        $this->call($controller, $method, $allowedRoles);
+        $alreadyCalled = true;
 
-            list($controller, $method) = $this->getController($this->internalError, "GET");
+    } catch (RouteNotFoundException $e) {
+        $this->logger->error("Status Code: 404 - Route Not Found", [
+            "ERROR" => [$path ?? 'undefined', $http_method ?? 'undefined']
+        ]);
+
+        if ($request->isAjax()) {
+            header('Content-Type: application/json', true, 404);
+            echo json_encode([
+                'success' => false,
+                'error' => '404 - Ruta no encontrada',
+                'message' => 'No se encontró una ruta para este recurso.'
+            ]);
+            exit;
+        }
+
+        list($controller, $method) = $this->getController($this->notFound, "GET");
+        $this->call($controller, $method, $allowedRoles);
+        $alreadyCalled = true;
+
+    } catch (Exception $e) {
+        $this->logger->error("Status Code: 500 - Internal Server Error", [
+            "ERROR" => $e
+        ]);
+
+        if ($request->isAjax()) {
+            header('Content-Type: application/json', true, 500);
+            echo json_encode([
+                'success' => false,
+                'error' => '500 - Error interno del servidor',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+
+        list($controller, $method) = $this->getController($this->internalError, "GET");
+        $this->call($controller, $method, $allowedRoles);
+        $alreadyCalled = true;
+    }
+
+    finally {
+        if (!$alreadyCalled && $controller && $method) {
             if (isset($allowedRoles) && $allowedRoles !== null) {
                 $this->call($controller, $method, $allowedRoles);
             } else {
                 $this->call($controller, $method);
-            }
-            $alreadyCalled = true;
-        } finally {
-            if (!$alreadyCalled) {
-                if (isset($allowedRoles) && $allowedRoles !== null) {
-                    $this->call($controller, $method, $allowedRoles);
-                } else {
-                    $this->call($controller, $method);
-                }
             }
         }
     }
+}
 
 }

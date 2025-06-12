@@ -138,6 +138,7 @@ class ProductoController extends Controller
     public function editarProducto()
     {
         $id = $this->request->get('id_producto');
+
         if ($this->request->method() == 'POST') {
             try {
                 $data = [
@@ -151,64 +152,126 @@ class ProductoController extends Controller
 
                 $this->request->sanitize($data);
 
-                $this->logger->info("S_FILES :", [$_FILES]);
-                // Si hay nueva imagen, la procesamos
-                if ($_FILES['imagen']['tmp_name']) {
-                    $imagen = new Imagen(
-                        $_FILES['imagen']['name'], 
-                        $_FILES['imagen']['type'], 
-                        $_FILES['imagen']['tmp_name'], 
-                        $_FILES['imagen']['size'], 
-                        $_FILES['imagen']['error'], 
-                        $this->logger);
+                $this->logger->info("📁 Archivos recibidos (S_FILES):", [$_FILES]);
 
-                    $data['path_imagen'] = $imagen->getFileName();
+                // Procesar imagen si fue cargada
+                if (!empty($_FILES['imagen']['tmp_name'])) {
+                    $imagen = new Imagen(
+                        $_FILES['imagen']['name'],
+                        $_FILES['imagen']['type'],
+                        $_FILES['imagen']['tmp_name'],
+                        $_FILES['imagen']['size'],
+                        $_FILES['imagen']['error'],
+                        $this->logger
+                    );
+
+                    $resultadoSubida = $imagen->subirArchivo();
+
+                    if (!$resultadoSubida['exito']) {
+                        throw new \Exception("Fallo al subir la imagen: " . $resultadoSubida['description']);
+                    }
+
+                    $data['path_imagen'] = $resultadoSubida['path_imagen'];
+                    $this->logger->info("🖼️ Imagen subida correctamente:", [$resultadoSubida]);
                 }
 
-                $this->logger->info("datos de la imagen :", [$imagen->load()]);
-                $resultSearch = $this->model->getById($data['id']);
-                if($resultSearch)
-                {
-                    $this->logger->info("Producto encontrado: ", [$resultSearch]);
-                    // Si la imagen no ha cambiado, no la reemplazamos
+                $productoExistente = $this->model->getById($data['id']);
 
-                    $imagen->subirArchivo();
-                    $data['path_imagen'] = $imagen->getFileName();
-                    $success = $this->model->actualizarProducto([
-                        'id' => $data['id'], 
+                if ($productoExistente) {
+                    $this->logger->info("✅ Producto encontrado:", [$productoExistente]);
+
+                    // Actualizar con datos del formulario y la imagen (si hubo)
+                    $exito = $this->model->actualizarProducto([
+                        'id' => $data['id'],
                         'nro_proyecto_productivo' => $data['nro_proyecto_productivo'],
                         'descripcion_proyecto' => $data['descripcion_proyecto'],
                         'estado' => $data['estado'],
-                        'id_taller' => $resultSearch['id_taller'],
-                        'id_unidad_q_fabrica' => $resultSearch['id_unidad_q_fabrica'],
+                        'id_taller' => $productoExistente['id_taller'],
+                        'id_unidad_q_fabrica' => $productoExistente['id_unidad_q_fabrica'],
                         'stock_inicial' => $data['stock_inicial'],
                         'unidad_medida' => $data['unidad_medida'],
-                        'path_imagen' => $data['path_imagen']
+                        'path_imagen' => $data['path_imagen'] ?? $productoExistente['path_imagen']
                     ]);
-                    
-                    if ($success) {
-                        $this->logger->info("Producto actualizado correctamente", [$data]);
+
+                    if ($exito) {
+                        $this->logger->info("📦 Producto actualizado correctamente", [$data]);
                         redirect('facturacion/productos/ver?id_producto=' . $data['id']);
                     } else {
-                        throw new Exception("No se pudo actualizar el producto.");
+                        throw new \Exception("No se pudo actualizar el producto.");
                     }
+                } else {
+                    throw new \Exception("Producto no encontrado.");
                 }
-
-            } catch (Exception $e) {
-                $this->logger->error("Error al actualizar producto", ['error' => $e->getMessage()]);
+            } catch (\Exception $e) {
+                $this->logger->error("❌ Error al actualizar producto", ['error' => $e->getMessage()]);
                 view('facturacion/productos/editar.producto', array_merge([
                     'producto' => $this->model->getDetalleProducto($id),
                     'error' => $e->getMessage()
                 ], $this->menu));
             }
-
         } else {
+            // GET: Mostrar formulario con datos actuales
             $producto = $this->model->getDetalleProducto($id);
             view('facturacion/productos/editar.producto', array_merge([
                 'producto' => $producto
             ], $this->menu));
         }
     }
+
+    public function nuevo()
+    {
+        try {
+            if ($this->request->method() === 'post') {
+                // 🟡 Procesar formulario
+                $this->logger->info("Recepción de datos para creación de producto", [$this->request->all()]);
+
+                $descripcion = $this->request->get('descripcion_proyecto');
+                $estado = $this->request->get('estado');
+                $stockInicial = (int) $this->request->get('stock_inicial');
+                $unidadMedida = $this->request->get('unidad_medida');
+                $nroProyecto = $this->request->get('nro_proyecto_productivo');
+
+                $imagen = $_FILES['imagen'] ?? null;
+                $nombreImagen = null;
+
+                if ($imagen && $imagen['error'] === UPLOAD_ERR_OK) {
+                    $resultado = \Paw\App\Models\Uploader::uploadFile($imagen);
+
+                    if ($resultado['exito'] === true) {
+                        $nombreImagen = $resultado['nombre_imagen'];
+                        $this->logger->info("Imagen subida exitosamente", [$nombreImagen]);
+                    } else {
+                        $this->logger->error("Error al subir imagen: " . $resultado['description']);
+                        echo "Error al subir imagen: " . $resultado['description'];
+                        return;
+                    }
+                }
+
+                $this->model->crearProducto([
+                    'descripcion_proyecto' => $descripcion,
+                    'estado' => $estado,
+                    'stock_inicial' => $stockInicial,
+                    'unidad_medida' => $unidadMedida,
+                    'nro_proyecto_productivo' => $nroProyecto,
+                    'imagen' => $nombreImagen
+                ]);
+
+                redirect('facturacion/productos/listado');
+
+            } else {
+                // 🟢 Mostrar formulario
+                $this->logger->info("Acceso a formulario de nuevo producto");
+                view('facturacion/productos/nuevo.producto', $this->menu);
+            }
+
+        } catch (Exception $e) {
+            $this->logger->error("Error en nuevo(): " . $e->getMessage());
+            echo "Ocurrió un error al procesar el producto.";
+        }
+    }
+
+
+
 
     public function eliminarProducto()
     {
@@ -393,7 +456,7 @@ class ProductoController extends Controller
         try {
             $path = $this->model->obtenerComprobanteDecomiso($productoId, $fechaMovimiento);
     
-            $rutaAbsoluta = realpath(__DIR__ . '/../../../' . \Paw\App\Models\Uploader::UPLOADDIRECTORY . $path);
+            $rutaAbsoluta = \Paw\App\Models\Uploader::UPLOADDIRECTORY . $path;
     
             $this->logger->debug("🧾 Ruta comprobante decomiso:", [
                 'producto_id' => $productoId,

@@ -476,6 +476,45 @@ class ProductosCollection extends Model
         }
     }
     
+    public function crearProducto(array $datos)
+    {
+        try {
+            $sql = "
+                INSERT INTO producto (
+                    descripcion_proyecto,
+                    estado,
+                    stock_inicial,
+                    unidad_medida,
+                    nro_proyecto_productivo,
+                    imagen,
+                    created_at
+                ) VALUES (
+                    :descripcion_proyecto,
+                    :estado,
+                    :stock_inicial,
+                    :unidad_medida,
+                    :nro_proyecto_productivo,
+                    :imagen,
+                    NOW()
+                )
+            ";
+
+            $params = [
+                'descripcion_proyecto' => $datos['descripcion_proyecto'],
+                'estado' => $datos['estado'],
+                'stock_inicial' => $datos['stock_inicial'],
+                'unidad_medida' => $datos['unidad_medida'],
+                'nro_proyecto_productivo' => $datos['nro_proyecto_productivo'],
+                'imagen' => $datos['imagen']
+            ];
+
+            $this->queryBuilder->query($sql, $params);
+        } catch (Exception $e) {
+            $this->logger->error("Error al insertar producto: " . $e->getMessage(), $datos);
+            throw $e;
+        }
+    }
+
 
     public function getProductosYPrecios($searchItem=null, $usuarioDependencia=null)
     {

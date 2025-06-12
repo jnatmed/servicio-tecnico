@@ -212,52 +212,128 @@ class FacturasCollection extends Model
         ]);
     }
         
-    public function getProximoNumeroFacturaPorUsuario($usuarioId)
+    public function getProximoNumeroFacturaPorDependencia($dependenciaId)
     {
-        $sql = "
-            SELECT 
-                nf.id AS id_numerador,
-                nf.ultimo_utilizado,
-                nf.hasta,
-                d.punto_venta,
-                d.id AS dependencia_idUser,
-                s.estado AS estado_dependencia
-            FROM solicitud_asignacion_dependencia s
-            JOIN dependencia d ON s.dependencia_id = d.id
-            JOIN numerador_factura nf ON nf.dependencia_id = d.id
-            WHERE s.usuario_id = :usuarioId
-            ORDER BY s.fecha_solicitud DESC
-            LIMIT 1
-        ";
+        try {
+            $sql = "
+                SELECT 
+                    nf.id AS id_numerador,
+                    nf.ultimo_utilizado,
+                    nf.hasta,
+                    d.punto_venta,
+                    d.id AS dependencia_id,
+                    'confirmado' AS estado_dependencia
+                FROM numerador_factura nf
+                JOIN dependencia d ON nf.dependencia_id = d.id
+                WHERE nf.dependencia_id = :dependenciaId
+                AND nf.estado_solicitud_numeracion = 'aceptada'
+                ORDER BY nf.fecha_solicitud DESC
+                LIMIT 1
+            ";
 
-        $result = $this->queryBuilder->query($sql, ['usuarioId' => $usuarioId]);
+            $result = $this->queryBuilder->query($sql, ['dependenciaId' => $dependenciaId]);
 
-        if (count($result) === 0) {
-            return [
-                'success' => false,
-                'message' => 'No hay solicitudes realizadas por este usuario.'
-            ];
-        }
+            if (empty($result)) {
+                return [
+                    'success' => false,
+                    'message' => 'No se encontró numerador aceptado para esta dependencia.'
+                ];
+            }
 
-        $numerador = $result[0];
+            $numerador = $result[0];
 
-        if ($numerador['estado_dependencia'] === 'confirmado') {
             if ($numerador['ultimo_utilizado'] >= $numerador['hasta']) {
                 return [
                     'success' => false,
-                    'message' => 'Se alcanzó el límite de numeración para este punto de venta.'
+                    'message' => 'Se alcanzó el límite de numeración para esta dependencia.'
                 ];
             }
+
+            return [
+                'success' => true,
+                'id_numerador' => $numerador['id_numerador'],
+                'proximo_numero' => $numerador['ultimo_utilizado'] + 1,
+                'punto_venta' => $numerador['punto_venta'],
+                'dependencia_id' => $numerador['dependencia_id'],
+                'estado_dependencia' => $numerador['estado_dependencia']
+            ];
+        } catch (Exception $e) {
+            $this->logger->error("Error en getProximoNumeroFacturaPorDependencia: " . $e->getMessage(), [
+                'dependenciaId' => $dependenciaId
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Ocurrió un error inesperado al obtener el próximo número de factura.'
+            ];
+        }
+    }
+
+
+    public function insertarSolicitudNumerador($dependenciaId, $expediente, $desde, $hasta)
+    {
+
+        $this->logger->info("Insertando solicitud de numerador con parámetros: dependencia_id=$dependenciaId, expediente=$expediente, desde=$desde, hasta=$hasta");
+
+        // 1. Verificar si ya hay una solicitud pendiente
+        $sqlCheckPendiente = "
+            SELECT id 
+            FROM numerador_factura 
+            WHERE dependencia_id = :dependencia_id 
+            AND estado_solicitud_numeracion = 'pendiente'
+            LIMIT 1
+        ";
+
+        $resultadoPendiente = $this->queryBuilder->query($sqlCheckPendiente, [
+            'dependencia_id' => $dependenciaId
+        ]);
+
+        $this->logger->debug("resultadoPendiente: ",[$resultadoPendiente]);
+
+        if (!empty($resultadoPendiente)) {
+            throw new Exception("Ya existe una solicitud pendiente para esta dependencia.");
         }
 
-        return [
-            'success' => true,
-            'id_numerador' => $numerador['id_numerador'],
-            'proximo_numero' => $numerador['ultimo_utilizado'] + 1,
-            'punto_venta' => $numerador['punto_venta'],
-            'dependencia_idUser' => $numerador['dependencia_idUser'],
-            'estado_dependencia' => $numerador['estado_dependencia']
+        // 2. Verificar si la última aceptada tiene un último utilizado >= desde
+        $sqlCheckUltimo = "
+            SELECT ultimo_utilizado 
+            FROM numerador_factura 
+            WHERE dependencia_id = :dependencia_id 
+            AND estado_solicitud_numeracion = 'aceptada'
+            ORDER BY fecha_solicitud DESC
+            LIMIT 1
+        ";
+
+        $resultadoUltimaAceptada = $this->queryBuilder->query($sqlCheckUltimo, [
+            'dependencia_id' => $dependenciaId
+        ]);
+
+        $ultimoUtilizado = $resultadoUltimaAceptada[0]['ultimo_utilizado'] ?? null;
+        $ultimoUtilizado = is_null($ultimoUtilizado) ? 0 : (int)$ultimoUtilizado;
+
+        $this->logger->info("resultadoUltimaAceptada: ", [$ultimoUtilizado]);
+
+        if (!is_null($ultimoUtilizado) && $ultimoUtilizado <= $hasta) {
+            throw new Exception("El valor 'hasta' debe ser mayor al último utilizado registrado (" . $ultimoUtilizado . ").");
+        }
+
+        // 3. Insertar si todo está correcto
+        $sql = "
+            INSERT INTO numerador_factura (
+                dependencia_id, expte_pedido_numeracion, desde, hasta, estado_solicitud_numeracion
+            ) VALUES (
+                :dependencia_id, :expte, :desde, :hasta, 'pendiente'
+            )
+        ";
+
+        $params = [
+            'dependencia_id' => $dependenciaId,
+            'expte' => $expediente,
+            'desde' => $desde,
+            'hasta' => $hasta,
         ];
+
+        $this->queryBuilder->query($sql, $params);
     }
 
 

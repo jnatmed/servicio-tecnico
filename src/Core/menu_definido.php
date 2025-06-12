@@ -42,6 +42,11 @@ $routes_definidas = [
                     'name' => 'PRODUCTOS',
                     'roles' => [PUNTO_VENTA, PLANIFICACION_COMERCIAL, JEFATURA_VENTAS],
                 ],
+                [
+                    'href' => '/facturacion/productos/nuevo',
+                    'name' => 'NUEVO PRODUCTO',
+                    'roles' => [PUNTO_VENTA, PLANIFICACION_COMERCIAL, JEFATURA_VENTAS],
+                ],
             ],
         ],
         [

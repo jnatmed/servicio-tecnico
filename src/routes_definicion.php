@@ -90,7 +90,7 @@ return [
         'path' => '/facturacion/ver',
         'controller' => 'Facturacion\FacturacionController@ver',
         'auth' => true,
-        'roles' => [ADMINISTRADOR, JEFATURA_VENTAS]
+        'roles' => [ADMINISTRADOR, JEFATURA_VENTAS, PUNTO_VENTA]
     ],
     [
         'method' => 'delete',
@@ -112,6 +112,13 @@ return [
         'controller' => 'Facturacion\FacturacionController@listarNumerador',
         'auth' => true,
         'roles' => [ADMINISTRADOR, JEFATURA_VENTAS]
+    ],
+    [
+        'method' => ['post'],
+        'path' => '/facturacion/numerador/solicitar',
+        'controller' => 'Facturacion\FacturacionController@solicitudNumeracion',
+        'auth' => true,
+        'roles' => [ADMINISTRADOR, PUNTO_VENTA]
     ],
     [
         'method' => ['post'],
@@ -182,6 +189,13 @@ return [
         'controller' => 'Facturacion\ProductoController@ver',
         'auth' => true,
         'roles' => [ADMINISTRADOR, CODIGO608, JEFATURA_VENTAS, PUNTO_VENTA, PLANIFICACION_COMERCIAL]
+    ],
+    [
+        'method' => ['get','post'],
+        'path' => '/facturacion/productos/nuevo',
+        'controller' => 'Facturacion\ProductoController@nuevo',
+        'auth' => true,
+        'roles' => [ADMINISTRADOR, CODIGO608, JEFATURA_VENTAS, PLANIFICACION_COMERCIAL, PUNTO_VENTA]
     ],
     [
         'method' => ['get'],
