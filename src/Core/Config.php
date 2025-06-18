@@ -43,6 +43,12 @@ class Config
         
         $this->configs['APP_ENV'] = getenv('APP_ENV') ?? '';
 
+        $this->configs['GRAPH_TENANT_ID'] = getenv('GRAPH_TENANT_ID') ?? '';
+        $this->configs['GRAPH_CLIENT_ID'] = getenv('GRAPH_CLIENT_ID') ?? '';
+        $this->configs['GRAPH_CLIENT_SECRET'] = getenv('GRAPH_CLIENT_SECRET') ?? '';
+        $this->configs['GRAPH_USER_FROM'] = getenv('GRAPH_USER_FROM') ?? '';
+
+
     }
 
     public function joinPaths()

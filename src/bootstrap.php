@@ -22,9 +22,13 @@ use Paw\Core\Configs\WhoopsConfig;
  * 1) DOTENV
  * configurando el dotenv - para las variables de entorno 
  */
-$dotenv = Dotenv::createUnsafeImmutable(__DIR__.'/../');
-$dotenv->load();
-
+try {
+    $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
+    $dotenv->load();
+} catch (\Throwable $e) {
+    echo "⚠️ Error al cargar .env: " . $e->getMessage();
+    exit;
+}
 /**
  * 2) CONFIG
  * con las variables de entorno levantadas
@@ -42,6 +46,8 @@ $handler = new StreamHandler(getenv('LOG_PATH'));
 $handler->setLevel($config->get("LOG_LEVEL"));
 $handler->setLevel(Level::Debug);
 $log->pushHandler($handler);
+
+
 
 /**
  * 4) BASE DE DATOS - ConnectionBuilder

@@ -419,7 +419,6 @@ class ProductoController extends Controller
         } else {
             try {
                 $this->logger->info("🖥️ Solicitud de vista completa (no JSON)");
-    
 
                 $listaProductos = $this->model->getProductosConUltimoPrecio($usuarioDependencia, $this->usuario->getRolUsuario());
                 $this->logger->debug("📦 Productos cargados para vista", ['cantidad' => count($listaProductos), 'usuarioDependencia' => $usuarioDependencia]);

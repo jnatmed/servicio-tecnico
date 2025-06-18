@@ -189,36 +189,51 @@ class ProductosCollection extends Model
         }
     }
     
-    public function getStockActual($idProducto)
-    {
-        try {
-            // Obtener el stock inicial
-            $producto = $this->getById($idProducto);
-            $stockInicial = (float) $producto['stock_inicial'] ?? 0;
-    
-            // Obtener total de entradas
-            $sqlIn = "SELECT SUM(cantidad) AS total_in FROM movimiento_inventario WHERE producto_id = :id AND tipo_movimiento = 'in'";
-            $totalIn = $this->queryBuilder->query($sqlIn, [':id' => $idProducto])[0]['total_in'] ?? 0;
-    
-            // Obtener total de salidas
-            $sqlOut = "SELECT SUM(cantidad) AS total_out FROM movimiento_inventario WHERE producto_id = :id AND tipo_movimiento = 'out'";
-            $totalOut = $this->queryBuilder->query($sqlOut, [':id' => $idProducto])[0]['total_out'] ?? 0;
-    
-            // Log para depurar
-            $this->logger->debug("🧮 Stock calculado:", [
-                'stock_inicial' => $stockInicial,
-                'in' => $totalIn,
-                'out' => $totalOut
-            ]);
-    
-            // Calcular y retornar stock actual
-            return $stockInicial + (float) $totalIn - (float) $totalOut;
-    
-        } catch (Exception $e) {
-            $this->logger->error("❌ Error al calcular stock actual: " . $e->getMessage());
-            return 0;
-        }
+public function getStockActual($idProducto)
+{
+    try {
+        $producto = $this->getById($idProducto);
+        $stockInicial = (float) $producto['stock_inicial'] ?? 0;
+
+        // Entradas (in)
+        $sqlIn = "SELECT SUM(cantidad) AS total_in 
+                  FROM movimiento_inventario 
+                  WHERE producto_id = :id 
+                  AND tipo_movimiento = 'in'";
+        $totalIn = (float) ($this->queryBuilder->query($sqlIn, [':id' => $idProducto])[0]['total_in'] ?? 0);
+
+        // Salidas (out)
+        $sqlOut = "SELECT SUM(cantidad) AS total_out 
+                   FROM movimiento_inventario 
+                   WHERE producto_id = :id 
+                   AND tipo_movimiento = 'out'";
+        $totalOut = (float) ($this->queryBuilder->query($sqlOut, [':id' => $idProducto])[0]['total_out'] ?? 0);
+
+        // Traslados pendientes desde cualquier dependencia
+        $sqlTransito = "SELECT SUM(cantidad) AS transito 
+                        FROM traslado_stock 
+                        WHERE producto_id = :id 
+                        AND estado = 'pendiente' 
+                        AND fecha_vencimiento > NOW()";
+        $stockEnTransito = (float) ($this->queryBuilder->query($sqlTransito, [':id' => $idProducto])[0]['transito'] ?? 0);
+
+        // Log
+        $this->logger->debug("🧮 Stock actual con tránsito descontado:", [
+            'stock_inicial' => $stockInicial,
+            'in' => $totalIn,
+            'out' => $totalOut,
+            'transito' => $stockEnTransito
+        ]);
+
+        // Stock disponible = real - en tránsito pendiente
+        return $stockInicial + $totalIn - $totalOut - $stockEnTransito;
+
+    } catch (Exception $e) {
+        $this->logger->error("❌ Error al calcular stock actual: " . $e->getMessage());
+        return 0;
     }
+}
+
     
 
     public function contarSinPrecio(): int
