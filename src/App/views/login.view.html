@@ -2,6 +2,18 @@
 <html lang="es">
 <head>
     {% include 'parts/head.view.html' %}
+    <style>
+        .error-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1055;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
 <body class="home">
     {% include 'parts/header.view.html' %}
@@ -15,10 +27,17 @@
             <label for="password">Contraseña:</label>
             <input type="password" id="password" name="password" required>
             <button type="submit" class="btn-login">Iniciar Sesión</button>
-            <label for="">{{ error }}</label>
         </form>
         <a href="{{ authUrl }}">Iniciar sesión con Google</a>
     </div>
+    {% if error %}
+    <div id="errorAlert" class="alert alert-danger alert-dismissible fade show error-alert" role="alert">
+        <strong>{{ error }}</strong>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+
 
     {% include 'parts/footer.view.html' %}
 
