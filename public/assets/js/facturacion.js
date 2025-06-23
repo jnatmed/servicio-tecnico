@@ -147,14 +147,20 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch(`productos/listado?jsonList=true&search=${searchValue}`)
             .then(res => res.json())
             .then(data => {
-                console.log("Productos: " + JSON.stringify(data));
-                if (data.productos) {
+                // console.log("Productos: " + JSON.stringify(data));
+                console.log("Productos:", data);
+                const tbody = document.querySelector('#productTable tbody');
+                tbody.innerHTML = '';                
+                
+                if (Array.isArray(data.productos)) {
                     const tbody = document.querySelector('#productTable tbody');
                     tbody.innerHTML = ''; // limpiar tabla
                     
                     data.productos.forEach(product => {
                         const tr = document.createElement('tr');
                         const tieneStock = parseFloat(product.stock_actual) > 0;
+
+                        console.table(product);
 
                         const tdDescripcion = document.createElement('td');
                         tdDescripcion.textContent = product.descripcion_proyecto;
@@ -187,6 +193,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         tbody.appendChild(tr);
                     });
+                } else {
+                    // Mostrar mensaje cuando no hay productos
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No hay productos disponibles.</td></tr>`;
+
+                    const mensaje = data?.mensaje || data?.productos?.error || null;
+
+                    if (mensaje) {
+                        const footer = document.querySelector('#mensaje-footer');
+                        if (footer) {
+                            footer.textContent = mensaje;
+                            footer.style.display = 'block';
+                        }
+                    }
                 }
             });
     });
@@ -210,14 +229,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Capturar los productos de la tabla
         let productos = [];
         document.querySelectorAll('#productosTable tbody tr').forEach(row => {
+            const idProducto = row.querySelector('.cantidad-producto').dataset.id;
             const cantidad = row.querySelector('.cantidad-producto').value;
             const precioUnitario = row.querySelector('.cantidad-producto').dataset.precio;
-            const idProducto = row.querySelector('.cantidad-producto').dataset.id;
+            const dependenciaId = row.querySelector('.cantidad-producto').dataset.dependencia;
     
             productos.push({
                 id: idProducto,
                 cantidad: cantidad,
                 precio_unitario: precioUnitario,
+                dependencia_id: dependenciaId
             });
         });
     
@@ -329,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const tr = document.createElement('tr');
     
         tr.innerHTML = `
-            <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.id_producto}" data-precio="${product.precio}"></td>
+            <td><input type="number" class="form-control cantidad-producto" min="1" value="1" data-id="${product.id_producto}" data-precio="${product.precio}" data-dependencia="${product.dependencia_id}"></td>
             <td><a href="productos/ver?id_producto=${product.id_producto}">${product.descripcion_proyecto}</a></td>
             <td>${product.nro_proyecto_productivo}</td>
             <td class="precio-unitario">${parseFloat(product.precio).toFixed(2)}</td>

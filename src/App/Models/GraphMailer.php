@@ -54,7 +54,7 @@ class GraphMailer
         return $data['access_token'] ?? throw new Exception('No se pudo obtener el token de acceso.');
     }
 
-    public function send($toEmail, $toName, $subject, $textPart, $htmlPart)
+    public function send($toEmail, $toName, $subject, $content)
     {
         $url = 'https://graph.microsoft.com/v1.0/users/' . $this->fromEmail . '/sendMail';
 
@@ -63,7 +63,7 @@ class GraphMailer
                 'subject' => $subject,
                 'body' => [
                     'contentType' => 'HTML',
-                    'content' => $htmlPart ?: $textPart,
+                    'content' => $content,
                 ],
                 'toRecipients' => [
                     [

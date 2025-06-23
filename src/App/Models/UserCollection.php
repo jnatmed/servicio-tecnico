@@ -442,6 +442,20 @@ class UserCollection extends Model
                 LIMIT 1
             ";
 
+            try{
+                $content = return_view('mails/solicitud.destino', ["nombre_usuario" => "Id: " . $usuarioId]);
+                $mailer = new GraphMailer();
+                $mailer->send(
+                    'jnatello@encope.gob.ar',
+                    'Departamento de Informatica',
+                    '✅ Solicitud de cambio de Destino, solicitada',
+                    $content,
+                );
+                $this->logger->info("✅ Correo enviado correctamente a informatica@encope.gob.ar");
+            }catch(Exception $e){
+                $this->logger->error("❌ Error al enviar correo: " . $e->getMessage());
+            }
+
             $resultado = $this->queryBuilder->query($sql, ['usuario_id' => $usuarioId]);
             $ultima = $resultado[0] ?? null;
 

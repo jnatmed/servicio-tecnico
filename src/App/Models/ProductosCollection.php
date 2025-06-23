@@ -103,6 +103,7 @@ class ProductosCollection extends Model
             list($idInsertado, $success) = $this->queryBuilder->insert('movimiento_inventario', [
                 'factura_id' => $data['factura_id'] ?? null,
                 'producto_id' => $data['producto_id'],
+                'dependencia_id' => $data['dependencia_id'],
                 'fecha_movimiento' => date('Y-m-d H:i:s'),
                 'tipo_movimiento' => $data['tipo_movimiento'],
                 'cantidad' => $data['cantidad'],

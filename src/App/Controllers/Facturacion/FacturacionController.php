@@ -11,6 +11,8 @@ use Paw\App\Models\ProductosCollection;
 use Paw\App\Models\CuotasCollection;
 use Paw\App\Models\DetalleFactura;
 use Paw\App\Models\Imagen;
+use Paw\App\Models\GraphMailer;
+
 use Paw\App\Models\CuentaCorrienteCollection;
 use Paw\App\Models\CuentaCorriente;
 
@@ -48,6 +50,7 @@ class FacturacionController extends Controller
         // $log->info("this->menu: ", [$this->menu]);
     }
     
+
     public function alta() 
     {
         /**
@@ -58,10 +61,12 @@ class FacturacionController extends Controller
             try {
                 // Paso 1: Obtener ID del usuario
                 $userId = $this->usuario->getIdUser();
-                $this->logger->debug("Usuario autenticado ID: {$userId}");
+                $dependenciaId = $this->usuario->getDependenciaId();
+                $this->logger->info("Metodo alta POST");
+                // $this->logger->debug("Usuario autenticado ID: {$userId}");
         
                 // Paso 2: Calcular número de factura seguro desde la tabla numerador_factura
-                $numeradorInfo = $this->model->getProximoNumeroFacturaPorUsuario($userId);
+                $numeradorInfo = $this->model->getProximoNumeroFacturaPorDependencia($dependenciaId);
                 $puntoDeVenta = $numeradorInfo['punto_venta'];
                 $nroSecuencial = $numeradorInfo['proximo_numero'];
                 $nroFacturaGenerado = sprintf("%04d-%08d", $puntoDeVenta, $nroSecuencial);
@@ -120,10 +125,13 @@ class FacturacionController extends Controller
                             'precio_unitario' => $productoData['precio_unitario']
                         ], $this->logger)
                     );
-        
+                    
+                    $this->logger->info("Detalle factura insertada. Datos Producto: ", [$productoData]);
+
                     $queryProducto->registrarMovimientoInventario([
                         'factura_id' => $facturaId,
                         'producto_id' => $productoData['id'],
+                        'dependencia_id' => $productoData['dependencia_id'],
                         'tipo_movimiento' => 'out',
                         'cantidad' => $productoData['cantidad'],
                         'descripcion_movimiento' => "Descuento de inventario por Factura #{$data['nro_factura']}",
@@ -146,6 +154,7 @@ class FacturacionController extends Controller
         } else {
             
             $userId = $this->usuario->getIdUser();
+            $this->logger->warning("Metodo GET alta factura");
             $this->logger->debug("ID de usuario obtenido: {$userId}");
 
             $this->logger->debug("Llamando a getProximoNumeroFacturaPorUsuario con usuario ID: {$userId}");
@@ -155,10 +164,13 @@ class FacturacionController extends Controller
             $data = [
                 'fecha_factura' => date('d/m/Y'),
                 'monto_minimo_cuota' => 10000,
+                'dependencia_id' => $numeradorInfo['dependencia_id'],
                 'dependencias' => $this->model->getDependencias(),
                 'version' => time(),
                 'dependencia_id_user' => $this->usuario->getDependenciaId(), // ??
             ];
+
+            $this->logger->info("1er paso Get DATA: ", [$data]);
 
             /**
              * Caso 1: No se puede obtener numerador
@@ -178,7 +190,7 @@ class FacturacionController extends Controller
                  * Caso 2: Se pudo obtener numerador
                  * cargamos los datos de numeracion de la factura
                  *  */ 
-                // $this->logger->warning("Se pudo obtener numerador: {$numeradorInfo['message']}");
+                $this->logger->warning("Se pudo obtener numerador: {$numeradorInfo['message']}");
                 $this->logger->info("numeracionInfo: ", [$numeradorInfo]);
                 $puntoDeVenta = $numeradorInfo['punto_venta'];
                 $nroSecuencial = $numeradorInfo['proximo_numero'];
@@ -204,6 +216,7 @@ class FacturacionController extends Controller
         }
 
     }
+
     public function solicitudNumeracion()
     {
         try {

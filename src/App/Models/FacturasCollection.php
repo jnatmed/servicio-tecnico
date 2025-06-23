@@ -19,7 +19,7 @@ class FacturasCollection extends Model
             return $dependencias;
         } catch (Exception $e) {
             // Registrar el error (puedes usar un logger en lugar de echo)
-            error_log('Error en getDependencias: ' . $e->getMessage());
+            $this->logger->error('Error en getDependencias: ' . $e->getMessage());
     
             // Retornar un valor por defecto o manejar el error según la lógica de tu aplicación
             return [];
@@ -215,6 +215,8 @@ class FacturasCollection extends Model
     public function getProximoNumeroFacturaPorDependencia($dependenciaId)
     {
         try {
+     
+            
             $sql = "
                 SELECT 
                     nf.id AS id_numerador,
@@ -251,6 +253,7 @@ class FacturasCollection extends Model
 
             return [
                 'success' => true,
+                'message' => "Numerador recuperado con exito",
                 'id_numerador' => $numerador['id_numerador'],
                 'proximo_numero' => $numerador['ultimo_utilizado'] + 1,
                 'punto_venta' => $numerador['punto_venta'],

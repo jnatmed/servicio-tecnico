@@ -25,7 +25,7 @@ class QueryBuilder
     public function select($table, $columns = '*', $params = [])
     {
         try {
-            $this->logger->info("params : ", [$params]);
+            // $this->logger->info("params : ", [$params]);
 
             $whereClauses = [];
             $bindings = [];
@@ -38,13 +38,13 @@ class QueryBuilder
                 }
             }
     
-            $this->logger->info("whereClauses : ", [$whereClauses]);
+            // $this->logger->info("whereClauses : ", [$whereClauses]);
             
             // Unir las cláusulas WHERE con AND
             $where = implode(' AND ', $whereClauses);
             $query = "SELECT $columns FROM $table";
     
-            $this->logger->info("query: $query");
+            // $this->logger->info("query: $query");
 
             if (!empty($whereClauses)) {
                 $query .= " WHERE $where";
@@ -64,7 +64,7 @@ class QueryBuilder
             
             $result = $sentencia->fetchAll();
 
-            $this->logger->info("result: ", [$result]);
+            // $this->logger->info("result: ", [$result]);
             // Retornar todos los resultados
             return $result;
             
@@ -377,76 +377,114 @@ class QueryBuilder
 
     public function obtenerProductosConPrecioMasReciente($searchItem = null, $idProducto = null, $usuarioDependencia = null) {
         try {
+            $this->logger->info("Parámetros recibidos en método obtenerProductosConPrecioMasReciente:", [
+                'searchItem' => $searchItem,
+                'idProducto' => $idProducto,
+                'usuarioDependencia' => $usuarioDependencia
+            ]);
+
             $sql = "
                 SELECT 
                     p.id AS id_producto,
                     p.nro_proyecto_productivo,
                     p.descripcion_proyecto,
+                    mi.dependencia_id,
                     pr.precio,
-                    p.stock_inicial,
+                    MAX(pr.fecha_precio) AS ultima_fecha_precio,
                     p.unidad_medida,
                     p.estado,
                     (
-                        p.stock_inicial
-                        + COALESCE((
-                            SELECT SUM(mi.cantidad)
-                            FROM movimiento_inventario mi
-                            WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'in'
-                        ), 0)
-                        - COALESCE((
-                            SELECT SUM(mi.cantidad)
-                            FROM movimiento_inventario mi
-                            WHERE mi.producto_id = p.id AND mi.tipo_movimiento = 'out'
-                        ), 0)
+                        COALESCE(SUM(CASE WHEN mi.tipo_movimiento = 'in' THEN mi.cantidad ELSE 0 END), 0)
+                        - COALESCE(SUM(CASE WHEN mi.tipo_movimiento = 'out' THEN mi.cantidad ELSE 0 END), 0)
                     ) AS stock_actual
                 FROM producto p
-                INNER JOIN precio pr ON p.id = pr.id_producto
-                WHERE pr.fecha_precio = (
-                    SELECT MAX(pr2.fecha_precio) 
-                    FROM precio pr2 
-                    WHERE pr2.id_producto = pr.id_producto
-                )
+                INNER JOIN movimiento_inventario mi 
+                    ON mi.producto_id = p.id
+                    AND (:usuarioDependencia IS NULL OR mi.dependencia_id = :usuarioDependencia)
+                INNER JOIN (
+                    SELECT *
+                    FROM (
+                        SELECT *,
+                            ROW_NUMBER() OVER (
+                                PARTITION BY id_producto 
+                                ORDER BY fecha_precio DESC, id DESC
+                            ) AS rn
+                        FROM precio
+                    ) sub
+                    WHERE sub.rn = 1
+                ) pr ON pr.id_producto = p.id
+                WHERE 1 = 1
+                GROUP BY 
+                    p.id, 
+                    p.nro_proyecto_productivo,
+                    mi.dependencia_id,
+                    p.descripcion_proyecto, 
+                    pr.precio, 
+                    p.unidad_medida, 
+                    p.estado
+                ORDER BY ultima_fecha_precio DESC;
             ";
-    
+
             $params = [];
-    
+
             if (!is_null($idProducto)) {
                 $sql .= " AND pr.id_producto = :idProducto";
                 $params['idProducto'] = $idProducto;
             }
-    
+
             if (!is_null($searchItem) && $searchItem !== '') {
-                $sql .= " AND p.descripcion_proyecto LIKE :searchItem";
+                $sql .= " AND LOWER(p.descripcion_proyecto) LIKE LOWER(:searchItem)";
                 $params['searchItem'] = "%{$searchItem}%";
             }
-    
+
             if (!is_null($usuarioDependencia)) {
-                $sql .= " AND p.id_unidad_q_fabrica = :usuarioDependencia";
+                // antes:
+                // $sql .= " AND p.id_unidad_q_fabrica = :usuarioDependencia";
+                // ahora:
+                $sql .= " AND EXISTS (
+                    SELECT 1
+                    FROM movimiento_inventario mi
+                    WHERE mi.producto_id = p.id AND mi.dependencia_id = :usuarioDependencia
+                )";
                 $params['usuarioDependencia'] = $usuarioDependencia;
             }
-    
-            $sql .= " ORDER BY pr.fecha_precio DESC";
-    
+
+            $sql .= " 
+                GROUP BY 
+                    p.id, 
+                    p.nro_proyecto_productivo, 
+                    p.descripcion_proyecto, 
+                    pr.precio, 
+                    p.unidad_medida, 
+                    p.estado
+                ORDER BY ultima_fecha_precio DESC
+            ";
+
             $this->logger->info("Consulta SQL generada: " . $sql);
             $this->logger->info("Parámetros: " . json_encode($params));
-    
+
             $stmt = $this->pdo->prepare($sql);
-    
             foreach ($params as $key => $value) {
                 $stmt->bindValue(":$key", $value, is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR);
             }
-    
+
             $stmt->execute();
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
+            if (empty($result)) {
+                $this->logger->warning("⚠️ No se encontraron productos para la dependencia {$usuarioDependencia}");
+                return ['error' => 'No hay productos disponibles con precios para esta unidad.'];
+            }
+
             $this->logger->info("Productos con precio más reciente obtenidos.", [$result]);
-    
             return $result;
+
         } catch (PDOException $e) {
             $this->logger->error('Error en obtenerProductosConPrecioMasReciente: ' . $e->getMessage());
             throw new Exception('Error al obtener productos con el precio más reciente.');
         }
     }
+
         
     public function getPaginatedWithSearch($table, $limit, $offset, $search = '', array $searchFields = [])
     {
